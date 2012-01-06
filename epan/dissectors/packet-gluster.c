@@ -46,9 +46,9 @@ static gint proto_gluster_dump = -1;
 static gint proto_gluster_mgmt = -1;
 static gint proto_gd_mgmt = -1;
 static gint proto_gluster_hndsk = -1;
+static gint proto_gluster_cli = -1;
 
 static gint hf_gluster_dump_proc = -1;
-static gint hf_gluster_dump_gfs_idx = -1;
 static gint hf_gluster_dump_gfsid = -1;
 static gint hf_gluster_dump_progname = -1;
 static gint hf_gluster_dump_prognum = -1;
@@ -57,6 +57,7 @@ static gint hf_gluster_dump_progver = -1;
 static gint hf_gluster_mgmt_proc = -1;
 static gint hf_gd_mgmt_proc = -1;
 static gint hf_gluster_hndsk_proc = -1;
+static gint hf_gluster_cli_proc = -1;
 
 /* Initialize the subtree pointers */
 static gint ett_gluster = -1;
@@ -64,12 +65,11 @@ static gint ett_gluster_dump = -1;
 static gint ett_gluster_mgmt = -1;
 static gint ett_gd_mgmt = -1;
 static gint ett_gluster_hndsk = -1;
+static gint ett_gluster_cli = -1;
 
 static int gluster_dump_reply_item(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
 {
 	gchar *progname = NULL;
-
-printf("%s is called\n", __func__); /* FIXME */
 
 	/* progname */
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_dump_progname, offset, &progname);
@@ -91,16 +91,8 @@ static int gluster_dump_reply(tvbuff_t *tvb, int offset, packet_info *pinfo _U_,
 /* DUMP request */
 static int gluster_dump_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
 {
-//                dissect_rpc_bytes(tvb, tree, hf_mount_statvfs_basetype, offset,
-//                        16, TRUE, NULL);
-//	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_dump_gfsid, offset, 8, FALSE, NULL);
-	gchar *gfsid = NULL;
-	proto_tree_add_bytes(tree, hf_gluster_dump_gfsid, tvb, offset, 8, gfsid);
-	offset += 8;
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_dump_gfsid, offset, 8, FALSE, NULL);
 
-printf("%s is called\n", __func__); /* FIXME */
-
-//	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_dump_gfsid, offset);
 	return offset;
 }
 
@@ -236,9 +228,86 @@ static const value_string gluster_hndsk_proc_vals[] = {
 	{ 0, "NULL" }
 };
 
+/* procedures for GLUSTER_CLI_PROGRAM */
+static const vsff gluster_cli_proc[] = {
+	{ GLUSTER_CLI_NULL, "GLUSTER_CLI_NULL", NULL, NULL },
+	{ GLUSTER_CLI_PROBE, "GLUSTER_CLI_PROBE", NULL, NULL },
+	{ GLUSTER_CLI_DEPROBE, "GLUSTER_CLI_DEPROBE", NULL, NULL },
+	{ GLUSTER_CLI_LIST_FRIENDS, "GLUSTER_CLI_LIST_FRIENDS", NULL, NULL },
+	{ GLUSTER_CLI_CREATE_VOLUME, "GLUSTER_CLI_CREATE_VOLUME", NULL, NULL },
+	{ GLUSTER_CLI_GET_VOLUME, "GLUSTER_CLI_GET_VOLUME", NULL, NULL },
+	{ GLUSTER_CLI_GET_NEXT_VOLUME, "GLUSTER_CLI_GET_NEXT_VOLUME", NULL, NULL },
+	{ GLUSTER_CLI_DELETE_VOLUME, "GLUSTER_CLI_DELETE_VOLUME", NULL, NULL },
+	{ GLUSTER_CLI_START_VOLUME, "GLUSTER_CLI_START_VOLUME", NULL, NULL },
+	{ GLUSTER_CLI_STOP_VOLUME, "GLUSTER_CLI_STOP_VOLUME", NULL, NULL },
+	{ GLUSTER_CLI_RENAME_VOLUME, "GLUSTER_CLI_RENAME_VOLUME", NULL, NULL },
+	{ GLUSTER_CLI_DEFRAG_VOLUME, "GLUSTER_CLI_DEFRAG_VOLUME", NULL, NULL },
+	{ GLUSTER_CLI_SET_VOLUME, "GLUSTER_CLI_SET_VOLUME", NULL, NULL },
+	{ GLUSTER_CLI_ADD_BRICK, "GLUSTER_CLI_ADD_BRICK", NULL, NULL },
+	{ GLUSTER_CLI_REMOVE_BRICK, "GLUSTER_CLI_REMOVE_BRICK", NULL, NULL },
+	{ GLUSTER_CLI_REPLACE_BRICK, "GLUSTER_CLI_REPLACE_BRICK", NULL, NULL },
+	{ GLUSTER_CLI_LOG_FILENAME, "GLUSTER_CLI_LOG_FILENAME", NULL, NULL },
+	{ GLUSTER_CLI_LOG_LOCATE, "GLUSTER_CLI_LOG_LOCATE", NULL, NULL },
+	{ GLUSTER_CLI_LOG_ROTATE, "GLUSTER_CLI_LOG_ROTATE", NULL, NULL },
+	{ GLUSTER_CLI_GETSPEC, "GLUSTER_CLI_GETSPEC", NULL, NULL },
+	{ GLUSTER_CLI_PMAP_PORTBYBRICK, "GLUSTER_CLI_PMAP_PORTBYBRICK", NULL, NULL },
+	{ GLUSTER_CLI_SYNC_VOLUME, "GLUSTER_CLI_SYNC_VOLUME", NULL, NULL },
+	{ GLUSTER_CLI_RESET_VOLUME, "GLUSTER_CLI_RESET_VOLUME", NULL, NULL },
+	{ GLUSTER_CLI_FSM_LOG, "GLUSTER_CLI_FSM_LOG", NULL, NULL },
+	{ GLUSTER_CLI_GSYNC_SET, "GLUSTER_CLI_GSYNC_SET", NULL, NULL },
+	{ GLUSTER_CLI_PROFILE_VOLUME, "GLUSTER_CLI_PROFILE_VOLUME", NULL, NULL },
+	{ GLUSTER_CLI_QUOTA, "GLUSTER_CLI_QUOTA", NULL, NULL },
+	{ GLUSTER_CLI_TOP_VOLUME, "GLUSTER_CLI_TOP_VOLUME", NULL, NULL },
+	{ GLUSTER_CLI_GETWD, "GLUSTER_CLI_GETWD", NULL, NULL },
+	{ GLUSTER_CLI_LOG_LEVEL, "GLUSTER_CLI_LOG_LEVEL", NULL, NULL },
+	{ GLUSTER_CLI_STATUS_VOLUME, "GLUSTER_CLI_STATUS_VOLUME", NULL, NULL },
+	{ GLUSTER_CLI_MOUNT, "GLUSTER_CLI_MOUNT", NULL, NULL },
+	{ GLUSTER_CLI_UMOUNT, "GLUSTER_CLI_UMOUNT", NULL, NULL },
+	{ GLUSTER_CLI_HEAL_VOLUME, "GLUSTER_CLI_HEAL_VOLUME", NULL, NULL },
+	{ GLUSTER_CLI_STATEDUMP_VOLUME, "GLUSTER_CLI_STATEDUMP_VOLUME", NULL, NULL },
+	{ GLUSTER_CLI_MAXVALUE, "GLUSTER_CLI_MAXVALUE", NULL, NULL }
+};
+static const value_string gluster_cli_proc_vals[] = {
+	{ GLUSTER_CLI_NULL, "GLUSTER_CLI_NULL" },
+	{ GLUSTER_CLI_PROBE, "GLUSTER_CLI_PROBE" },
+	{ GLUSTER_CLI_DEPROBE, "GLUSTER_CLI_DEPROBE" },
+	{ GLUSTER_CLI_LIST_FRIENDS, "GLUSTER_CLI_LIST_FRIENDS" },
+	{ GLUSTER_CLI_CREATE_VOLUME, "GLUSTER_CLI_CREATE_VOLUME" },
+	{ GLUSTER_CLI_GET_VOLUME, "GLUSTER_CLI_GET_VOLUME" },
+	{ GLUSTER_CLI_GET_NEXT_VOLUME, "GLUSTER_CLI_GET_NEXT_VOLUME" },
+	{ GLUSTER_CLI_DELETE_VOLUME, "GLUSTER_CLI_DELETE_VOLUME" },
+	{ GLUSTER_CLI_START_VOLUME, "GLUSTER_CLI_START_VOLUME" },
+	{ GLUSTER_CLI_STOP_VOLUME, "GLUSTER_CLI_STOP_VOLUME" },
+	{ GLUSTER_CLI_RENAME_VOLUME, "GLUSTER_CLI_RENAME_VOLUME" },
+	{ GLUSTER_CLI_DEFRAG_VOLUME, "GLUSTER_CLI_DEFRAG_VOLUME" },
+	{ GLUSTER_CLI_SET_VOLUME, "GLUSTER_CLI_SET_VOLUME" },
+	{ GLUSTER_CLI_ADD_BRICK, "GLUSTER_CLI_ADD_BRICK" },
+	{ GLUSTER_CLI_REMOVE_BRICK, "GLUSTER_CLI_REMOVE_BRICK" },
+	{ GLUSTER_CLI_REPLACE_BRICK, "GLUSTER_CLI_REPLACE_BRICK" },
+	{ GLUSTER_CLI_LOG_FILENAME, "GLUSTER_CLI_LOG_FILENAME" },
+	{ GLUSTER_CLI_LOG_LOCATE, "GLUSTER_CLI_LOG_LOCATE" },
+	{ GLUSTER_CLI_LOG_ROTATE, "GLUSTER_CLI_LOG_ROTATE" },
+	{ GLUSTER_CLI_GETSPEC, "GLUSTER_CLI_GETSPEC" },
+	{ GLUSTER_CLI_PMAP_PORTBYBRICK, "GLUSTER_CLI_PMAP_PORTBYBRICK" },
+	{ GLUSTER_CLI_SYNC_VOLUME, "GLUSTER_CLI_SYNC_VOLUME" },
+	{ GLUSTER_CLI_RESET_VOLUME, "GLUSTER_CLI_RESET_VOLUME" },
+	{ GLUSTER_CLI_FSM_LOG, "GLUSTER_CLI_FSM_LOG" },
+	{ GLUSTER_CLI_GSYNC_SET, "GLUSTER_CLI_GSYNC_SET" },
+	{ GLUSTER_CLI_PROFILE_VOLUME, "GLUSTER_CLI_PROFILE_VOLUME" },
+	{ GLUSTER_CLI_QUOTA, "GLUSTER_CLI_QUOTA" },
+	{ GLUSTER_CLI_TOP_VOLUME, "GLUSTER_CLI_TOP_VOLUME" },
+	{ GLUSTER_CLI_GETWD, "GLUSTER_CLI_GETWD" },
+	{ GLUSTER_CLI_LOG_LEVEL, "GLUSTER_CLI_LOG_LEVEL" },
+	{ GLUSTER_CLI_STATUS_VOLUME, "GLUSTER_CLI_STATUS_VOLUME" },
+	{ GLUSTER_CLI_MOUNT, "GLUSTER_CLI_MOUNT" },
+	{ GLUSTER_CLI_UMOUNT, "GLUSTER_CLI_UMOUNT" },
+	{ GLUSTER_CLI_HEAL_VOLUME, "GLUSTER_CLI_HEAL_VOLUME" },
+	{ GLUSTER_CLI_STATEDUMP_VOLUME, "GLUSTER_CLI_STATEDUMP_VOLUME" },
+	{ GLUSTER_CLI_MAXVALUE, "GLUSTER_CLI_MAXVALUE" }
+};
+
 /* TODO: procedures for GLUSTER3_1_FOP_PROGRAM */
 /* TODO: procedures for GLUSTER_CBK_PROGRAM */
-/* TODO: procedures for GLUSTER_CLI_PROGRAM */
 /* TODO: procedures for GLUSTERD1_MGMT_PROGRAM */
 /* TODO: procedures for GLUSTER_PMAP_PROGRAM */
 
@@ -278,6 +347,10 @@ proto_register_gluster(void)
 		{ &hf_gluster_hndsk_proc,
 			{ "Gluster Handshake", "gluster.hndsk", FT_UINT32, BASE_DEC,
 			VALS(gluster_hndsk_proc_vals), 0, NULL, HFILL }
+		},
+		{ &hf_gluster_cli_proc,
+			{ "Gluster CLI", "gluster.cli", FT_UINT32, BASE_DEC,
+			VALS(gluster_cli_proc_vals), 0, NULL, HFILL }
 		}
 	};
 
@@ -287,7 +360,8 @@ proto_register_gluster(void)
 		&ett_gluster_dump,
 		&ett_gluster_mgmt,
 		&ett_gd_mgmt,
-		&ett_gluster_hndsk
+		&ett_gluster_hndsk,
+		&ett_gluster_cli
 	};
 
 /* Register the protocol name and description */
@@ -310,6 +384,9 @@ proto_register_gluster(void)
 	proto_gluster_hndsk = proto_register_protocol("Gluster Handshake",
 	    "Gluster Handshake", "gluster-hndsk");
 //	proto_register_field_array(proto_gluster_hndsk, hf_hndsk, array_length(hf_hndsk));
+
+	proto_gluster_cli = proto_register_protocol("Gluster CLI",
+	    "Gluster CLI", "gluster-cli");
 }
 
 
@@ -330,5 +407,8 @@ proto_reg_handoff_gluster(void)
 
 	rpc_init_prog(proto_gluster_hndsk, GLUSTER_HNDSK_PROGRAM, ett_gluster_hndsk);
 	rpc_init_proc_table(GLUSTER_HNDSK_PROGRAM, 1, gluster_hndsk_proc, hf_gluster_hndsk_proc);
+
+	rpc_init_prog(proto_gluster_cli, GLUSTER_CLI_PROGRAM, ett_gluster_cli);
+	rpc_init_proc_table(GLUSTER_CLI_PROGRAM, 1, gluster_cli_proc, hf_gluster_cli_proc);
 }
 
