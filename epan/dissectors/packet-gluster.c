@@ -368,22 +368,19 @@ proto_register_gluster(void)
 	proto_gluster = proto_register_protocol("Gluster",
 	    "Gluster", "gluster");
 	proto_register_subtree_array(ett, array_length(ett));
+	proto_register_field_array(proto_gluster, hf, array_length(hf));
 
 	proto_gluster_dump = proto_register_protocol("Gluster Dump",
 	    "Gluster Dump", "gluster-dump");
-	proto_register_field_array(proto_gluster_dump, hf, array_length(hf));
 
 	proto_gluster_mgmt = proto_register_protocol("Gluster Management",
 	    "Gluster Management", "gluster-mgmt");
-//	proto_register_field_array(proto_gluster_mgmt, hf_mgmt, array_length(hf_mgmt));
 
 	proto_gd_mgmt = proto_register_protocol("Gluster Daemon Management",
 	    "GlusterD Management", "gd-mgmt");
-//	proto_register_field_array(proto_gd_mgmt, hf_gd_mgmt, array_length(hf_gd_mgmt));
 
 	proto_gluster_hndsk = proto_register_protocol("Gluster Handshake",
 	    "Gluster Handshake", "gluster-hndsk");
-//	proto_register_field_array(proto_gluster_hndsk, hf_hndsk, array_length(hf_hndsk));
 
 	proto_gluster_cli = proto_register_protocol("Gluster CLI",
 	    "Gluster CLI", "gluster-cli");
