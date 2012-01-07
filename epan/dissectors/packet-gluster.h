@@ -225,6 +225,18 @@ enum gluster_prog_hndsk_procs {
 	GF_HNDSK_MAXVALUE,
 };
 
+/* rpc/rpc-lib/src/protocol-common.h */
+enum gf_pmap_procnum {
+	GF_PMAP_NULL = 0,
+	GF_PMAP_PORTBYBRICK,
+	GF_PMAP_BRICKBYPORT,
+	GF_PMAP_SIGNUP,
+	GF_PMAP_SIGNIN,
+	GF_PMAP_SIGNOUT,
+	GF_PMAP_MAXVALUE,
+};
+
+
 struct gluster_pkt_hdr {
 	guint32 size;				/* size of the packet */
 	gboolean last;				/* marker for the last packet */

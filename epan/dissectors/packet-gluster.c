@@ -47,6 +47,7 @@ static gint proto_gluster_mgmt = -1;
 static gint proto_gd_mgmt = -1;
 static gint proto_gluster_hndsk = -1;
 static gint proto_gluster_cli = -1;
+static gint proto_gluster_pmap = -1;
 
 static gint hf_gluster_dump_proc = -1;
 static gint hf_gluster_dump_gfsid = -1;
@@ -58,6 +59,7 @@ static gint hf_gluster_mgmt_proc = -1;
 static gint hf_gd_mgmt_proc = -1;
 static gint hf_gluster_hndsk_proc = -1;
 static gint hf_gluster_cli_proc = -1;
+static gint hf_gluster_pmap_proc = -1;
 
 /* Initialize the subtree pointers */
 static gint ett_gluster = -1;
@@ -66,6 +68,7 @@ static gint ett_gluster_mgmt = -1;
 static gint ett_gd_mgmt = -1;
 static gint ett_gluster_hndsk = -1;
 static gint ett_gluster_cli = -1;
+static gint ett_gluster_pmap = -1;
 
 static int gluster_dump_reply_item(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
 {
@@ -306,10 +309,29 @@ static const value_string gluster_cli_proc_vals[] = {
 	{ GLUSTER_CLI_MAXVALUE, "GLUSTER_CLI_MAXVALUE" }
 };
 
+/* procedures for GLUSTER_PMAP_PROGRAM come from xlators/mgmt/glusterd/src/glusterd-pmap.c */
+static const vsff gluster_pmap_proc[] = {
+	{ GF_PMAP_NULL, "NULL", NULL, NULL },
+	{ GF_PMAP_PORTBYBRICK, "PORTBYBRICK", NULL, NULL },
+	{ GF_PMAP_BRICKBYPORT, "BRICKBYPORT", NULL, NULL },
+	{ GF_PMAP_SIGNIN, "SIGNIN", NULL, NULL },
+	{ GF_PMAP_SIGNOUT, "SIGNOUT", NULL, NULL },
+	{ GF_PMAP_SIGNUP, "SIGNUP", NULL, NULL }
+};
+static const value_string gluster_pmap_proc_vals[] = {
+	{ GF_PMAP_NULL, "NULL" },
+	{ GF_PMAP_PORTBYBRICK, "PORTBYBRICK" },
+	{ GF_PMAP_BRICKBYPORT, "BRICKBYPORT" },
+	{ GF_PMAP_SIGNIN, "SIGNIN" },
+	{ GF_PMAP_SIGNOUT, "SIGNOUT" },
+	{ GF_PMAP_SIGNUP, "SIGNUP" }
+};
+
+
 /* TODO: procedures for GLUSTER3_1_FOP_PROGRAM */
 /* TODO: procedures for GLUSTER_CBK_PROGRAM */
 /* TODO: procedures for GLUSTERD1_MGMT_PROGRAM */
-/* TODO: procedures for GLUSTER_PMAP_PROGRAM */
+
 
 void
 proto_register_gluster(void)
@@ -351,6 +373,10 @@ proto_register_gluster(void)
 		{ &hf_gluster_cli_proc,
 			{ "Gluster CLI", "gluster.cli", FT_UINT32, BASE_DEC,
 			VALS(gluster_cli_proc_vals), 0, NULL, HFILL }
+		},
+		{ &hf_gluster_pmap_proc,
+			{ "Gluster Portmap", "gluster.pmap", FT_UINT32, BASE_DEC,
+			VALS(gluster_pmap_proc_vals), 0, NULL, HFILL }
 		}
 	};
 
@@ -361,7 +387,8 @@ proto_register_gluster(void)
 		&ett_gluster_mgmt,
 		&ett_gd_mgmt,
 		&ett_gluster_hndsk,
-		&ett_gluster_cli
+		&ett_gluster_cli,
+		&ett_gluster_pmap
 	};
 
 /* Register the protocol name and description */
@@ -384,6 +411,9 @@ proto_register_gluster(void)
 
 	proto_gluster_cli = proto_register_protocol("Gluster CLI",
 	    "Gluster CLI", "gluster-cli");
+
+	proto_gluster_pmap = proto_register_protocol("Gluster Portmap",
+	    "Gluster Portmap", "gluster-pmap");
 }
 
 
@@ -407,5 +437,8 @@ proto_reg_handoff_gluster(void)
 
 	rpc_init_prog(proto_gluster_cli, GLUSTER_CLI_PROGRAM, ett_gluster_cli);
 	rpc_init_proc_table(GLUSTER_CLI_PROGRAM, 1, gluster_cli_proc, hf_gluster_cli_proc);
+
+	rpc_init_prog(proto_gluster_pmap, GLUSTER_PMAP_PROGRAM, ett_gluster_pmap);
+	rpc_init_proc_table(GLUSTER_PMAP_PROGRAM, 1, gluster_pmap_proc, hf_gluster_pmap_proc);
 }
 
