@@ -104,12 +104,12 @@ static int gluster_dump_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, 
 static const vsff gluster_dump_proc[] = {
 	{ 0, "NULL", NULL, NULL },
 	{ GF_DUMP_DUMP, "DUMP", gluster_dump_call, gluster_dump_reply },
-	{ 0, "NULL", NULL, NULL }
+	{ 0, NULL, NULL, NULL }
 };
 static const value_string gluster_dump_proc_vals[] = {
 	{ 0, "NULL" },
 	{ GF_DUMP_DUMP, "DUMP" },
-	{ 0, "NULL" }
+	{ 0, NULL }
 };
 
 /* xlators/mgmt/glusterd/src/glusterd-rpc-ops.c */
@@ -135,7 +135,7 @@ static const value_string gluster_mgmt_proc_vals[] = {
 	{ GLUSTERD_MGMT_COMMIT_OP, "COMMIT_OP" },
 	{ GLUSTERD_MGMT_FRIEND_REMOVE, "FRIEND_REMOVE" },
 	{ GLUSTERD_MGMT_FRIEND_UPDATE, "FRIEND_UPDATE" },
-	{ 0, "NULL" }
+	{ 0, NULL }
 };
 
 static const vsff gd_mgmt_proc[] = {
@@ -174,7 +174,7 @@ static const vsff gd_mgmt_proc[] = {
 	{ GD_MGMT_CLI_LOG_LEVEL, "GD_MGMT_CLI_LOG_LEVEL", NULL, NULL},
 	{ GD_MGMT_CLI_STATUS_VOLUME, "GD_MGMT_CLI_STATUS_VOLUME", NULL, NULL},
 	{ GD_MGMT_MAXVALUE, "GD_MGMT_MAXVALUE", NULL, NULL},
-	{ 0, "NULL", NULL, NULL}
+	{ 0, NULL, NULL, NULL}
 };
 static const value_string gd_mgmt_proc_vals[] = {
 	{ GD_MGMT_NULL, "NULL" },
@@ -221,14 +221,14 @@ static const vsff gluster_hndsk_proc[] = {
 	{ GF_HNDSK_SETVOLUME, "DUMP", NULL, NULL },
 	{ GF_HNDSK_GETSPEC, "GETSPEC", NULL, NULL },
 	{ GF_HNDSK_PING, "PING", NULL, NULL },
-	{ 0, "NULL", NULL, NULL }
+	{ 0, NULL, NULL, NULL }
 };
 static const value_string gluster_hndsk_proc_vals[] = {
 	{ GF_HNDSK_NULL, "NULL" },
 	{ GF_HNDSK_SETVOLUME, "DUMP" },
 	{ GF_HNDSK_GETSPEC, "GETSPEC" },
 	{ GF_HNDSK_PING, "PING" },
-	{ 0, "NULL" }
+	{ 0, NULL }
 };
 
 /* procedures for GLUSTER_CLI_PROGRAM */
@@ -268,7 +268,8 @@ static const vsff gluster_cli_proc[] = {
 	{ GLUSTER_CLI_UMOUNT, "GLUSTER_CLI_UMOUNT", NULL, NULL },
 	{ GLUSTER_CLI_HEAL_VOLUME, "GLUSTER_CLI_HEAL_VOLUME", NULL, NULL },
 	{ GLUSTER_CLI_STATEDUMP_VOLUME, "GLUSTER_CLI_STATEDUMP_VOLUME", NULL, NULL },
-	{ GLUSTER_CLI_MAXVALUE, "GLUSTER_CLI_MAXVALUE", NULL, NULL }
+	{ GLUSTER_CLI_MAXVALUE, "GLUSTER_CLI_MAXVALUE", NULL, NULL },
+	{ 0, NULL, NULL, NULL }
 };
 static const value_string gluster_cli_proc_vals[] = {
 	{ GLUSTER_CLI_NULL, "GLUSTER_CLI_NULL" },
@@ -306,7 +307,8 @@ static const value_string gluster_cli_proc_vals[] = {
 	{ GLUSTER_CLI_UMOUNT, "GLUSTER_CLI_UMOUNT" },
 	{ GLUSTER_CLI_HEAL_VOLUME, "GLUSTER_CLI_HEAL_VOLUME" },
 	{ GLUSTER_CLI_STATEDUMP_VOLUME, "GLUSTER_CLI_STATEDUMP_VOLUME" },
-	{ GLUSTER_CLI_MAXVALUE, "GLUSTER_CLI_MAXVALUE" }
+	{ GLUSTER_CLI_MAXVALUE, "GLUSTER_CLI_MAXVALUE" },
+	{ 0, NULL }
 };
 
 /* procedures for GLUSTER_PMAP_PROGRAM come from xlators/mgmt/glusterd/src/glusterd-pmap.c */
