@@ -342,13 +342,13 @@ proto_register_gluster(void)
 {
 /* Setup list of header fields  See Section 1.6.1 for details*/
 	static hf_register_info hf[] = {
-		{ &hf_gluster_dump_gfsid,
-			{ "DUMP GFS ID", "gluster.dump.gfsid", FT_BYTES, BASE_NONE,
-			NULL, 0, NULL, HFILL }
-		},
 		{ &hf_gluster_dump_proc,
 			{ "Gluster DUMP", "gluster.dump", FT_UINT32, BASE_DEC,
 			VALS(gluster_dump_proc_vals), 0, NULL, HFILL }
+		},
+		{ &hf_gluster_dump_gfsid,
+			{ "DUMP GFS ID", "gluster.dump.gfsid", FT_BYTES, BASE_NONE,
+			NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_dump_progname,
 			{ "DUMP Program", "gluster.dump.progname", FT_STRING, BASE_NONE,
