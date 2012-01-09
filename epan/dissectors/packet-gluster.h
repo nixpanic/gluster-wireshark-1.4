@@ -32,17 +32,50 @@
 #ifndef __PACKET_GLUSTER_H__
 #define __PACKET_GLUSTER_H__
 
-#include <glib.h>
-
 #define GLUSTER_PORT		24007
 
-/* this comes from rpc/rpc-lib/src/protocol-common.h
- * TODO: use libglusterfs-devel
+/* most of this comes from rpc/rpc-lib/src/protocol-common.h
+ * Some versions are commented with a user-visible version, others are not.
+ * Some programs were introduced starting version 2.
  *
- * #include <gluster/rpc-lib/protocol-common.h>>
+ * Older versions were removed from the sources.
+ * One patch that did this is at http://review.gluster.com/610
  */
+#define GLUSTERD1_MGMT_PROGRAM	1298433
+/* only available in version 1 */
 
-enum gf_mgmt_procnum_ {
+#define GLUSTERFS_PROGRAM	4867634 /* same as GD_BRICK_PROGRAM */
+/* only available in version 1 (replaced by GD_BRICK_PROGRAM) */
+
+/* rpc/rpc-lib/src/xdr-common.h */
+#define GLUSTER_DUMP_PROGRAM	123451501
+/* only available in version 1 */
+
+#define GLUSTER_HNDSK_PROGRAM	14398633
+/* only available in version 1 (0.0.1) */
+
+#define GLUSTER_PMAP_PROGRAM	34123456
+/* only available in version 1 */
+
+#define GLUSTER_CBK_PROGRAM	52743234
+/* only available in version 1 (0.0.1) */
+
+#define GLUSTER3_1_FOP_PROGRAM	1298437
+/* available in version 310 (3.1.0) */
+
+#define GD_MGMT_PROGRAM		1238433
+/* available in version 1 and 2 */
+
+#define GD_FRIEND_PROGRAM	1238437
+/* only available in version 2 (0.0.2) */
+
+#define GLUSTER_CLI_PROGRAM	1238463
+/* available in version 1 (0.0.1) and 2 (0.0.2) */
+
+#define GD_BRICK_PROGRAM	4867634
+/* only available in version 2 (supersedes GLUSTERFS_PROGRAM) */
+
+enum gf_mgmt_procnum {
         GD_MGMT_NULL,    /* 0 */
         GD_MGMT_PROBE_QUERY,
         GD_MGMT_FRIEND_ADD,
@@ -79,8 +112,6 @@ enum gf_mgmt_procnum_ {
         GD_MGMT_CLI_STATUS_VOLUME,
         GD_MGMT_MAXVALUE,
 };
-typedef enum gf_mgmt_procnum_ gf_mgmt_procnum;
-
 
 enum gluster_cli_procnum {
         GLUSTER_CLI_NULL,    /* 0 */
@@ -121,21 +152,6 @@ enum gluster_cli_procnum {
         GLUSTER_CLI_MAXVALUE,
 };
 
-/* numbers are spread over a load of files */
-enum gluster_prognums {
-	GD_MGMT_PROGRAM        = 1238433,
-	GLUSTER3_1_FOP_PROGRAM = 1298437,
-	GLUSTER_CBK_PROGRAM    = 52743234,
-	GLUSTER_CLI_PROGRAM    = 1238463,
-	GLUSTERD1_MGMT_PROGRAM = 1298433,
-	GLUSTER_DUMP_PROGRAM   = 123451501,
-	GLUSTERFS_PROGRAM      = 4867634,
-	GLUSTER_HNDSK_PROGRAM  = 14398633,
-	GLUSTER_PMAP_PROGRAM   = 34123456,
-};
-
-/* rpc/rpc-lib/src/xdr-common.h:gf_dump_procnum
- * gf_dump_procnum does not contain a 0-value */
 enum gluster_prog_dump_procs {
 	GF_DUMP_NULL /* = 0 */,
 	GF_DUMP_DUMP,
@@ -155,7 +171,6 @@ enum glusterd_mgmt_procnum {
 	GLUSTERD_MGMT_MAXVALUE,
 };
 
-/* rpc/rpc-lib/src/protocol-common.h */
 enum gf_brick_procnum {
 	GF_BRICK_NULL = 0,
 	GF_BRICK_TERMINATE = 1,
@@ -172,7 +187,6 @@ enum gluster_prog_hndsk_procs {
 	GF_HNDSK_MAXVALUE,
 };
 
-/* rpc/rpc-lib/src/protocol-common.h */
 enum gf_pmap_procnum {
 	GF_PMAP_NULL = 0,
 	GF_PMAP_PORTBYBRICK,
@@ -181,6 +195,15 @@ enum gf_pmap_procnum {
 	GF_PMAP_SIGNIN,
 	GF_PMAP_SIGNOUT,
 	GF_PMAP_MAXVALUE,
+};
+
+enum glusterd_brick_procnum {
+	GLUSTERD_BRICK_NULL,    /* 0 */
+	GLUSTERD_BRICK_TERMINATE,
+	GLUSTERD_BRICK_XLATOR_INFO,
+	GLUSTERD_BRICK_XLATOR_HEAL,
+	GLUSTERD_BRICK_OP,
+	GLUSTERD_BRICK_MAXVALUE,
 };
 
 #endif /* __PACKET_GLUSTER_H__ */
