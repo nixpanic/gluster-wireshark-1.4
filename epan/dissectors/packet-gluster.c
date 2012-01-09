@@ -123,7 +123,7 @@ static const vsff gluster_mgmt_proc[] = {
 	{ GLUSTERD_MGMT_COMMIT_OP, "COMMIT_OP", NULL, NULL },
 	{ GLUSTERD_MGMT_FRIEND_REMOVE, "FRIEND_REMOVE", NULL, NULL },
 	{ GLUSTERD_MGMT_FRIEND_UPDATE, "FRIEND_UPDATE", NULL, NULL },
-	{ 0, "NULL", NULL, NULL }
+	{ 0, NULL, NULL, NULL }
 };
 static const value_string gluster_mgmt_proc_vals[] = {
 	{ GLUSTERD_MGMT_NULL, "NULL" },
@@ -212,7 +212,7 @@ static const value_string gd_mgmt_proc_vals[] = {
 	{ GD_MGMT_CLI_LOG_LEVEL, "GD_MGMT_CLI_LOG_LEVEL" },
 	{ GD_MGMT_CLI_STATUS_VOLUME, "GD_MGMT_CLI_STATUS_VOLUME" },
 	{ GD_MGMT_MAXVALUE, "GD_MGMT_MAXVALUE" },
-	{ 0, "NULL" }
+	{ 0, NULL }
 };
 
 /* procedures for GLUSTER_HNDSK_PROGRAM */
@@ -318,7 +318,8 @@ static const vsff gluster_pmap_proc[] = {
 	{ GF_PMAP_BRICKBYPORT, "BRICKBYPORT", NULL, NULL },
 	{ GF_PMAP_SIGNIN, "SIGNIN", NULL, NULL },
 	{ GF_PMAP_SIGNOUT, "SIGNOUT", NULL, NULL },
-	{ GF_PMAP_SIGNUP, "SIGNUP", NULL, NULL }
+	{ GF_PMAP_SIGNUP, "SIGNUP", NULL, NULL },
+	{ 0, NULL, NULL, NULL }
 };
 static const value_string gluster_pmap_proc_vals[] = {
 	{ GF_PMAP_NULL, "NULL" },
@@ -326,7 +327,8 @@ static const value_string gluster_pmap_proc_vals[] = {
 	{ GF_PMAP_BRICKBYPORT, "BRICKBYPORT" },
 	{ GF_PMAP_SIGNIN, "SIGNIN" },
 	{ GF_PMAP_SIGNOUT, "SIGNOUT" },
-	{ GF_PMAP_SIGNUP, "SIGNUP" }
+	{ GF_PMAP_SIGNUP, "SIGNUP" },
+	{ 0, NULL }
 };
 
 
