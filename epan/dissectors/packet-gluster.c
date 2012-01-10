@@ -144,6 +144,10 @@ static const value_string gluster_mgmt_proc_vals[] = {
 	{ 0, NULL }
 };
 
+/* GD_MGMT_PROGRAM
+ * - xlators/mgmt/glusterd/src/glusterd-handler.c: "GlusterD svc mgmt"
+ * - xlators/mgmt/glusterd/src/glusterd-rpc-ops.c: "glusterd clnt mgmt"
+ */
 static const vsff gd_mgmt_proc[] = {
 	{ GD_MGMT_NULL, "NULL", NULL, NULL},
 	{ GD_MGMT_PROBE_QUERY, "GD_MGMT_PROBE_QUERY", NULL, NULL},
