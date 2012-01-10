@@ -49,6 +49,7 @@ static gint proto_gluster_hndsk = -1;
 static gint proto_gluster_cli = -1;
 static gint proto_gluster_pmap = -1;
 static gint proto_gluster_cbk = -1;
+static gint proto_gluster_fs = -1;
 
 static gint hf_gluster_dump_proc = -1;
 static gint hf_gluster_dump_gfsid = -1;
@@ -62,6 +63,7 @@ static gint hf_gluster_hndsk_proc = -1;
 static gint hf_gluster_cli_proc = -1;
 static gint hf_gluster_pmap_proc = -1;
 static gint hf_gluster_cbk_proc = -1;
+static gint hf_gluster_fs_proc = -1;
 
 /* Initialize the subtree pointers */
 static gint ett_gluster = -1;
@@ -72,6 +74,7 @@ static gint ett_gluster_hndsk = -1;
 static gint ett_gluster_cli = -1;
 static gint ett_gluster_pmap = -1;
 static gint ett_gluster_cbk = -1;
+static gint ett_gluster_fs = -1;
 
 static int gluster_dump_reply_item(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
 {
@@ -348,9 +351,31 @@ static const value_string gluster_cbk_proc_vals[] = {
 	{ 0, NULL }
 };
 
+/* procedures for GLUSTERFS_PROGRAM "GlusterFS Mops"
+ *
+ * This seems to be spread over multiple files (are Call/Reply seperated?)
+ * - xlators/mgmt/glusterd/src/glusterd-rpc-ops.c
+ * - glusterfsd/src/glusterfsd-mgmt.c
+ */
+static const vsff gluster_fs_proc[] = {
+	{ GD_MGMT_NULL, "NULL", NULL, NULL },
+	{ GD_MGMT_BRICK_OP, "BRICK_OP", NULL, NULL },
+	{ GF_BRICK_NULL, "NULL", NULL, NULL },
+	{ GF_BRICK_TERMINATE, "TERMINATE", NULL, NULL },
+	{ GF_BRICK_XLATOR_INFO, "TRANSLATOR INFO", NULL, NULL },
+	{ 0, NULL, NULL, NULL }
+};
+static const value_string gluster_fs_proc_vals[] = {
+	{ GD_MGMT_NULL, "NULL" },
+	{ GD_MGMT_BRICK_OP, "BRICK_OP" },
+	{ GF_BRICK_NULL, "NULL" },
+	{ GF_BRICK_TERMINATE, "TERMINATE" },
+	{ GF_BRICK_XLATOR_INFO, "TRANSLATOR INFO" },
+	{ 0, NULL }
+};
+
 /* TODO: procedures for GLUSTER3_1_FOP_PROGRAM */
 /* TODO: procedures for GLUSTERD1_MGMT_PROGRAM */
-/* TODO: procedures for GLUSTERFS_PROGRAM "GlusterFS Mops" */
 
 
 void
@@ -401,6 +426,10 @@ proto_register_gluster(void)
 		{ &hf_gluster_cbk_proc,
 			{ "GlusterFS Callback", "gluster.cbk", FT_UINT32, BASE_DEC,
 			VALS(gluster_cbk_proc_vals), 0, NULL, HFILL }
+		},
+		{ &hf_gluster_fs_proc,
+			{ "GlusterFS Mops", "gluster.mops", FT_UINT32, BASE_DEC,
+			VALS(gluster_fs_proc_vals), 0, NULL, HFILL }
 		}
 	};
 
@@ -413,7 +442,8 @@ proto_register_gluster(void)
 		&ett_gluster_hndsk,
 		&ett_gluster_cli,
 		&ett_gluster_pmap,
-		&ett_gluster_cbk
+		&ett_gluster_cbk,
+		&ett_gluster_fs
 	};
 
 /* Register the protocol name and description */
@@ -442,6 +472,9 @@ proto_register_gluster(void)
 
 	proto_gluster_cbk = proto_register_protocol("GlusterFS Callback",
 	    "GlusterFS Callback", "gluster-cbk");
+
+	proto_gluster_fs = proto_register_protocol("GlusterFS Mops",
+	    "GlusterFS Mops", "gluster-mops");
 }
 
 
@@ -471,5 +504,8 @@ proto_reg_handoff_gluster(void)
 
 	rpc_init_prog(proto_gluster_cbk, GLUSTER_CBK_PROGRAM, ett_gluster_cbk);
 	rpc_init_proc_table(GLUSTER_CBK_PROGRAM, 1, gluster_cbk_proc, hf_gluster_cbk_proc);
+
+	rpc_init_prog(proto_gluster_fs, GLUSTERFS_PROGRAM, ett_gluster_fs);
+	rpc_init_proc_table(GLUSTERFS_PROGRAM, 1, gluster_fs_proc, hf_gluster_fs_proc);
 }
 
