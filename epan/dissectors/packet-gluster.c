@@ -48,6 +48,7 @@ static gint proto_gd_mgmt = -1;
 static gint proto_gluster_hndsk = -1;
 static gint proto_gluster_cli = -1;
 static gint proto_gluster_pmap = -1;
+static gint proto_gluster_cbk = -1;
 
 static gint hf_gluster_dump_proc = -1;
 static gint hf_gluster_dump_gfsid = -1;
@@ -60,6 +61,7 @@ static gint hf_gd_mgmt_proc = -1;
 static gint hf_gluster_hndsk_proc = -1;
 static gint hf_gluster_cli_proc = -1;
 static gint hf_gluster_pmap_proc = -1;
+static gint hf_gluster_cbk_proc = -1;
 
 /* Initialize the subtree pointers */
 static gint ett_gluster = -1;
@@ -69,6 +71,7 @@ static gint ett_gd_mgmt = -1;
 static gint ett_gluster_hndsk = -1;
 static gint ett_gluster_cli = -1;
 static gint ett_gluster_pmap = -1;
+static gint ett_gluster_cbk = -1;
 
 static int gluster_dump_reply_item(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
 {
@@ -331,9 +334,21 @@ static const value_string gluster_pmap_proc_vals[] = {
 	{ 0, NULL }
 };
 
+/* procedures for GLUSTER_CBK_PROGRAM */
+static const vsff gluster_cbk_proc[] = {
+        { GF_CBK_NULL, "NULL", NULL, NULL },
+        { GF_CBK_FETCHSPEC, "FETCHSPEC", NULL, NULL },
+        { GF_CBK_INO_FLUSH, "INO_FLUSH", NULL, NULL },
+	{ 0, NULL, NULL, NULL }
+};
+static const value_string gluster_cbk_proc_vals[] = {
+        { GF_CBK_NULL, "NULL" },
+        { GF_CBK_FETCHSPEC, "FETCHSPEC" },
+        { GF_CBK_INO_FLUSH, "INO_FLUSH" },
+	{ 0, NULL }
+};
 
 /* TODO: procedures for GLUSTER3_1_FOP_PROGRAM */
-/* TODO: procedures for GLUSTER_CBK_PROGRAM */
 /* TODO: procedures for GLUSTERD1_MGMT_PROGRAM */
 
 
@@ -381,6 +396,10 @@ proto_register_gluster(void)
 		{ &hf_gluster_pmap_proc,
 			{ "Gluster Portmap", "gluster.pmap", FT_UINT32, BASE_DEC,
 			VALS(gluster_pmap_proc_vals), 0, NULL, HFILL }
+		},
+		{ &hf_gluster_cbk_proc,
+			{ "GlusterFS Callback", "gluster.cbk", FT_UINT32, BASE_DEC,
+			VALS(gluster_cbk_proc_vals), 0, NULL, HFILL }
 		}
 	};
 
@@ -392,7 +411,8 @@ proto_register_gluster(void)
 		&ett_gd_mgmt,
 		&ett_gluster_hndsk,
 		&ett_gluster_cli,
-		&ett_gluster_pmap
+		&ett_gluster_pmap,
+		&ett_gluster_cbk
 	};
 
 /* Register the protocol name and description */
@@ -418,6 +438,9 @@ proto_register_gluster(void)
 
 	proto_gluster_pmap = proto_register_protocol("Gluster Portmap",
 	    "Gluster Portmap", "gluster-pmap");
+
+	proto_gluster_cbk = proto_register_protocol("GlusterFS Callback",
+	    "GlusterFS Callback", "gluster-cbk");
 }
 
 
@@ -444,5 +467,8 @@ proto_reg_handoff_gluster(void)
 
 	rpc_init_prog(proto_gluster_pmap, GLUSTER_PMAP_PROGRAM, ett_gluster_pmap);
 	rpc_init_proc_table(GLUSTER_PMAP_PROGRAM, 1, gluster_pmap_proc, hf_gluster_pmap_proc);
+
+	rpc_init_prog(proto_gluster_cbk, GLUSTER_CBK_PROGRAM, ett_gluster_cbk);
+	rpc_init_proc_table(GLUSTER_CBK_PROGRAM, 1, gluster_cbk_proc, hf_gluster_cbk_proc);
 }
 

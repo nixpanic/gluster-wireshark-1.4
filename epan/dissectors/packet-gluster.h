@@ -206,4 +206,11 @@ enum glusterd_brick_procnum {
 	GLUSTERD_BRICK_MAXVALUE,
 };
 
+enum gf_cbk_procnum {
+	GF_CBK_NULL = 0,
+	GF_CBK_FETCHSPEC,
+	GF_CBK_INO_FLUSH,
+	GF_CBK_MAXVALUE,
+};
+
 #endif /* __PACKET_GLUSTER_H__ */
