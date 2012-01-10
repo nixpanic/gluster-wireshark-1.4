@@ -8,12 +8,6 @@
  * By Gerald Combs <gerald@wireshark.org>
  * Copyright 1998 Gerald Combs
  *
- * Copied from WHATEVER_FILE_YOU_USED (where "WHATEVER_FILE_YOU_USED"
- * is a dissector file; if you just copied this from README.developer,
- * don't bother with the "Copied from" - you don't even need to put
- * in a "Copied from" if you copied an existing dissector, especially
- * if the bulk of the code in the new dissector is your code)
- *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -27,6 +21,16 @@
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ *
+ * References to source files point in general to the glusterfs sources.
+ * There is currently no RFC or other document where the protocol is
+ * completely described. The glusterfs sources can be found at:
+ * - http://git.gluster.com/?p=glusterfs.git
+ * - https://github.com/gluster/glusterfs
+ *
+ * The coding-style is roughly the same as the one use in the Linux kernel,
+ * see http://www.kernel.org/doc/Documentation/CodingStyle.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -76,31 +80,43 @@ static gint ett_gluster_pmap = -1;
 static gint ett_gluster_cbk = -1;
 static gint ett_gluster_fs = -1;
 
-static int gluster_dump_reply_item(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
+static int
+gluster_dump_reply_item(tvbuff_t *tvb, int offset, packet_info *pinfo _U_,
+							proto_tree *tree)
 {
 	gchar *progname = NULL;
 
 	/* progname */
-	offset = dissect_rpc_string(tvb, tree, hf_gluster_dump_progname, offset, &progname);
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_dump_progname, offset,
+								&progname);
 	/* prognumber */
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_dump_prognum, offset);
 	/* progversion */
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_dump_progver, offset);
+	/* FIXME:  it seems that there is an other xdr-byte of data? */
 
 	return offset;
 }
 
-static int gluster_dump_reply(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
+static int
+gluster_dump_reply(tvbuff_t *tvb, int offset, packet_info *pinfo _U_,
+							proto_tree *tree)
 {
-	offset = dissect_rpc_list(tvb, pinfo, tree, offset, gluster_dump_reply_item);
+	/* FIXME: I don't think this is how it works */
+	offset = dissect_rpc_list(tvb, pinfo, tree, offset,
+						gluster_dump_reply_item);
 
 	return offset;
 }
 
 /* DUMP request */
-static int gluster_dump_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
+static int
+gluster_dump_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U_,
+							proto_tree *tree)
 {
-	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_dump_gfsid, offset, 8, FALSE, NULL);
+	/* FIXME: this does *not* display the data, only the label */
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_dump_gfsid, offset, 8,
+								FALSE, NULL);
 
 	return offset;
 }
@@ -118,7 +134,7 @@ static const value_string gluster_dump_proc_vals[] = {
 	{ 0, NULL }
 };
 
-/* xlators/mgmt/glusterd/src/glusterd-rpc-ops.c */
+/* GLUSTERD1_MGMT_PROGRAM from xlators/mgmt/glusterd/src/glusterd-rpc-ops.c */
 static const vsff gluster_mgmt_proc[] = {
 	{ GLUSTERD_MGMT_NULL, "NULL", NULL, NULL },
 	{ GLUSTERD_MGMT_PROBE_QUERY, "PROBE_QUERY", NULL, NULL },
@@ -144,7 +160,8 @@ static const value_string gluster_mgmt_proc_vals[] = {
 	{ 0, NULL }
 };
 
-/* GD_MGMT_PROGRAM
+/*
+ * GD_MGMT_PROGRAM
  * - xlators/mgmt/glusterd/src/glusterd-handler.c: "GlusterD svc mgmt"
  * - xlators/mgmt/glusterd/src/glusterd-rpc-ops.c: "glusterd clnt mgmt"
  */
@@ -249,7 +266,10 @@ static const vsff gluster_cli_proc[] = {
 	{ GLUSTER_CLI_LIST_FRIENDS, "GLUSTER_CLI_LIST_FRIENDS", NULL, NULL },
 	{ GLUSTER_CLI_CREATE_VOLUME, "GLUSTER_CLI_CREATE_VOLUME", NULL, NULL },
 	{ GLUSTER_CLI_GET_VOLUME, "GLUSTER_CLI_GET_VOLUME", NULL, NULL },
-	{ GLUSTER_CLI_GET_NEXT_VOLUME, "GLUSTER_CLI_GET_NEXT_VOLUME", NULL, NULL },
+	{
+		GLUSTER_CLI_GET_NEXT_VOLUME, "GLUSTER_CLI_GET_NEXT_VOLUME",
+		NULL, NULL
+	},
 	{ GLUSTER_CLI_DELETE_VOLUME, "GLUSTER_CLI_DELETE_VOLUME", NULL, NULL },
 	{ GLUSTER_CLI_START_VOLUME, "GLUSTER_CLI_START_VOLUME", NULL, NULL },
 	{ GLUSTER_CLI_STOP_VOLUME, "GLUSTER_CLI_STOP_VOLUME", NULL, NULL },
@@ -263,12 +283,18 @@ static const vsff gluster_cli_proc[] = {
 	{ GLUSTER_CLI_LOG_LOCATE, "GLUSTER_CLI_LOG_LOCATE", NULL, NULL },
 	{ GLUSTER_CLI_LOG_ROTATE, "GLUSTER_CLI_LOG_ROTATE", NULL, NULL },
 	{ GLUSTER_CLI_GETSPEC, "GLUSTER_CLI_GETSPEC", NULL, NULL },
-	{ GLUSTER_CLI_PMAP_PORTBYBRICK, "GLUSTER_CLI_PMAP_PORTBYBRICK", NULL, NULL },
+	{
+		GLUSTER_CLI_PMAP_PORTBYBRICK, "GLUSTER_CLI_PMAP_PORTBYBRICK",
+		NULL, NULL
+	},
 	{ GLUSTER_CLI_SYNC_VOLUME, "GLUSTER_CLI_SYNC_VOLUME", NULL, NULL },
 	{ GLUSTER_CLI_RESET_VOLUME, "GLUSTER_CLI_RESET_VOLUME", NULL, NULL },
 	{ GLUSTER_CLI_FSM_LOG, "GLUSTER_CLI_FSM_LOG", NULL, NULL },
 	{ GLUSTER_CLI_GSYNC_SET, "GLUSTER_CLI_GSYNC_SET", NULL, NULL },
-	{ GLUSTER_CLI_PROFILE_VOLUME, "GLUSTER_CLI_PROFILE_VOLUME", NULL, NULL },
+	{
+		GLUSTER_CLI_PROFILE_VOLUME, "GLUSTER_CLI_PROFILE_VOLUME",
+		NULL, NULL
+	},
 	{ GLUSTER_CLI_QUOTA, "GLUSTER_CLI_QUOTA", NULL, NULL },
 	{ GLUSTER_CLI_TOP_VOLUME, "GLUSTER_CLI_TOP_VOLUME", NULL, NULL },
 	{ GLUSTER_CLI_GETWD, "GLUSTER_CLI_GETWD", NULL, NULL },
@@ -277,7 +303,10 @@ static const vsff gluster_cli_proc[] = {
 	{ GLUSTER_CLI_MOUNT, "GLUSTER_CLI_MOUNT", NULL, NULL },
 	{ GLUSTER_CLI_UMOUNT, "GLUSTER_CLI_UMOUNT", NULL, NULL },
 	{ GLUSTER_CLI_HEAL_VOLUME, "GLUSTER_CLI_HEAL_VOLUME", NULL, NULL },
-	{ GLUSTER_CLI_STATEDUMP_VOLUME, "GLUSTER_CLI_STATEDUMP_VOLUME", NULL, NULL },
+	{
+		GLUSTER_CLI_STATEDUMP_VOLUME, "GLUSTER_CLI_STATEDUMP_VOLUME",
+		NULL, NULL
+	},
 	{ GLUSTER_CLI_MAXVALUE, "GLUSTER_CLI_MAXVALUE", NULL, NULL },
 	{ 0, NULL, NULL, NULL }
 };
@@ -321,7 +350,7 @@ static const value_string gluster_cli_proc_vals[] = {
 	{ 0, NULL }
 };
 
-/* procedures for GLUSTER_PMAP_PROGRAM come from xlators/mgmt/glusterd/src/glusterd-pmap.c */
+/* GLUSTER_PMAP_PROGRAM from xlators/mgmt/glusterd/src/glusterd-pmap.c */
 static const vsff gluster_pmap_proc[] = {
 	{ GF_PMAP_NULL, "NULL", NULL, NULL },
 	{ GF_PMAP_PORTBYBRICK, "PORTBYBRICK", NULL, NULL },
@@ -355,7 +384,8 @@ static const value_string gluster_cbk_proc_vals[] = {
 	{ 0, NULL }
 };
 
-/* procedures for GLUSTERFS_PROGRAM "GlusterFS Mops"
+/*
+ * procedures for GLUSTERFS_PROGRAM "GlusterFS Mops"
  *
  * This seems to be spread over multiple files (are Call/Reply seperated?)
  * - xlators/mgmt/glusterd/src/glusterd-rpc-ops.c
@@ -385,59 +415,65 @@ static const value_string gluster_fs_proc_vals[] = {
 void
 proto_register_gluster(void)
 {
-/* Setup list of header fields  See Section 1.6.1 for details*/
+	/* Setup list of header fields  See Section 1.6.1 for details */
 	static hf_register_info hf[] = {
 		{ &hf_gluster_dump_proc,
 			{ "Gluster DUMP", "gluster.dump", FT_UINT32, BASE_DEC,
-			VALS(gluster_dump_proc_vals), 0, NULL, HFILL }
+				VALS(gluster_dump_proc_vals), 0, NULL, HFILL }
 		},
 		{ &hf_gluster_dump_gfsid,
-			{ "DUMP GFS ID", "gluster.dump.gfsid", FT_BYTES, BASE_NONE,
-			NULL, 0, NULL, HFILL }
+			{ "DUMP GFS ID", "gluster.dump.gfsid", FT_BYTES,
+				BASE_NONE, NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_dump_progname,
-			{ "DUMP Program", "gluster.dump.progname", FT_STRING, BASE_NONE,
-			NULL, 0, NULL, HFILL }
+			{ "DUMP Program", "gluster.dump.progname", FT_STRING,
+				BASE_NONE, NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_dump_prognum,
-			{ "DUMP Program Numbver", "gluster.dump.prognum", FT_UINT32, BASE_DEC,
-			NULL, 0, NULL, HFILL }
+			{ "DUMP Program Numbver", "gluster.dump.prognum",
+				FT_UINT32, BASE_DEC, NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_dump_progver,
-			{ "DUMP Program Version", "gluster.dump.progver", FT_UINT32, BASE_DEC,
-			NULL, 0, NULL, HFILL }
+			{ "DUMP Program Version", "gluster.dump.progver",
+				FT_UINT32, BASE_DEC, NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_mgmt_proc,
-			{ "Gluster Management", "gluster.mgmt", FT_UINT32, BASE_DEC,
-			VALS(gluster_mgmt_proc_vals), 0, NULL, HFILL }
+			{ "Gluster Management", "gluster.mgmt", FT_UINT32,
+				BASE_DEC, VALS(gluster_mgmt_proc_vals), 0,
+				NULL, HFILL }
 		},
 		{ &hf_gd_mgmt_proc,
-			{ "Gluster Daemon Management", "glusterd.mgmt", FT_UINT32, BASE_DEC,
-			VALS(gd_mgmt_proc_vals), 0, NULL, HFILL }
+			{ "Gluster Daemon Management", "glusterd.mgmt",
+				FT_UINT32, BASE_DEC, VALS(gd_mgmt_proc_vals),
+				0, NULL, HFILL }
 		},
 		{ &hf_gluster_hndsk_proc,
-			{ "Gluster Handshake", "gluster.hndsk", FT_UINT32, BASE_DEC,
-			VALS(gluster_hndsk_proc_vals), 0, NULL, HFILL }
+			{ "Gluster Handshake", "gluster.hndsk", FT_UINT32,
+				BASE_DEC, VALS(gluster_hndsk_proc_vals), 0,
+				NULL, HFILL }
 		},
 		{ &hf_gluster_cli_proc,
 			{ "Gluster CLI", "gluster.cli", FT_UINT32, BASE_DEC,
-			VALS(gluster_cli_proc_vals), 0, NULL, HFILL }
+				VALS(gluster_cli_proc_vals), 0, NULL, HFILL }
 		},
 		{ &hf_gluster_pmap_proc,
-			{ "Gluster Portmap", "gluster.pmap", FT_UINT32, BASE_DEC,
-			VALS(gluster_pmap_proc_vals), 0, NULL, HFILL }
+			{ "Gluster Portmap", "gluster.pmap", FT_UINT32,
+				BASE_DEC, VALS(gluster_pmap_proc_vals), 0,
+				NULL, HFILL }
 		},
 		{ &hf_gluster_cbk_proc,
-			{ "GlusterFS Callback", "gluster.cbk", FT_UINT32, BASE_DEC,
-			VALS(gluster_cbk_proc_vals), 0, NULL, HFILL }
+			{ "GlusterFS Callback", "gluster.cbk", FT_UINT32,
+				BASE_DEC, VALS(gluster_cbk_proc_vals), 0, NULL,
+				HFILL }
 		},
 		{ &hf_gluster_fs_proc,
-			{ "GlusterFS Mops", "gluster.mops", FT_UINT32, BASE_DEC,
-			VALS(gluster_fs_proc_vals), 0, NULL, HFILL }
+			{ "GlusterFS Mops", "gluster.mops", FT_UINT32,
+				BASE_DEC, VALS(gluster_fs_proc_vals), 0, NULL,
+				HFILL }
 		}
 	};
 
-/* Setup protocol subtree array */
+	/* Setup protocol subtree array */
 	static gint *ett[] = {
 		&ett_gluster,
 		&ett_gluster_dump,
@@ -450,66 +486,74 @@ proto_register_gluster(void)
 		&ett_gluster_fs
 	};
 
-/* Register the protocol name and description */
-	proto_gluster = proto_register_protocol("Gluster",
-	    "Gluster", "gluster");
+	/* Register the protocol name and description */
+	proto_gluster = proto_register_protocol("Gluster", "Gluster",
+								"gluster");
 	proto_register_subtree_array(ett, array_length(ett));
 	proto_register_field_array(proto_gluster, hf, array_length(hf));
 
 	proto_gluster_dump = proto_register_protocol("Gluster Dump",
-	    "Gluster Dump", "gluster-dump");
+					"Gluster Dump", "gluster-dump");
 
 	proto_gluster_mgmt = proto_register_protocol("Gluster Management",
-	    "Gluster Management", "gluster-mgmt");
+					"Gluster Management", "gluster-mgmt");
 
 	proto_gd_mgmt = proto_register_protocol("Gluster Daemon Management",
-	    "GlusterD Management", "gd-mgmt");
+					"GlusterD Management", "gd-mgmt");
 
 	proto_gluster_hndsk = proto_register_protocol("GlusterFS Handshake",
-	    "GlusterFS Handshake", "gluster-hndsk");
+					"GlusterFS Handshake", "gluster-hndsk");
 
 	proto_gluster_cli = proto_register_protocol("Gluster CLI",
-	    "Gluster CLI", "gluster-cli");
+					"Gluster CLI", "gluster-cli");
 
 	proto_gluster_pmap = proto_register_protocol("Gluster Portmap",
-	    "Gluster Portmap", "gluster-pmap");
+					"Gluster Portmap", "gluster-pmap");
 
 	proto_gluster_cbk = proto_register_protocol("GlusterFS Callback",
-	    "GlusterFS Callback", "gluster-cbk");
+					"GlusterFS Callback", "gluster-cbk");
 
 	proto_gluster_fs = proto_register_protocol("GlusterFS Mops",
-	    "GlusterFS Mops", "gluster-mops");
+					"GlusterFS Mops", "gluster-mops");
 }
 
 
-/* Simple form of proto_reg_handoff_PROTOABBREV which can be used if there are
-   no prefs-dependent registration function calls.
- */
 void
 proto_reg_handoff_gluster(void)
 {
-	rpc_init_prog(proto_gluster_dump, GLUSTER_DUMP_PROGRAM, ett_gluster_dump);
-	rpc_init_proc_table(GLUSTER_DUMP_PROGRAM, 1, gluster_dump_proc, hf_gluster_dump_proc);
+	rpc_init_prog(proto_gluster_dump, GLUSTER_DUMP_PROGRAM,
+							ett_gluster_dump);
+	rpc_init_proc_table(GLUSTER_DUMP_PROGRAM, 1, gluster_dump_proc,
+							hf_gluster_dump_proc);
 
-	rpc_init_prog(proto_gluster_mgmt, GLUSTERD1_MGMT_PROGRAM, ett_gluster_mgmt);
-	rpc_init_proc_table(GLUSTERD1_MGMT_PROGRAM, 1, gluster_mgmt_proc, hf_gluster_mgmt_proc);
+	rpc_init_prog(proto_gluster_mgmt, GLUSTERD1_MGMT_PROGRAM,
+							ett_gluster_mgmt);
+	rpc_init_proc_table(GLUSTERD1_MGMT_PROGRAM, 1, gluster_mgmt_proc,
+							hf_gluster_mgmt_proc);
 
 	rpc_init_prog(proto_gd_mgmt, GD_MGMT_PROGRAM, ett_gd_mgmt);
 	rpc_init_proc_table(GD_MGMT_PROGRAM, 1, gd_mgmt_proc, hf_gd_mgmt_proc);
 
-	rpc_init_prog(proto_gluster_hndsk, GLUSTER_HNDSK_PROGRAM, ett_gluster_hndsk);
-	rpc_init_proc_table(GLUSTER_HNDSK_PROGRAM, 1, gluster_hndsk_proc, hf_gluster_hndsk_proc);
+	rpc_init_prog(proto_gluster_hndsk, GLUSTER_HNDSK_PROGRAM,
+							ett_gluster_hndsk);
+	rpc_init_proc_table(GLUSTER_HNDSK_PROGRAM, 1, gluster_hndsk_proc,
+							hf_gluster_hndsk_proc);
 
 	rpc_init_prog(proto_gluster_cli, GLUSTER_CLI_PROGRAM, ett_gluster_cli);
-	rpc_init_proc_table(GLUSTER_CLI_PROGRAM, 1, gluster_cli_proc, hf_gluster_cli_proc);
+	rpc_init_proc_table(GLUSTER_CLI_PROGRAM, 1, gluster_cli_proc,
+							hf_gluster_cli_proc);
 
-	rpc_init_prog(proto_gluster_pmap, GLUSTER_PMAP_PROGRAM, ett_gluster_pmap);
-	rpc_init_proc_table(GLUSTER_PMAP_PROGRAM, 1, gluster_pmap_proc, hf_gluster_pmap_proc);
+	rpc_init_prog(proto_gluster_pmap, GLUSTER_PMAP_PROGRAM,
+							ett_gluster_pmap);
+	rpc_init_proc_table(GLUSTER_PMAP_PROGRAM, 1, gluster_pmap_proc,
+							hf_gluster_pmap_proc);
 
 	rpc_init_prog(proto_gluster_cbk, GLUSTER_CBK_PROGRAM, ett_gluster_cbk);
-	rpc_init_proc_table(GLUSTER_CBK_PROGRAM, 1, gluster_cbk_proc, hf_gluster_cbk_proc);
+	rpc_init_proc_table(GLUSTER_CBK_PROGRAM, 1, gluster_cbk_proc,
+							hf_gluster_cbk_proc);
 
 	rpc_init_prog(proto_gluster_fs, GLUSTERFS_PROGRAM, ett_gluster_fs);
-	rpc_init_proc_table(GLUSTERFS_PROGRAM, 1, gluster_fs_proc, hf_gluster_fs_proc);
+	rpc_init_proc_table(GLUSTERFS_PROGRAM, 1, gluster_fs_proc,
+							hf_gluster_fs_proc);
 }
 

@@ -8,12 +8,6 @@
  * By Gerald Combs <gerald@wireshark.org>
  * Copyright 1998 Gerald Combs
  *
- * Copied from WHATEVER_FILE_YOU_USED (where "WHATEVER_FILE_YOU_USED"
- * is a dissector file; if you just copied this from README.developer,
- * don't bother with the "Copied from" - you don't even need to put
- * in a "Copied from" if you copied an existing dissector, especially
- * if the bulk of the code in the new dissector is your code)
- *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -27,6 +21,16 @@
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ *
+ * References to source files point in general to the glusterfs sources.
+ * There is currently no RFC or other document where the protocol is
+ * completely described. The glusterfs sources can be found at:
+ * - http://git.gluster.com/?p=glusterfs.git
+ * - https://github.com/gluster/glusterfs
+ *
+ * The coding-style is roughly the same as the one use in the Linux kernel,
+ * see http://www.kernel.org/doc/Documentation/CodingStyle.
  */
 
 #ifndef __PACKET_GLUSTER_H__
@@ -75,6 +79,7 @@
 #define GD_BRICK_PROGRAM	4867634
 /* only available in version 2 (supersedes GLUSTERFS_PROGRAM) */
 
+/* GD_MGMT_PROGRAM */
 enum gf_mgmt_procnum {
         GD_MGMT_NULL = 0,
         GD_MGMT_PROBE_QUERY,
@@ -113,6 +118,7 @@ enum gf_mgmt_procnum {
         GD_MGMT_MAXVALUE
 };
 
+/* GLUSTER_CLI_PROGRAM */
 enum gluster_cli_procnum {
         GLUSTER_CLI_NULL = 0,
         GLUSTER_CLI_PROBE,
@@ -152,12 +158,14 @@ enum gluster_cli_procnum {
         GLUSTER_CLI_MAXVALUE
 };
 
+/* GLUSTER_DUMP_PROGRAM */
 enum gluster_prog_dump_procs {
 	GF_DUMP_NULL = 0,
 	GF_DUMP_DUMP,
 	GF_DUMP_MAXVALUE
 };
 
+/* GLUSTERD1_MGMT_PROGRAM */
 enum glusterd_mgmt_procnum {
 	GLUSTERD_MGMT_NULL = 0,
 	GLUSTERD_MGMT_PROBE_QUERY,
@@ -171,6 +179,7 @@ enum glusterd_mgmt_procnum {
 	GLUSTERD_MGMT_MAXVALUE
 };
 
+/* GLUSTERFS_PROGRAM */
 enum gf_brick_procnum {
 	GF_BRICK_NULL = 0,
 	GF_BRICK_TERMINATE,
@@ -179,6 +188,7 @@ enum gf_brick_procnum {
 	GF_BRICK_MAXVALUE
 };
 
+/* GLUSTER_HNDSK_PROGRAM */
 enum gluster_prog_hndsk_procs {
 	GF_HNDSK_NULL = 0,
 	GF_HNDSK_SETVOLUME,
@@ -187,6 +197,7 @@ enum gluster_prog_hndsk_procs {
 	GF_HNDSK_MAXVALUE
 };
 
+/* GLUSTER_PMAP_PROGRAM */
 enum gf_pmap_procnum {
 	GF_PMAP_NULL = 0,
 	GF_PMAP_PORTBYBRICK,
@@ -197,6 +208,7 @@ enum gf_pmap_procnum {
 	GF_PMAP_MAXVALUE
 };
 
+/* GD_BRICK_PROGRAM */
 enum glusterd_brick_procnum {
 	GLUSTERD_BRICK_NULL = 0,
 	GLUSTERD_BRICK_TERMINATE,
@@ -206,6 +218,7 @@ enum glusterd_brick_procnum {
 	GLUSTERD_BRICK_MAXVALUE
 };
 
+/* GLUSTER_CBK_PROGRAM */
 enum gf_cbk_procnum {
 	GF_CBK_NULL = 0,
 	GF_CBK_FETCHSPEC,
