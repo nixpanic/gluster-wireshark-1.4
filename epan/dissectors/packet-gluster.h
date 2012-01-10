@@ -76,7 +76,7 @@
 /* only available in version 2 (supersedes GLUSTERFS_PROGRAM) */
 
 enum gf_mgmt_procnum {
-        GD_MGMT_NULL,    /* 0 */
+        GD_MGMT_NULL = 0,
         GD_MGMT_PROBE_QUERY,
         GD_MGMT_FRIEND_ADD,
         GD_MGMT_CLUSTER_LOCK,
@@ -110,11 +110,11 @@ enum gf_mgmt_procnum {
         GD_MGMT_BRICK_OP,
         GD_MGMT_CLI_LOG_LEVEL,
         GD_MGMT_CLI_STATUS_VOLUME,
-        GD_MGMT_MAXVALUE,
+        GD_MGMT_MAXVALUE
 };
 
 enum gluster_cli_procnum {
-        GLUSTER_CLI_NULL,    /* 0 */
+        GLUSTER_CLI_NULL = 0,
         GLUSTER_CLI_PROBE,
         GLUSTER_CLI_DEPROBE,
         GLUSTER_CLI_LIST_FRIENDS,
@@ -149,17 +149,17 @@ enum gluster_cli_procnum {
         GLUSTER_CLI_UMOUNT,
         GLUSTER_CLI_HEAL_VOLUME,
         GLUSTER_CLI_STATEDUMP_VOLUME,
-        GLUSTER_CLI_MAXVALUE,
+        GLUSTER_CLI_MAXVALUE
 };
 
 enum gluster_prog_dump_procs {
-	GF_DUMP_NULL /* = 0 */,
+	GF_DUMP_NULL = 0,
 	GF_DUMP_DUMP,
-	GF_DUMP_MAXVALUE,
+	GF_DUMP_MAXVALUE
 };
 
 enum glusterd_mgmt_procnum {
-	GLUSTERD_MGMT_NULL,    /* 0 */ 
+	GLUSTERD_MGMT_NULL = 0,
 	GLUSTERD_MGMT_PROBE_QUERY,
 	GLUSTERD_MGMT_FRIEND_ADD,
 	GLUSTERD_MGMT_CLUSTER_LOCK,
@@ -168,23 +168,23 @@ enum glusterd_mgmt_procnum {
 	GLUSTERD_MGMT_COMMIT_OP,
 	GLUSTERD_MGMT_FRIEND_REMOVE,
 	GLUSTERD_MGMT_FRIEND_UPDATE,
-	GLUSTERD_MGMT_MAXVALUE,
+	GLUSTERD_MGMT_MAXVALUE
 };
 
 enum gf_brick_procnum {
 	GF_BRICK_NULL = 0,
-	GF_BRICK_TERMINATE = 1,
-	GF_BRICK_XLATOR_INFO = 2,
-	GF_BRICK_XLATOR_HEAL = 3,
+	GF_BRICK_TERMINATE,
+	GF_BRICK_XLATOR_INFO,
+	GF_BRICK_XLATOR_HEAL,
 	GF_BRICK_MAXVALUE
 };
 
 enum gluster_prog_hndsk_procs {
-	GF_HNDSK_NULL,
+	GF_HNDSK_NULL = 0,
 	GF_HNDSK_SETVOLUME,
 	GF_HNDSK_GETSPEC,
 	GF_HNDSK_PING,
-	GF_HNDSK_MAXVALUE,
+	GF_HNDSK_MAXVALUE
 };
 
 enum gf_pmap_procnum {
@@ -194,16 +194,16 @@ enum gf_pmap_procnum {
 	GF_PMAP_SIGNUP,
 	GF_PMAP_SIGNIN,
 	GF_PMAP_SIGNOUT,
-	GF_PMAP_MAXVALUE,
+	GF_PMAP_MAXVALUE
 };
 
 enum glusterd_brick_procnum {
-	GLUSTERD_BRICK_NULL,    /* 0 */
+	GLUSTERD_BRICK_NULL = 0,
 	GLUSTERD_BRICK_TERMINATE,
 	GLUSTERD_BRICK_XLATOR_INFO,
 	GLUSTERD_BRICK_XLATOR_HEAL,
 	GLUSTERD_BRICK_OP,
-	GLUSTERD_BRICK_MAXVALUE,
+	GLUSTERD_BRICK_MAXVALUE
 };
 
 enum gf_cbk_procnum {
