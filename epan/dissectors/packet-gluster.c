@@ -431,8 +431,8 @@ proto_register_gluster(void)
 	proto_gd_mgmt = proto_register_protocol("Gluster Daemon Management",
 	    "GlusterD Management", "gd-mgmt");
 
-	proto_gluster_hndsk = proto_register_protocol("Gluster Handshake",
-	    "Gluster Handshake", "gluster-hndsk");
+	proto_gluster_hndsk = proto_register_protocol("GlusterFS Handshake",
+	    "GlusterFS Handshake", "gluster-hndsk");
 
 	proto_gluster_cli = proto_register_protocol("Gluster CLI",
 	    "Gluster CLI", "gluster-cli");
