@@ -409,7 +409,6 @@ static const value_string gluster_fs_proc_vals[] = {
 };
 
 /* TODO: procedures for GLUSTER3_1_FOP_PROGRAM */
-/* TODO: procedures for GLUSTERD1_MGMT_PROGRAM */
 
 
 void
