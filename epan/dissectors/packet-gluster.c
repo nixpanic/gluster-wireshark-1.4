@@ -54,6 +54,7 @@ static gint proto_gluster_cli = -1;
 static gint proto_gluster_pmap = -1;
 static gint proto_gluster_cbk = -1;
 static gint proto_gluster_fs = -1;
+static gint proto_gluster3_1_fop = -1;
 
 static gint hf_gluster_dump_proc = -1;
 static gint hf_gluster_dump_gfsid = -1;
@@ -68,6 +69,7 @@ static gint hf_gluster_cli_proc = -1;
 static gint hf_gluster_pmap_proc = -1;
 static gint hf_gluster_cbk_proc = -1;
 static gint hf_gluster_fs_proc = -1;
+static gint hf_gluster3_1_fop_proc = -1;
 
 /* Initialize the subtree pointers */
 static gint ett_gluster = -1;
@@ -79,6 +81,7 @@ static gint ett_gluster_cli = -1;
 static gint ett_gluster_pmap = -1;
 static gint ett_gluster_cbk = -1;
 static gint ett_gluster_fs = -1;
+static gint ett_gluster3_1_fop = -1;
 
 static int
 gluster_dump_reply_item(tvbuff_t *tvb, int offset, packet_info *pinfo _U_,
@@ -408,8 +411,103 @@ static const value_string gluster_fs_proc_vals[] = {
 	{ 0, NULL }
 };
 
-/* TODO: procedures for GLUSTER3_1_FOP_PROGRAM */
-
+/*
+ * GLUSTER3_1_FOP_PROGRAM
+ * - xlators/protocol/client/src/client3_1-fops.c
+ * - xlators/protocol/server/src/server3_1-fops.c
+ */
+static const vsff gluster3_1_fop_proc[] = {
+	{ GFS3_OP_NULL, "NULL", NULL, NULL },
+	{ GFS3_OP_STAT, "STAT", NULL, NULL },
+	{ GFS3_OP_READLINK, "READLINK", NULL, NULL },
+	{ GFS3_OP_MKNOD, "MKNOD", NULL, NULL },
+	{ GFS3_OP_MKDIR, "MKDIR", NULL, NULL },
+	{ GFS3_OP_UNLINK, "UNLINK", NULL, NULL },
+	{ GFS3_OP_RMDIR, "RMDIR", NULL, NULL },
+	{ GFS3_OP_SYMLINK, "SYMLINK", NULL, NULL },
+	{ GFS3_OP_RENAME, "RENAME", NULL, NULL },
+	{ GFS3_OP_LINK, "LINK", NULL, NULL },
+	{ GFS3_OP_TRUNCATE, "TRUNCATE", NULL, NULL },
+	{ GFS3_OP_OPEN, "OPEN", NULL, NULL },
+	{ GFS3_OP_READ, "READ", NULL, NULL },
+	{ GFS3_OP_WRITE, "WRITE", NULL, NULL },
+	{ GFS3_OP_STATFS, "STATFS", NULL, NULL },
+	{ GFS3_OP_FLUSH, "FLUSH", NULL, NULL },
+	{ GFS3_OP_FSYNC, "FSYNC", NULL, NULL },
+	{ GFS3_OP_SETXATTR, "SETXATTR", NULL, NULL },
+	{ GFS3_OP_GETXATTR, "GETXATTR", NULL, NULL },
+	{ GFS3_OP_REMOVEXATTR, "REMOVEXATTR", NULL, NULL },
+	{ GFS3_OP_OPENDIR, "OPENDIR", NULL, NULL },
+	{ GFS3_OP_FSYNCDIR, "FSYNCDIR", NULL, NULL },
+	{ GFS3_OP_ACCESS, "ACCESS", NULL, NULL },
+	{ GFS3_OP_CREATE, "CREATE", NULL, NULL },
+	{ GFS3_OP_FTRUNCATE, "FTRUNCATE", NULL, NULL },
+	{ GFS3_OP_FSTAT, "FSTAT", NULL, NULL },
+	{ GFS3_OP_LK, "LK", NULL, NULL },
+	{ GFS3_OP_LOOKUP, "LOOKUP", NULL, NULL },
+	{ GFS3_OP_READDIR, "READDIR", NULL, NULL },
+	{ GFS3_OP_INODELK, "INODELK", NULL, NULL },
+	{ GFS3_OP_FINODELK, "FINODELK", NULL, NULL },
+	{ GFS3_OP_ENTRYLK, "ENTRYLK", NULL, NULL },
+	{ GFS3_OP_FENTRYLK, "FENTRYLK", NULL, NULL },
+	{ GFS3_OP_XATTROP, "XATTROP", NULL, NULL },
+	{ GFS3_OP_FXATTROP, "FXATTROP", NULL, NULL },
+	{ GFS3_OP_FGETXATTR, "FGETXATTR", NULL, NULL },
+	{ GFS3_OP_FSETXATTR, "FSETXATTR", NULL, NULL },
+	{ GFS3_OP_RCHECKSUM, "RCHECKSUM", NULL, NULL },
+	{ GFS3_OP_SETATTR, "SETATTR", NULL, NULL },
+	{ GFS3_OP_FSETATTR, "FSETATTR", NULL, NULL },
+	{ GFS3_OP_READDIRP, "READDIRP", NULL, NULL },
+	{ GFS3_OP_RELEASE, "RELEASE", NULL, NULL },
+	{ GFS3_OP_RELEASEDIR, "RELEASEDIR", NULL, NULL },
+	{ 0, NULL, NULL, NULL }
+};
+static const value_string gluster3_1_fop_proc_vals[] = {
+	{ GFS3_OP_NULL, "NULL" },
+	{ GFS3_OP_STAT, "STAT" },
+	{ GFS3_OP_READLINK, "READLINK" },
+	{ GFS3_OP_MKNOD, "MKNOD" },
+	{ GFS3_OP_MKDIR, "MKDIR" },
+	{ GFS3_OP_UNLINK, "UNLINK" },
+	{ GFS3_OP_RMDIR, "RMDIR" },
+	{ GFS3_OP_SYMLINK, "SYMLINK" },
+	{ GFS3_OP_RENAME, "RENAME" },
+	{ GFS3_OP_LINK, "LINK" },
+	{ GFS3_OP_TRUNCATE, "TRUNCATE" },
+	{ GFS3_OP_OPEN, "OPEN" },
+	{ GFS3_OP_READ, "READ" },
+	{ GFS3_OP_WRITE, "WRITE" },
+	{ GFS3_OP_STATFS, "STATFS" },
+	{ GFS3_OP_FLUSH, "FLUSH" },
+	{ GFS3_OP_FSYNC, "FSYNC" },
+	{ GFS3_OP_SETXATTR, "SETXATTR" },
+	{ GFS3_OP_GETXATTR, "GETXATTR" },
+	{ GFS3_OP_REMOVEXATTR, "REMOVEXATTR" },
+	{ GFS3_OP_OPENDIR, "OPENDIR" },
+	{ GFS3_OP_FSYNCDIR, "FSYNCDIR" },
+	{ GFS3_OP_ACCESS, "ACCESS" },
+	{ GFS3_OP_CREATE, "CREATE" },
+	{ GFS3_OP_FTRUNCATE, "FTRUNCATE" },
+	{ GFS3_OP_FSTAT, "FSTAT" },
+	{ GFS3_OP_LK, "LK" },
+	{ GFS3_OP_LOOKUP, "LOOKUP" },
+	{ GFS3_OP_READDIR, "READDIR" },
+	{ GFS3_OP_INODELK, "INODELK" },
+	{ GFS3_OP_FINODELK, "FINODELK" },
+	{ GFS3_OP_ENTRYLK, "ENTRYLK" },
+	{ GFS3_OP_FENTRYLK, "FENTRYLK" },
+	{ GFS3_OP_XATTROP, "XATTROP" },
+	{ GFS3_OP_FXATTROP, "FXATTROP" },
+	{ GFS3_OP_FGETXATTR, "FGETXATTR" },
+	{ GFS3_OP_FSETXATTR, "FSETXATTR" },
+	{ GFS3_OP_RCHECKSUM, "RCHECKSUM" },
+	{ GFS3_OP_SETATTR, "SETATTR" },
+	{ GFS3_OP_FSETATTR, "FSETATTR" },
+	{ GFS3_OP_READDIRP, "READDIRP" },
+	{ GFS3_OP_RELEASE, "RELEASE" },
+	{ GFS3_OP_RELEASEDIR, "RELEASEDIR" },
+	{ 0, NULL }
+};
 
 void
 proto_register_gluster(void)
@@ -469,6 +567,10 @@ proto_register_gluster(void)
 			{ "GlusterFS Mops", "gluster.mops", FT_UINT32,
 				BASE_DEC, VALS(gluster_fs_proc_vals), 0, NULL,
 				HFILL }
+		},
+		{ &hf_gluster3_1_fop_proc,
+			{ "GlusterFS", "glusterfs", FT_UINT32, 	BASE_DEC,
+				VALS(gluster3_1_fop_proc_vals), 0, NULL, HFILL }
 		}
 	};
 
@@ -482,7 +584,8 @@ proto_register_gluster(void)
 		&ett_gluster_cli,
 		&ett_gluster_pmap,
 		&ett_gluster_cbk,
-		&ett_gluster_fs
+		&ett_gluster_fs,
+		&ett_gluster3_1_fop
 	};
 
 	/* Register the protocol name and description */
@@ -514,6 +617,9 @@ proto_register_gluster(void)
 
 	proto_gluster_fs = proto_register_protocol("GlusterFS Mops",
 					"GlusterFS Mops", "gluster-mops");
+
+	proto_gluster3_1_fop = proto_register_protocol("GlusterFS",
+				"GlusterFS", "glusterfs");
 }
 
 
@@ -554,5 +660,9 @@ proto_reg_handoff_gluster(void)
 	rpc_init_prog(proto_gluster_fs, GLUSTERFS_PROGRAM, ett_gluster_fs);
 	rpc_init_proc_table(GLUSTERFS_PROGRAM, 1, gluster_fs_proc,
 							hf_gluster_fs_proc);
+
+	rpc_init_prog(proto_gluster3_1_fop, GLUSTER3_1_FOP_PROGRAM, ett_gluster3_1_fop);
+	rpc_init_proc_table(GLUSTER3_1_FOP_PROGRAM, 310, gluster3_1_fop_proc,
+							hf_gluster3_1_fop_proc);
 }
 
