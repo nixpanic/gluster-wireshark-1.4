@@ -38,6 +38,7 @@
 #endif
 
 #include <glib.h>
+#include <string.h>
 #include <epan/packet.h>
 #include <epan/tfs.h>
 
@@ -56,12 +57,9 @@ static gint proto_gluster_cbk = -1;
 static gint proto_gluster_fs = -1;
 static gint proto_gluster3_1_fop = -1;
 
-static gint hf_gluster_dump_proc = -1;
-static gint hf_gluster_dump_gfsid = -1;
-static gint hf_gluster_dump_progname = -1;
-static gint hf_gluster_dump_prognum = -1;
-static gint hf_gluster_dump_progver = -1;
 
+/* programs and procedures */
+static gint hf_gluster_dump_proc = -1;
 static gint hf_gluster_mgmt_proc = -1;
 static gint hf_gd_mgmt_proc = -1;
 static gint hf_gluster_hndsk_proc = -1;
@@ -70,6 +68,46 @@ static gint hf_gluster_pmap_proc = -1;
 static gint hf_gluster_cbk_proc = -1;
 static gint hf_gluster_fs_proc = -1;
 static gint hf_gluster3_1_fop_proc = -1;
+
+/* fields used by multiple programs/procedures */
+static gint hf_gluster_gfsid = -1;
+static gint hf_gluster_gfid = -1;
+static gint hf_gluster_pargfid = -1;
+static gint hf_gluster_progname = -1;
+static gint hf_gluster_prognum = -1;
+static gint hf_gluster_progver = -1;
+static gint hf_gluster_brick = -1;
+static gint hf_gluster_op_ret = -1;
+static gint hf_gluster_op_errno = -1;
+static gint hf_gluster_flags = -1;
+static gint hf_gluster_path = -1;
+static gint hf_gluster_bname = -1;
+static gint hf_gluster_brick_status = -1;
+static gint hf_gluster_brick_port = -1;
+static gint hf_gluster_dict_key = -1;
+static gint hf_gluster_dict_value = -1;
+
+/* gf_iatt */
+static gint hf_gluster_ia_ino = -1;
+static gint hf_gluster_ia_dev = -1;
+static gint hf_gluster_mode = -1;
+static gint hf_gluster_ia_nlink = -1;
+static gint hf_gluster_ia_uid = -1;
+static gint hf_gluster_ia_gid = -1;
+static gint hf_gluster_ia_rdev = -1;
+static gint hf_gluster_ia_size = -1;
+static gint hf_gluster_ia_blksize = -1;
+static gint hf_gluster_ia_blocks = -1;
+static gint hf_gluster_ia_atime = -1;
+static gint hf_gluster_ia_atime_nsec = -1;
+static gint hf_gluster_ia_mtime = -1;
+static gint hf_gluster_ia_mtime_nsec = -1;
+static gint hf_gluster_ia_ctime = -1;
+static gint hf_gluster_ia_ctime_nsec = -1;
+
+/* temporarily used during development */
+static gint hf_gluster_dict = -1;
+static gint hf_gluster_unknown_int = -1;
 
 /* Initialize the subtree pointers */
 static gint ett_gluster = -1;
@@ -82,21 +120,116 @@ static gint ett_gluster_pmap = -1;
 static gint ett_gluster_cbk = -1;
 static gint ett_gluster_fs = -1;
 static gint ett_gluster3_1_fop = -1;
+static gint ett_gluster_dict = -1;
+static gint ett_gluster_iatt = -1;
+
+
+/* function for dissecting and adding a gluster dict_t to the tree */
+static int
+gluster_rpc_dissect_dict(proto_tree *tree, tvbuff_t *tvb, int offset)
+{
+	gchar *key, *value;
+	gint items, i, len, roundup, value_len, key_len;
+
+	proto_item *dict_item;
+	proto_tree *dict_tree;
+
+	len = tvb_get_ntohl(tvb, offset);
+	roundup = rpc_roundup(len) - len;
+	proto_tree_add_text(tree, tvb, offset, 4, "Size of the dict: %d (%d bytes inc. RPC-roundup)", len, rpc_roundup(len));
+	offset += 4;
+
+	if (len == 0)
+		return offset;
+
+	items = tvb_get_ntohl(tvb, offset);
+	proto_tree_add_text(tree, tvb, offset, 4, "Items in the dict: %d", items);
+	offset += 4;
+
+	for (i = 0; i < items; i++) {
+		dict_item = proto_tree_add_text(tree, tvb, offset, -1, "Item %d", i);
+		dict_tree = proto_item_add_subtree(dict_item, ett_gluster_dict);
+
+		/* key_len is the length of the key without the terminating '\0' */
+		/* key_len = tvb_get_ntohl(tvb, offset) + 1; // will be read later */
+		offset += 4;
+		value_len = tvb_get_ntohl(tvb, offset);
+		offset += 4;
+
+		/* read the key, '\0' terminated */
+		key = tvb_get_stringz(tvb, offset, &key_len);
+		if (tree)
+			proto_tree_add_string(dict_tree, hf_gluster_dict_key, tvb, offset, key_len, key);
+		offset += key_len;
+		g_free(key);
+
+		/* read the value, '\0' terminated */
+		value = tvb_get_string(tvb, offset, value_len);
+		if (tree)
+			proto_tree_add_string(dict_tree, hf_gluster_dict_value, tvb, offset, value_len, value);
+		offset += value_len;
+		g_free(value);
+	}
+
+	if (roundup) {
+		if (tree)
+			proto_tree_add_text(tree, tvb, offset, -1, "RPC-roundup bytes: %d", roundup);
+		offset += roundup;
+	}
+
+	return offset;
+}
 
 static int
-gluster_dump_reply_item(tvbuff_t *tvb, int offset, packet_info *pinfo _U_,
-							proto_tree *tree)
+gluster_dissect_rpc_uquad_t(tvbuff_t *tvb, proto_tree *tree, int hfindex, int offset)
+{
+	offset = dissect_rpc_bytes(tvb, tree, hfindex, offset, 8, FALSE, NULL);
+	return offset;
+}
+
+/*
+ * from rpc/xdr/src/glusterfs3-xdr.c:xdr_gf_iatt()
+ * FIXME: this may be inclomplete, different code-paths may require different
+ * encoding/decoding.
+ */
+static int
+gluster_rpc_dissect_gf_iatt(proto_tree *tree, tvbuff_t *tvb, int offset)
+{
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
+								FALSE, NULL);
+	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_ia_ino, offset);
+	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_ia_dev, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_mode, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_ia_nlink, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_ia_uid, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_ia_gid, offset);
+	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_ia_rdev, offset);
+	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_ia_size, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_ia_blksize, offset);
+	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_ia_blocks, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_ia_atime, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_ia_atime_nsec, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_ia_mtime, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_ia_mtime_nsec, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_ia_ctime, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_ia_ctime_nsec, offset);
+
+	return offset;
+}
+
+/* from rpc/rpc-lib/src/rpc-common.c */
+static int
+gluster_dump_reply_item(tvbuff_t *tvb, int offset, proto_tree *tree)
 {
 	gchar *progname = NULL;
 
 	/* progname */
-	offset = dissect_rpc_string(tvb, tree, hf_gluster_dump_progname, offset,
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_progname, offset,
 								&progname);
 	/* prognumber */
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_dump_prognum, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_prognum, offset);
 	/* progversion */
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_dump_progver, offset);
-	/* FIXME:  it seems that there is an other xdr-byte of data? */
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_progver, offset);
 
 	return offset;
 }
@@ -105,9 +238,15 @@ static int
 gluster_dump_reply(tvbuff_t *tvb, int offset, packet_info *pinfo _U_,
 							proto_tree *tree)
 {
-	/* FIXME: I don't think this is how it works */
-	offset = dissect_rpc_list(tvb, pinfo, tree, offset,
-						gluster_dump_reply_item);
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 8,
+								FALSE, NULL);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+
+	if (tree)
+		proto_tree_add_text(tree, tvb, offset, -1, "FIXME: The data that follows is a xdr_pointer from xdr_gf_prog_detail()");
+//	while (offset < tvb_reported_length(tvb))
+//		offset = gluster_dump_reply_item(tvb, offset, tree);
 
 	return offset;
 }
@@ -117,13 +256,118 @@ static int
 gluster_dump_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U_,
 							proto_tree *tree)
 {
-	/* FIXME: this does *not* display the data, only the label */
-	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_dump_gfsid, offset, 8,
-								FALSE, NULL);
+	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_gfsid, offset);
 
 	return offset;
 }
 
+/* PMAP PORTBYBRICK */
+static int
+gluster_pmap_portbybrick_reply(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_brick_status, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_brick_port, offset);
+
+	return offset;
+}
+
+static int
+gluster_pmap_portbybrick_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	gchar *brick = NULL;
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_brick, offset,
+								&brick);
+	return offset;
+}
+
+static int
+gluster_hndsk_ping_reply(tvbuff_t *tvb, int offset, packet_info *pinfo _U_,
+							proto_tree *tree)
+{
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	return offset;
+}
+
+static int
+gluster_hndsk_setvolume_reply(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, offset);
+	return offset;
+}
+
+static int
+gluster_hndsk_setvolume_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	offset = gluster_rpc_dissect_dict(tree, tvb, offset);
+	return offset;
+}
+
+static int
+gluster_hndsk_lookup_reply(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	proto_item *iatt_item;
+	proto_tree *iatt_tree;
+
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	// FIXME: describe this better - gf_iatt (xdrs, &objp->stat
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "Stat IATT");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+	// FIXME: describe this better - gf_iatt (xdrs, &objp->postparent
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "PostParent IATT");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, offset);
+
+	return offset;
+}
+
+static int
+gluster_hndsk_lookup_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	gchar *path = NULL;
+	gchar *bname = NULL;
+	guint flags;
+
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
+								FALSE, NULL);
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_pargfid, offset, 16,
+								FALSE, NULL);
+#if 0 /* example from epan/dissectors/packet-tcp.c */
+    tf = proto_tree_add_uint_format(tcp_tree, hf_tcp_flags, tvb, offset + 13, 1,
+        tcph->th_flags, "Flags: 0x%02x (%s)", tcph->th_flags, flags_strbuf->str);
+    field_tree = proto_item_add_subtree(tf, ett_tcp_flags);
+    proto_tree_add_boolean(field_tree, hf_tcp_flags_cwr, tvb, offset + 13, 1, tcph->th_flags);
+    proto_tree_add_boolean(field_tree, hf_tcp_flags_ecn, tvb, offset + 13, 1, tcph->th_flags);
+    proto_tree_add_boolean(field_tree, hf_tcp_flags_urg, tvb, offset + 13, 1, tcph->th_flags);
+    proto_tree_add_boolean(field_tree, hf_tcp_flags_ack, tvb, offset + 13, 1, tcph->th_flags);
+    proto_tree_add_boolean(field_tree, hf_tcp_flags_push, tvb, offset + 13, 1, tcph->th_flags);
+#endif
+	/* FIXME: display as a list of fields */
+	flags = tvb_get_ntohl(tvb, offset);
+	proto_tree_add_uint_format(tree, hf_gluster_flags, tvb, offset, 4, flags, "Flags: 0x%02x", flags);
+	offset += 4;
+//	field_tree = proto_item_add_subtree(tf, ett_gluster_lookup_flags);
+//	proto_tree_add_boolean(field_tree, hf_gluster_lookup_flag_cwr, tvb, offset + 13, 1, tcph->th_flags);
+
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_path, offset, &path);
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_bname, offset, &bname);
+	offset = gluster_rpc_dissect_dict(tree, tvb, offset);
+	
+	return offset;
+}
 
 /* procedures for GLUSTER_DUMP_PROGRAM */
 static const vsff gluster_dump_proc[] = {
@@ -248,9 +492,12 @@ static const value_string gd_mgmt_proc_vals[] = {
 /* procedures for GLUSTER_HNDSK_PROGRAM */
 static const vsff gluster_hndsk_proc[] = {
 	{ GF_HNDSK_NULL, "NULL", NULL, NULL },
-	{ GF_HNDSK_SETVOLUME, "DUMP", NULL, NULL },
+	{
+		GF_HNDSK_SETVOLUME, "SETVOLUME",
+		gluster_hndsk_setvolume_call, gluster_hndsk_setvolume_reply
+	},
 	{ GF_HNDSK_GETSPEC, "GETSPEC", NULL, NULL },
-	{ GF_HNDSK_PING, "PING", NULL, NULL },
+	{ GF_HNDSK_PING, "PING", NULL, gluster_hndsk_ping_reply },
 	{ 0, NULL, NULL, NULL }
 };
 static const value_string gluster_hndsk_proc_vals[] = {
@@ -288,7 +535,7 @@ static const vsff gluster_cli_proc[] = {
 	{ GLUSTER_CLI_GETSPEC, "GLUSTER_CLI_GETSPEC", NULL, NULL },
 	{
 		GLUSTER_CLI_PMAP_PORTBYBRICK, "GLUSTER_CLI_PMAP_PORTBYBRICK",
-		NULL, NULL
+		NULL , NULL
 	},
 	{ GLUSTER_CLI_SYNC_VOLUME, "GLUSTER_CLI_SYNC_VOLUME", NULL, NULL },
 	{ GLUSTER_CLI_RESET_VOLUME, "GLUSTER_CLI_RESET_VOLUME", NULL, NULL },
@@ -356,7 +603,10 @@ static const value_string gluster_cli_proc_vals[] = {
 /* GLUSTER_PMAP_PROGRAM from xlators/mgmt/glusterd/src/glusterd-pmap.c */
 static const vsff gluster_pmap_proc[] = {
 	{ GF_PMAP_NULL, "NULL", NULL, NULL },
-	{ GF_PMAP_PORTBYBRICK, "PORTBYBRICK", NULL, NULL },
+	{
+		GF_PMAP_PORTBYBRICK, "PORTBYBRICK",
+		gluster_pmap_portbybrick_call, gluster_pmap_portbybrick_reply
+	},
 	{ GF_PMAP_BRICKBYPORT, "BRICKBYPORT", NULL, NULL },
 	{ GF_PMAP_SIGNIN, "SIGNIN", NULL, NULL },
 	{ GF_PMAP_SIGNOUT, "SIGNOUT", NULL, NULL },
@@ -444,7 +694,7 @@ static const vsff gluster3_1_fop_proc[] = {
 	{ GFS3_OP_FTRUNCATE, "FTRUNCATE", NULL, NULL },
 	{ GFS3_OP_FSTAT, "FSTAT", NULL, NULL },
 	{ GFS3_OP_LK, "LK", NULL, NULL },
-	{ GFS3_OP_LOOKUP, "LOOKUP", NULL, NULL },
+	{ GFS3_OP_LOOKUP, "LOOKUP", gluster_hndsk_lookup_call, gluster_hndsk_lookup_reply },
 	{ GFS3_OP_READDIR, "READDIR", NULL, NULL },
 	{ GFS3_OP_INODELK, "INODELK", NULL, NULL },
 	{ GFS3_OP_FINODELK, "FINODELK", NULL, NULL },
@@ -514,23 +764,20 @@ proto_register_gluster(void)
 {
 	/* Setup list of header fields  See Section 1.6.1 for details */
 	static hf_register_info hf[] = {
+		/* programs */
 		{ &hf_gluster_dump_proc,
 			{ "Gluster DUMP", "gluster.dump", FT_UINT32, BASE_DEC,
 				VALS(gluster_dump_proc_vals), 0, NULL, HFILL }
 		},
-		{ &hf_gluster_dump_gfsid,
-			{ "DUMP GFS ID", "gluster.dump.gfsid", FT_BYTES,
-				BASE_NONE, NULL, 0, NULL, HFILL }
-		},
-		{ &hf_gluster_dump_progname,
+		{ &hf_gluster_progname,
 			{ "DUMP Program", "gluster.dump.progname", FT_STRING,
 				BASE_NONE, NULL, 0, NULL, HFILL }
 		},
-		{ &hf_gluster_dump_prognum,
-			{ "DUMP Program Numbver", "gluster.dump.prognum",
+		{ &hf_gluster_prognum,
+			{ "DUMP Program Number", "gluster.dump.prognum",
 				FT_UINT32, BASE_DEC, NULL, 0, NULL, HFILL }
 		},
-		{ &hf_gluster_dump_progver,
+		{ &hf_gluster_progver,
 			{ "DUMP Program Version", "gluster.dump.progver",
 				FT_UINT32, BASE_DEC, NULL, 0, NULL, HFILL }
 		},
@@ -571,6 +818,133 @@ proto_register_gluster(void)
 		{ &hf_gluster3_1_fop_proc,
 			{ "GlusterFS", "glusterfs", FT_UINT32, 	BASE_DEC,
 				VALS(gluster3_1_fop_proc_vals), 0, NULL, HFILL }
+		},
+		/* fields used by procedures */
+		{ &hf_gluster_unknown_int,
+			{ "Unknown Integer", "gluster.unknown.int", FT_UINT32,
+				BASE_HEX, NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_gfsid,
+			{ "GFS ID", "gluster.gfsid", FT_BYTES,
+				BASE_HEX, NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_gfid,
+			{ "GFID", "gluster.gfid", FT_BYTES,
+				BASE_HEX, NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_pargfid,
+			{ "PARGFID (FIXME?)", "gluster.pargfid", FT_BYTES,
+				BASE_HEX, NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_brick,
+			{ "Brick", "gluster.brick", FT_STRINGZ, BASE_NONE,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_op_ret,
+			{ "Return value", "gluster.op_ret", FT_INT32, BASE_DEC,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_op_errno,
+			{ "Errno", "gluster.op_errno", FT_INT32, BASE_DEC,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_flags,
+			{ "Flags", "gluster.flags", FT_UINT32, BASE_OCT,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_path,
+			{ "Path", "gluster.path", FT_STRING, BASE_NONE,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_bname,
+			{ "BNAME (FIXME!)", "gluster.bname", FT_STRING, BASE_NONE,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_brick_status,
+			{ "Status", "gluster.brick.status", FT_INT32, BASE_DEC,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_brick_port,
+			{ "Port", "gluster.brick.port", FT_INT32, BASE_DEC,
+				NULL, 0, NULL, HFILL }
+		},
+
+		{ &hf_gluster_ia_ino,
+			{ "is_ino", "gluster.ia_ino", FT_BYTES, BASE_HEX,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_ia_dev,
+			{ "ia_dev", "gluster.ia_dev", FT_BYTES, BASE_HEX,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_mode,
+			{ "mode", "gluster.mode", FT_INT32, BASE_DEC,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_ia_nlink,
+			{ "ia_nlink", "gluster.ia_nlink", FT_INT32, BASE_DEC,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_ia_uid,
+			{ "ia_uid", "gluster.ia_uid", FT_INT32, BASE_DEC,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_ia_gid,
+			{ "ia_gid", "gluster.ia_gid", FT_INT32, BASE_DEC,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_ia_rdev,
+			{ "ia_rdev", "gluster.ia_rdev", FT_BYTES, BASE_HEX,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_ia_size,
+			{ "ia_size", "gluster.ia_size", FT_BYTES, BASE_HEX,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_ia_blksize,
+			{ "ia_blksize", "gluster.ia_blksize", FT_INT32, BASE_DEC,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_ia_blocks,
+			{ "ia_blocks", "gluster.brick.status", FT_BYTES, BASE_HEX,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_ia_atime,
+			{ "ia_time", "gluster.brick.status", FT_INT32, BASE_DEC,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_ia_atime_nsec,
+			{ "ia_atime_nsec", "gluster.brick.status", FT_INT32, BASE_DEC,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_ia_mtime,
+			{ "ia_mtime", "gluster.brick.status", FT_INT32, BASE_DEC,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_ia_mtime_nsec,
+			{ "ia_mtime_msec", "gluster.brick.status", FT_INT32, BASE_DEC,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_ia_ctime,
+			{ "ia_ctime", "gluster.brick.status", FT_INT32, BASE_DEC,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_ia_ctime_nsec,
+			{ "ia_ctime_nsec", "gluster.brick.status", FT_INT32, BASE_DEC,
+				NULL, 0, NULL, HFILL }
+		},
+
+		{ &hf_gluster_dict,
+			{ "Dict (unparsed)", "gluster.dict", FT_STRING, BASE_NONE,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_dict_key,
+			{ "Key", "gluster.dict.key", FT_STRING, BASE_NONE,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_dict_value,
+			{ "Value", "gluster.dict.value", FT_STRING, BASE_NONE,
+				NULL, 0, NULL, HFILL }
 		}
 	};
 
@@ -585,7 +959,9 @@ proto_register_gluster(void)
 		&ett_gluster_pmap,
 		&ett_gluster_cbk,
 		&ett_gluster_fs,
-		&ett_gluster3_1_fop
+		&ett_gluster3_1_fop,
+		&ett_gluster_dict,
+		&ett_gluster_iatt
 	};
 
 	/* Register the protocol name and description */
