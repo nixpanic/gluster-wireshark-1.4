@@ -430,6 +430,24 @@ gluster_gd_mgmt_friend_add_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U
 }
 
 static int
+gluster_gd_mgmt_cluster_lock_reply(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
+{
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_uuid, offset, 16 * 4, FALSE, NULL);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+
+	return offset;
+}
+
+static int
+gluster_gd_mgmt_cluster_lock_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
+{
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_uuid, offset, 16 * 4, FALSE, NULL);
+
+	return offset;
+}
+
+static int
 gluster_gd_mgmt_friend_update_reply(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
 {
 	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_uuid, offset, 16 * 4, FALSE, NULL);
@@ -504,7 +522,10 @@ static const vsff gd_mgmt_proc[] = {
 		GD_MGMT_FRIEND_ADD, "GD_MGMT_FRIEND_ADD",
 		gluster_gd_mgmt_friend_add_call, gluster_gd_mgmt_friend_add_reply
 	},
-	{ GD_MGMT_CLUSTER_LOCK, "GD_MGMT_CLUSTER_LOCK", NULL, NULL},
+	{
+		GD_MGMT_CLUSTER_LOCK, "GD_MGMT_CLUSTER_LOCK",
+		gluster_gd_mgmt_cluster_lock_call, gluster_gd_mgmt_cluster_lock_reply
+	},
 	{ GD_MGMT_CLUSTER_UNLOCK, "GD_MGMT_CLUSTER_UNLOCK", NULL, NULL},
 	{ GD_MGMT_STAGE_OP, "GD_MGMT_STAGE_OP", NULL, NULL},
 	{ GD_MGMT_COMMIT_OP, "GD_MGMT_COMMIT_OP", NULL, NULL},
