@@ -430,6 +430,7 @@ gluster_gd_mgmt_friend_add_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U
 	return offset;
 }
 
+/* gluster_gd_mgmt_cluster_lock_reply is used for LOCK and UNLOCK */
 static int
 gluster_gd_mgmt_cluster_lock_reply(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
 {
@@ -440,6 +441,7 @@ gluster_gd_mgmt_cluster_lock_reply(tvbuff_t *tvb, int offset, packet_info *pinfo
 	return offset;
 }
 
+/* gluster_gd_mgmt_cluster_lock_call is used for LOCK and UNLOCK */
 static int
 gluster_gd_mgmt_cluster_lock_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
 {
@@ -573,7 +575,11 @@ static const vsff gd_mgmt_proc[] = {
 		GD_MGMT_CLUSTER_LOCK, "GD_MGMT_CLUSTER_LOCK",
 		gluster_gd_mgmt_cluster_lock_call, gluster_gd_mgmt_cluster_lock_reply
 	},
-	{ GD_MGMT_CLUSTER_UNLOCK, "GD_MGMT_CLUSTER_UNLOCK", NULL, NULL},
+	{
+		GD_MGMT_CLUSTER_UNLOCK, "GD_MGMT_CLUSTER_UNLOCK",
+		/* UNLOCK seems to be the same a LOCK, re-use the function */
+		gluster_gd_mgmt_cluster_lock_call, gluster_gd_mgmt_cluster_lock_reply
+	},
 	{
 		GD_MGMT_STAGE_OP, "GD_MGMT_STAGE_OP",
 		gluster_gd_mgmt_stage_op_call, gluster_gd_mgmt_stage_op_reply
