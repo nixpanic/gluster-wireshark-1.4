@@ -87,6 +87,10 @@ static gint hf_gluster_brick_port = -1;
 static gint hf_gluster_dict_key = -1;
 static gint hf_gluster_dict_value = -1;
 
+static gint hf_gluster_uuid = -1;
+static gint hf_gluster_hostname = -1;
+static gint hf_gluster_port = -1;
+
 /* gf_iatt */
 static gint hf_gluster_ia_ino = -1;
 static gint hf_gluster_ia_dev = -1;
@@ -369,6 +373,32 @@ gluster_hndsk_lookup_call(tvbuff_t *tvb, int offset,
 	return offset;
 }
 
+static int
+gluster_gd_mgmt_probe_reply(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
+{
+	gchar *hostname = NULL;
+
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_uuid, offset, 16 * 4, FALSE, NULL);
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_hostname, offset, &hostname);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_port, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+
+	return offset;
+}
+
+static int
+gluster_gd_mgmt_probe_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
+{
+	gchar *hostname = NULL;
+
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_uuid, offset, 16 * 4, FALSE, NULL);
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_hostname, offset, &hostname);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_port, offset);
+
+	return offset;
+}
+
 /* procedures for GLUSTER_DUMP_PROGRAM */
 static const vsff gluster_dump_proc[] = {
 	{ 0, "NULL", NULL, NULL },
@@ -414,7 +444,10 @@ static const value_string gluster_mgmt_proc_vals[] = {
  */
 static const vsff gd_mgmt_proc[] = {
 	{ GD_MGMT_NULL, "NULL", NULL, NULL},
-	{ GD_MGMT_PROBE_QUERY, "GD_MGMT_PROBE_QUERY", NULL, NULL},
+	{
+		GD_MGMT_PROBE_QUERY, "GD_MGMT_PROBE_QUERY",
+		gluster_gd_mgmt_probe_call, gluster_gd_mgmt_probe_reply
+	},
 	{ GD_MGMT_FRIEND_ADD, "GD_MGMT_FRIEND_ADD", NULL, NULL},
 	{ GD_MGMT_CLUSTER_LOCK, "GD_MGMT_CLUSTER_LOCK", NULL, NULL},
 	{ GD_MGMT_CLUSTER_UNLOCK, "GD_MGMT_CLUSTER_UNLOCK", NULL, NULL},
@@ -869,12 +902,25 @@ proto_register_gluster(void)
 				NULL, 0, NULL, HFILL }
 		},
 
+		{ &hf_gluster_uuid,
+			{ "UUID", "gluster.uuid", FT_BYTES,
+				BASE_NONE, NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_hostname,
+			{ "Hostname", "gluster.hostname", FT_STRING, BASE_NONE,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_port,
+			{ "Port", "gluster.port", FT_INT32, BASE_DEC,
+				NULL, 0, NULL, HFILL }
+		},
+
 		{ &hf_gluster_ia_ino,
-			{ "is_ino", "gluster.ia_ino", FT_BYTES, BASE_HEX,
+			{ "is_ino", "gluster.ia_ino", FT_BYTES, BASE_NONE,
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_ia_dev,
-			{ "ia_dev", "gluster.ia_dev", FT_BYTES, BASE_HEX,
+			{ "ia_dev", "gluster.ia_dev", FT_BYTES, BASE_NONE,
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_mode,
