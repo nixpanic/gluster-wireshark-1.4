@@ -472,6 +472,29 @@ gluster_gd_mgmt_stage_op_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U_,
 }
 
 static int
+gluster_gd_mgmt_commit_op_reply(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
+{
+	gchar *errstr = NULL;
+
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_uuid, offset, 16 * 4, FALSE, NULL);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, offset);
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_op_errstr, offset, &errstr);
+	return offset;
+}
+
+static int
+gluster_gd_mgmt_commit_op_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
+{
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_uuid, offset, 16 * 4, FALSE, NULL);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, offset);
+
+	return offset;
+}
+
+static int
 gluster_gd_mgmt_friend_update_reply(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
 {
 	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_uuid, offset, 16 * 4, FALSE, NULL);
@@ -555,7 +578,10 @@ static const vsff gd_mgmt_proc[] = {
 		GD_MGMT_STAGE_OP, "GD_MGMT_STAGE_OP",
 		gluster_gd_mgmt_stage_op_call, gluster_gd_mgmt_stage_op_reply
 	},
-	{ GD_MGMT_COMMIT_OP, "GD_MGMT_COMMIT_OP", NULL, NULL},
+	{
+		GD_MGMT_COMMIT_OP, "GD_MGMT_COMMIT_OP",
+		gluster_gd_mgmt_commit_op_call, gluster_gd_mgmt_commit_op_reply
+	},
 	{ GD_MGMT_FRIEND_REMOVE, "GD_MGMT_FRIEND_REMOVE", NULL, NULL},
 	{
 		GD_MGMT_FRIEND_UPDATE, "GD_MGMT_FRIEND_UPDATE",
