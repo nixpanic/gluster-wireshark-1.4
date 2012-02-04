@@ -859,15 +859,15 @@ proto_register_gluster(void)
 		},
 		{ &hf_gluster_gfsid,
 			{ "GFS ID", "gluster.gfsid", FT_BYTES,
-				BASE_HEX, NULL, 0, NULL, HFILL }
+				BASE_NONE, NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_gfid,
 			{ "GFID", "gluster.gfid", FT_BYTES,
-				BASE_HEX, NULL, 0, NULL, HFILL }
+				BASE_NONE, NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_pargfid,
 			{ "PARGFID (FIXME?)", "gluster.pargfid", FT_BYTES,
-				BASE_HEX, NULL, 0, NULL, HFILL }
+				BASE_NONE, NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_brick,
 			{ "Brick", "gluster.brick", FT_STRINGZ, BASE_NONE,
@@ -940,11 +940,11 @@ proto_register_gluster(void)
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_ia_rdev,
-			{ "ia_rdev", "gluster.ia_rdev", FT_BYTES, BASE_HEX,
+			{ "ia_rdev", "gluster.ia_rdev", FT_BYTES, BASE_NONE,
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_ia_size,
-			{ "ia_size", "gluster.ia_size", FT_BYTES, BASE_HEX,
+			{ "ia_size", "gluster.ia_size", FT_BYTES, BASE_NONE,
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_ia_blksize,
@@ -952,7 +952,7 @@ proto_register_gluster(void)
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_ia_blocks,
-			{ "ia_blocks", "gluster.brick.status", FT_BYTES, BASE_HEX,
+			{ "ia_blocks", "gluster.brick.status", FT_BYTES, BASE_NONE,
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_ia_atime,
