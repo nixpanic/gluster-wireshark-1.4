@@ -77,6 +77,7 @@ static gint hf_gluster_progname = -1;
 static gint hf_gluster_prognum = -1;
 static gint hf_gluster_progver = -1;
 static gint hf_gluster_brick = -1;
+static gint hf_gluster_op = -1;
 static gint hf_gluster_op_ret = -1;
 static gint hf_gluster_op_errno = -1;
 static gint hf_gluster_flags = -1;
@@ -90,6 +91,7 @@ static gint hf_gluster_dict_value = -1;
 static gint hf_gluster_uuid = -1;
 static gint hf_gluster_hostname = -1;
 static gint hf_gluster_port = -1;
+static gint hf_gluster_vols = -1;
 
 /* gf_iatt */
 static gint hf_gluster_ia_ino = -1;
@@ -399,6 +401,56 @@ gluster_gd_mgmt_probe_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, pr
 	return offset;
 }
 
+static int
+gluster_gd_mgmt_friend_add_reply(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
+{
+	gchar *hostname = NULL;
+
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_uuid, offset, 16 * 4, FALSE, NULL);
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_hostname, offset, &hostname);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_port, offset);
+
+	return offset;
+}
+
+static int
+gluster_gd_mgmt_friend_add_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
+{
+	gchar *hostname = NULL;
+
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_uuid, offset, 16 * 4, FALSE, NULL);
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_hostname, offset, &hostname);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_port, offset);
+	/* FIXME: how to call this one? vols? */
+	offset = gluster_rpc_dissect_dict(tree, tvb, offset);
+
+	return offset;
+}
+
+static int
+gluster_gd_mgmt_friend_update_reply(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
+{
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_uuid, offset, 16 * 4, FALSE, NULL);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+
+	return offset;
+}
+
+static int
+gluster_gd_mgmt_friend_update_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
+{
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_uuid, offset, 16 * 4, FALSE, NULL);
+	/* FIXME: how to call this one? vols? */
+	offset = gluster_rpc_dissect_dict(tree, tvb, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_port, offset);
+
+	return offset;
+}
+
 /* procedures for GLUSTER_DUMP_PROGRAM */
 static const vsff gluster_dump_proc[] = {
 	{ 0, "NULL", NULL, NULL },
@@ -448,13 +500,19 @@ static const vsff gd_mgmt_proc[] = {
 		GD_MGMT_PROBE_QUERY, "GD_MGMT_PROBE_QUERY",
 		gluster_gd_mgmt_probe_call, gluster_gd_mgmt_probe_reply
 	},
-	{ GD_MGMT_FRIEND_ADD, "GD_MGMT_FRIEND_ADD", NULL, NULL},
+	{
+		GD_MGMT_FRIEND_ADD, "GD_MGMT_FRIEND_ADD",
+		gluster_gd_mgmt_friend_add_call, gluster_gd_mgmt_friend_add_reply
+	},
 	{ GD_MGMT_CLUSTER_LOCK, "GD_MGMT_CLUSTER_LOCK", NULL, NULL},
 	{ GD_MGMT_CLUSTER_UNLOCK, "GD_MGMT_CLUSTER_UNLOCK", NULL, NULL},
 	{ GD_MGMT_STAGE_OP, "GD_MGMT_STAGE_OP", NULL, NULL},
 	{ GD_MGMT_COMMIT_OP, "GD_MGMT_COMMIT_OP", NULL, NULL},
 	{ GD_MGMT_FRIEND_REMOVE, "GD_MGMT_FRIEND_REMOVE", NULL, NULL},
-	{ GD_MGMT_FRIEND_UPDATE, "GD_MGMT_FRIEND_UPDATE", NULL, NULL},
+	{
+		GD_MGMT_FRIEND_UPDATE, "GD_MGMT_FRIEND_UPDATE",
+		gluster_gd_mgmt_friend_update_call, gluster_gd_mgmt_friend_update_reply
+	},
 	{ GD_MGMT_CLI_PROBE, "GD_MGMT_CLI_PROBE", NULL, NULL},
 	{ GD_MGMT_CLI_DEPROBE, "GD_MGMT_CLI_DEPROBE", NULL, NULL},
 	{ GD_MGMT_CLI_LIST_FRIENDS, "GD_MGMT_CLI_LIST_FRIENDS", NULL, NULL},
@@ -873,6 +931,10 @@ proto_register_gluster(void)
 			{ "Brick", "gluster.brick", FT_STRINGZ, BASE_NONE,
 				NULL, 0, NULL, HFILL }
 		},
+		{ &hf_gluster_op,
+			{ "Operation (FIXME?)", "gluster.op", FT_INT32, BASE_DEC,
+				NULL, 0, NULL, HFILL }
+		},
 		{ &hf_gluster_op_ret,
 			{ "Return value", "gluster.op_ret", FT_INT32, BASE_DEC,
 				NULL, 0, NULL, HFILL }
@@ -912,6 +974,10 @@ proto_register_gluster(void)
 		},
 		{ &hf_gluster_port,
 			{ "Port", "gluster.port", FT_INT32, BASE_DEC,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_vols,
+			{ "Volumes", "gluster.vols", FT_INT32, BASE_DEC,
 				NULL, 0, NULL, HFILL }
 		},
 
