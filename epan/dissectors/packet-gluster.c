@@ -80,6 +80,7 @@ static gint hf_gluster_brick = -1;
 static gint hf_gluster_op = -1;
 static gint hf_gluster_op_ret = -1;
 static gint hf_gluster_op_errno = -1;
+static gint hf_gluster_op_errstr = -1;
 static gint hf_gluster_flags = -1;
 static gint hf_gluster_path = -1;
 static gint hf_gluster_bname = -1;
@@ -448,6 +449,29 @@ gluster_gd_mgmt_cluster_lock_call(tvbuff_t *tvb, int offset, packet_info *pinfo 
 }
 
 static int
+gluster_gd_mgmt_stage_op_reply(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
+{
+	gchar *errstr = NULL;
+
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_uuid, offset, 16 * 4, FALSE, NULL);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_op_errstr, offset, &errstr);
+	offset = gluster_rpc_dissect_dict(tree, tvb, offset);
+	return offset;
+}
+
+static int
+gluster_gd_mgmt_stage_op_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
+{
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_uuid, offset, 16 * 4, FALSE, NULL);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, offset);
+
+	return offset;
+}
+
+static int
 gluster_gd_mgmt_friend_update_reply(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
 {
 	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_uuid, offset, 16 * 4, FALSE, NULL);
@@ -527,7 +551,10 @@ static const vsff gd_mgmt_proc[] = {
 		gluster_gd_mgmt_cluster_lock_call, gluster_gd_mgmt_cluster_lock_reply
 	},
 	{ GD_MGMT_CLUSTER_UNLOCK, "GD_MGMT_CLUSTER_UNLOCK", NULL, NULL},
-	{ GD_MGMT_STAGE_OP, "GD_MGMT_STAGE_OP", NULL, NULL},
+	{
+		GD_MGMT_STAGE_OP, "GD_MGMT_STAGE_OP",
+		gluster_gd_mgmt_stage_op_call, gluster_gd_mgmt_stage_op_reply
+	},
 	{ GD_MGMT_COMMIT_OP, "GD_MGMT_COMMIT_OP", NULL, NULL},
 	{ GD_MGMT_FRIEND_REMOVE, "GD_MGMT_FRIEND_REMOVE", NULL, NULL},
 	{
@@ -963,6 +990,10 @@ proto_register_gluster(void)
 		{ &hf_gluster_op_errno,
 			{ "Errno", "gluster.op_errno", FT_INT32, BASE_DEC,
 				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_op_errstr,
+			{ "Error String", "gluster.op_errstr", FT_STRING,
+				BASE_NONE, NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_flags,
 			{ "Flags", "gluster.flags", FT_UINT32, BASE_OCT,
