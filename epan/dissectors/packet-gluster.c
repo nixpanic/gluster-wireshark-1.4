@@ -373,7 +373,7 @@ gluster_gfs3_op_statfs_call(tvbuff_t *tvb, int offset,
 }
 
 static int
-gluster_hndsk_lookup_reply(tvbuff_t *tvb, int offset,
+gluster_gfs3_op_lookup_reply(tvbuff_t *tvb, int offset,
 				packet_info *pinfo _U_, proto_tree *tree)
 {
 	proto_item *iatt_item;
@@ -395,7 +395,7 @@ gluster_hndsk_lookup_reply(tvbuff_t *tvb, int offset,
 }
 
 static int
-gluster_hndsk_lookup_call(tvbuff_t *tvb, int offset,
+gluster_gfs3_op_lookup_call(tvbuff_t *tvb, int offset,
 				packet_info *pinfo _U_, proto_tree *tree)
 {
 	gchar *path = NULL;
@@ -922,7 +922,10 @@ static const vsff gluster3_1_fop_proc[] = {
 	{ GFS3_OP_FTRUNCATE, "FTRUNCATE", NULL, NULL },
 	{ GFS3_OP_FSTAT, "FSTAT", NULL, NULL },
 	{ GFS3_OP_LK, "LK", NULL, NULL },
-	{ GFS3_OP_LOOKUP, "LOOKUP", gluster_hndsk_lookup_call, gluster_hndsk_lookup_reply },
+	{
+		GFS3_OP_LOOKUP, "LOOKUP",
+		gluster_gfs3_op_lookup_call, gluster_gfs3_op_lookup_reply
+	},
 	{ GFS3_OP_READDIR, "READDIR", NULL, NULL },
 	{ GFS3_OP_INODELK, "INODELK", NULL, NULL },
 	{ GFS3_OP_FINODELK, "FINODELK", NULL, NULL },
