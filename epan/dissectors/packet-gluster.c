@@ -203,6 +203,7 @@ gluster_rpc_dissect_dict(proto_tree *tree, tvbuff_t *tvb /* FIXME: add ", int hf
 static int
 gluster_dissect_rpc_uquad_t(tvbuff_t *tvb, proto_tree *tree, int hfindex, int offset)
 {
+	/* FIXME: this should actually be a decimal number */
 	offset = dissect_rpc_bytes(tvb, tree, hfindex, offset, 8, FALSE, NULL);
 	return offset;
 }
