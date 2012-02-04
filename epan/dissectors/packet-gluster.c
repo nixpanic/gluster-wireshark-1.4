@@ -376,6 +376,36 @@ gluster_gfs3_op_statfs_call(tvbuff_t *tvb, int offset,
 }
 
 static int
+gluster_gfs3_op_setxattr_reply(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	return offset;
+}
+
+static int
+gluster_gfs3_op_setxattr_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	gchar *path = NULL;
+	guint flags;
+
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
+								FALSE, NULL);
+
+	/* FIXME: these flags need to be displayed in a sane way */
+	flags = tvb_get_ntohl(tvb, offset);
+	proto_tree_add_uint_format(tree, hf_gluster_flags, tvb, offset, 4, flags, "Flags: 0x%02x", flags);
+	offset += 4;
+
+	offset = gluster_rpc_dissect_dict(tree, tvb, offset);
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_path, offset, &path);
+
+	return offset;
+}
+
+static int
 gluster_gfs3_op_lookup_reply(tvbuff_t *tvb, int offset,
 				packet_info *pinfo _U_, proto_tree *tree)
 {
@@ -964,7 +994,10 @@ static const vsff gluster3_1_fop_proc[] = {
 	},
 	{ GFS3_OP_FLUSH, "FLUSH", NULL, NULL },
 	{ GFS3_OP_FSYNC, "FSYNC", NULL, NULL },
-	{ GFS3_OP_SETXATTR, "SETXATTR", NULL, NULL },
+	{
+		GFS3_OP_SETXATTR, "SETXATTR",
+		gluster_gfs3_op_setxattr_call, gluster_gfs3_op_setxattr_reply
+	},
 	{ GFS3_OP_GETXATTR, "GETXATTR", NULL, NULL },
 	{ GFS3_OP_REMOVEXATTR, "REMOVEXATTR", NULL, NULL },
 	{ GFS3_OP_OPENDIR, "OPENDIR", NULL, NULL },
