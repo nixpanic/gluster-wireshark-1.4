@@ -133,7 +133,7 @@ static gint ett_gluster_iatt = -1;
 
 /* function for dissecting and adding a gluster dict_t to the tree */
 static int
-gluster_rpc_dissect_dict(proto_tree *tree, tvbuff_t *tvb, int offset)
+gluster_rpc_dissect_dict(proto_tree *tree, tvbuff_t *tvb /* FIXME: add ", int hfindex" */, int offset)
 {
 	gchar *key, *value;
 	gint items, i, len, roundup, value_len, key_len;
