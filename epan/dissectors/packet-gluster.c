@@ -1017,31 +1017,31 @@ proto_register_gluster(void)
 	proto_register_field_array(proto_gluster, hf, array_length(hf));
 
 	proto_gluster_dump = proto_register_protocol("Gluster Dump",
-					"Gluster Dump", "gluster.dump");
+					"Gluster Dump", "gluster-dump");
 
 	proto_gluster_mgmt = proto_register_protocol("Gluster Management",
-					"Gluster Management", "gluster.mgmt");
+					"Gluster Management", "gluster-mgmt");
 
 	proto_gd_mgmt = proto_register_protocol("Gluster Daemon Management",
-					"GlusterD Management", "gd.mgmt");
+					"GlusterD Management", "gd-mgmt");
 
 	proto_gluster_hndsk = proto_register_protocol("GlusterFS Handshake",
-					"GlusterFS Handshake", "gluster.hndsk");
+					"GlusterFS Handshake", "gluster-hndsk");
 
 	proto_gluster_cli = proto_register_protocol("Gluster CLI",
-					"Gluster CLI", "gluster.cli");
+					"Gluster CLI", "gluster-cli");
 
 	proto_gluster_pmap = proto_register_protocol("Gluster Portmap",
-					"Gluster Portmap", "gluster.pmap");
+					"Gluster Portmap", "gluster-pmap");
 
 	proto_gluster_cbk = proto_register_protocol("GlusterFS Callback",
-					"GlusterFS Callback", "gluster.cbk");
+					"GlusterFS Callback", "gluster-cbk");
 
 	proto_gluster_fs = proto_register_protocol("GlusterFS Mops",
-					"GlusterFS Mops", "gluster.mops");
+					"GlusterFS Mops", "gluster-mops");
 
 	proto_gluster3_1_fop = proto_register_protocol("GlusterFS",
-				"GlusterFS", "gluster.fs");
+				"GlusterFS", "glusterfs");
 }
 
 
