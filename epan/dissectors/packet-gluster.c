@@ -112,6 +112,19 @@ static gint hf_gluster_ia_mtime_nsec = -1;
 static gint hf_gluster_ia_ctime = -1;
 static gint hf_gluster_ia_ctime_nsec = -1;
 
+/* statfs */
+static gint hf_gluster_bsize = -1;
+static gint hf_gluster_frsize = -1;
+static gint hf_gluster_blocks = -1;
+static gint hf_gluster_bfree = -1;
+static gint hf_gluster_bavail = -1;
+static gint hf_gluster_files = -1;
+static gint hf_gluster_ffree = -1;
+static gint hf_gluster_favail = -1;
+static gint hf_gluster_fsid = -1;
+static gint hf_gluster_flag = -1;
+static gint hf_gluster_namemax = -1;
+
 /* temporarily used during development */
 static gint hf_gluster_dict = -1;
 static gint hf_gluster_unknown_int = -1;
@@ -315,6 +328,47 @@ gluster_hndsk_setvolume_call(tvbuff_t *tvb, int offset,
 				packet_info *pinfo _U_, proto_tree *tree)
 {
 	offset = gluster_rpc_dissect_dict(tree, tvb, offset);
+	return offset;
+}
+
+static int
+gluster_rpc_dissect_statfs(proto_tree *tree, tvbuff_t *tvb, int offset)
+{
+	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_bsize, offset);
+	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_frsize, offset);
+	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_blocks, offset);
+	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_bfree, offset);
+	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_bavail, offset);
+	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_files, offset);
+	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_ffree, offset);
+	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_favail, offset);
+	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_fsid, offset);
+	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_flag, offset);
+	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_namemax, offset);
+
+	return offset;
+}
+
+static int
+gluster_gfs3_op_statfs_reply(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	offset = gluster_rpc_dissect_statfs(tree, tvb, offset);
+	return offset;
+}
+
+static int
+gluster_gfs3_op_statfs_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	gchar *path = NULL;
+
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
+								FALSE, NULL);
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_path, offset, &path);
+
 	return offset;
 }
 
@@ -852,7 +906,10 @@ static const vsff gluster3_1_fop_proc[] = {
 	{ GFS3_OP_OPEN, "OPEN", NULL, NULL },
 	{ GFS3_OP_READ, "READ", NULL, NULL },
 	{ GFS3_OP_WRITE, "WRITE", NULL, NULL },
-	{ GFS3_OP_STATFS, "STATFS", NULL, NULL },
+	{
+		GFS3_OP_STATFS, "STATFS",
+		gluster_gfs3_op_statfs_call, gluster_gfs3_op_statfs_reply
+	},
 	{ GFS3_OP_FLUSH, "FLUSH", NULL, NULL },
 	{ GFS3_OP_FSYNC, "FSYNC", NULL, NULL },
 	{ GFS3_OP_SETXATTR, "SETXATTR", NULL, NULL },
@@ -1127,6 +1184,52 @@ proto_register_gluster(void)
 		},
 		{ &hf_gluster_ia_ctime_nsec,
 			{ "ia_ctime_nsec", "gluster.brick.status", FT_INT32, BASE_DEC,
+				NULL, 0, NULL, HFILL }
+		},
+
+		/* FIXME: these statfs fields need a better name*/
+		{ &hf_gluster_bsize,
+			{ "bsize", "gluster.statfs.bsize", FT_BYTES, BASE_NONE,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_frsize,
+			{ "frsize", "gluster.statfs.frsize", FT_BYTES, BASE_NONE,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_blocks,
+			{ "blocks", "gluster.statfs.blocks", FT_BYTES, BASE_NONE,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_bfree,
+			{ "bfree", "gluster.statfs.bfree", FT_BYTES, BASE_NONE,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_bavail,
+			{ "bavail", "gluster.statfs.bavail", FT_BYTES, BASE_NONE,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_files,
+			{ "files", "gluster.statfs.files", FT_BYTES, BASE_NONE,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_ffree,
+			{ "ffree", "gluster.statfs.ffree", FT_BYTES, BASE_NONE,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_favail,
+			{ "favail", "gluster.statfs.favail", FT_BYTES, BASE_NONE,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_fsid,
+			{ "fsid", "gluster.statfs.fsid", FT_BYTES, BASE_NONE,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_flag,
+			{ "flag", "gluster.statfs.flag", FT_BYTES, BASE_NONE,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_namemax,
+			{ "namemax", "gluster.statfs.namemax", FT_BYTES, BASE_NONE,
 				NULL, 0, NULL, HFILL }
 		},
 
