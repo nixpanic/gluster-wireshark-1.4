@@ -205,8 +205,7 @@ gluster_rpc_dissect_dict(proto_tree *tree, tvbuff_t *tvb /* FIXME: add ", int hf
 static int
 gluster_dissect_rpc_uquad_t(tvbuff_t *tvb, proto_tree *tree, int hfindex, int offset)
 {
-	/* FIXME: this should actually be a decimal number */
-	offset = dissect_rpc_bytes(tvb, tree, hfindex, offset, 8, FALSE, NULL);
+	offset = dissect_rpc_uint64(tvb, tree, hfindex, offset);
 	return offset;
 }
 
@@ -1148,8 +1147,8 @@ proto_register_gluster(void)
 				BASE_HEX, NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_gfsid,
-			{ "GFS ID", "gluster.gfsid", FT_BYTES,
-				BASE_NONE, NULL, 0, NULL, HFILL }
+			{ "GFS ID", "gluster.gfsid", FT_UINT64,
+				BASE_HEX, NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_gfid,
 			{ "GFID", "gluster.gfid", FT_BYTES,
@@ -1218,11 +1217,11 @@ proto_register_gluster(void)
 		},
 
 		{ &hf_gluster_ia_ino,
-			{ "is_ino", "gluster.ia_ino", FT_BYTES, BASE_NONE,
+			{ "ia_ino", "gluster.ia_ino", FT_UINT64, BASE_DEC,
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_ia_dev,
-			{ "ia_dev", "gluster.ia_dev", FT_BYTES, BASE_NONE,
+			{ "ia_dev", "gluster.ia_dev", FT_UINT64, BASE_HEX,
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_mode,
@@ -1242,11 +1241,11 @@ proto_register_gluster(void)
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_ia_rdev,
-			{ "ia_rdev", "gluster.ia_rdev", FT_BYTES, BASE_NONE,
+			{ "ia_rdev", "gluster.ia_rdev", FT_UINT64, BASE_HEX,
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_ia_size,
-			{ "ia_size", "gluster.ia_size", FT_BYTES, BASE_NONE,
+			{ "ia_size", "gluster.ia_size", FT_UINT64, BASE_DEC,
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_ia_blksize,
@@ -1254,82 +1253,82 @@ proto_register_gluster(void)
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_ia_blocks,
-			{ "ia_blocks", "gluster.brick.status", FT_BYTES, BASE_NONE,
+			{ "ia_blocks", "gluster.ia_blocks", FT_UINT64, BASE_DEC,
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_ia_atime,
-			{ "ia_time", "gluster.brick.status", FT_INT32, BASE_DEC,
+			{ "ia_time", "gluster.is_time", FT_INT32, BASE_DEC,
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_ia_atime_nsec,
-			{ "ia_atime_nsec", "gluster.brick.status", FT_INT32, BASE_DEC,
+			{ "ia_atime_nsec", "gluster.ia_atime_nsec", FT_INT32, BASE_DEC,
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_ia_mtime,
-			{ "ia_mtime", "gluster.brick.status", FT_INT32, BASE_DEC,
+			{ "ia_mtime", "gluster.is_mtime", FT_INT32, BASE_DEC,
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_ia_mtime_nsec,
-			{ "ia_mtime_msec", "gluster.brick.status", FT_INT32, BASE_DEC,
+			{ "ia_mtime_msec", "gluster.is_mtime_nsec", FT_INT32, BASE_DEC,
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_ia_ctime,
-			{ "ia_ctime", "gluster.brick.status", FT_INT32, BASE_DEC,
+			{ "ia_ctime", "gluster.ia_ctime", FT_INT32, BASE_DEC,
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_ia_ctime_nsec,
-			{ "ia_ctime_nsec", "gluster.brick.status", FT_INT32, BASE_DEC,
+			{ "ia_ctime_nsec", "gluster.ia_ctime_nsec", FT_INT32, BASE_DEC,
 				NULL, 0, NULL, HFILL }
 		},
 
 		/* FIXME: these statfs fields need a better name*/
 		{ &hf_gluster_bsize,
-			{ "bsize", "gluster.statfs.bsize", FT_BYTES, BASE_NONE,
+			{ "bsize", "gluster.statfs.bsize", FT_UINT64, BASE_DEC,
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_frsize,
-			{ "frsize", "gluster.statfs.frsize", FT_BYTES, BASE_NONE,
+			{ "frsize", "gluster.statfs.frsize", FT_UINT64, BASE_DEC,
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_blocks,
-			{ "blocks", "gluster.statfs.blocks", FT_BYTES, BASE_NONE,
+			{ "blocks", "gluster.statfs.blocks", FT_UINT64, BASE_DEC,
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_bfree,
-			{ "bfree", "gluster.statfs.bfree", FT_BYTES, BASE_NONE,
+			{ "bfree", "gluster.statfs.bfree", FT_UINT64, BASE_DEC,
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_bavail,
-			{ "bavail", "gluster.statfs.bavail", FT_BYTES, BASE_NONE,
+			{ "bavail", "gluster.statfs.bavail", FT_UINT64, BASE_DEC,
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_files,
-			{ "files", "gluster.statfs.files", FT_BYTES, BASE_NONE,
+			{ "files", "gluster.statfs.files", FT_UINT64, BASE_DEC,
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_ffree,
-			{ "ffree", "gluster.statfs.ffree", FT_BYTES, BASE_NONE,
+			{ "ffree", "gluster.statfs.ffree", FT_UINT64, BASE_DEC,
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_favail,
-			{ "favail", "gluster.statfs.favail", FT_BYTES, BASE_NONE,
+			{ "favail", "gluster.statfs.favail", FT_UINT64, BASE_DEC,
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_fsid,
-			{ "fsid", "gluster.statfs.fsid", FT_BYTES, BASE_NONE,
+			{ "fsid", "gluster.statfs.fsid", FT_UINT64, BASE_HEX,
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_flag,
-			{ "flag", "gluster.statfs.flag", FT_BYTES, BASE_NONE,
+			{ "flag", "gluster.statfs.flag", FT_UINT64, BASE_OCT,
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_namemax,
-			{ "namemax", "gluster.statfs.namemax", FT_BYTES, BASE_NONE,
+			{ "namemax", "gluster.statfs.namemax", FT_UINT64, BASE_DEC,
 				NULL, 0, NULL, HFILL }
 		},
 
 		{ &hf_gluster_setattr_valid,
-			{ "valid", "gluster.setattr.valid", FT_INT32, BASE_DEC,
+			{ "valid", "gluster.setattr.valid", FT_UINT32, BASE_DEC,
 				NULL, 0, NULL, HFILL }
 		},
 
