@@ -81,6 +81,9 @@ static gint hf_gluster_op = -1;
 static gint hf_gluster_op_ret = -1;
 static gint hf_gluster_op_errno = -1;
 static gint hf_gluster_op_errstr = -1;
+static gint hf_gluster_fd = -1;
+static gint hf_gluster_offset = -1;
+static gint hf_gluster_size = -1;
 static gint hf_gluster_flags = -1;
 static gint hf_gluster_path = -1;
 static gint hf_gluster_bname = -1;
@@ -405,6 +408,29 @@ gluster_gfs3_op_setxattr_call(tvbuff_t *tvb, int offset,
 }
 
 static int
+gluster_gfs3_op_opendir_reply(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_fd, offset);
+	return offset;
+}
+
+static int
+gluster_gfs3_op_opendir_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	gchar *path = NULL;
+
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
+								FALSE, NULL);
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_path, offset, &path);
+
+	return offset;
+}
+
+static int
 gluster_gfs3_op_lookup_reply(tvbuff_t *tvb, int offset,
 				packet_info *pinfo _U_, proto_tree *tree)
 {
@@ -459,6 +485,32 @@ gluster_gfs3_op_lookup_call(tvbuff_t *tvb, int offset,
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_bname, offset, &bname);
 	offset = gluster_rpc_dissect_dict(tree, tvb, offset);
 	
+	return offset;
+}
+
+static int
+gluster_gfs3_op_readdirp_reply(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+
+	if (tree)
+		proto_tree_add_text(tree, tvb, offset, -1, "FIXME: The data that follows is a xdr_pointer from xdr_gfs3_dirplist");
+
+	return offset;
+}
+
+static int
+gluster_gfs3_op_readdirp_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
+								FALSE, NULL);
+	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_fd, offset);
+	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_offset, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_size, offset);
+
 	return offset;
 }
 
@@ -999,7 +1051,10 @@ static const vsff gluster3_1_fop_proc[] = {
 	},
 	{ GFS3_OP_GETXATTR, "GETXATTR", NULL, NULL },
 	{ GFS3_OP_REMOVEXATTR, "REMOVEXATTR", NULL, NULL },
-	{ GFS3_OP_OPENDIR, "OPENDIR", NULL, NULL },
+	{
+		GFS3_OP_OPENDIR, "OPENDIR",
+		gluster_gfs3_op_opendir_call, gluster_gfs3_op_opendir_reply
+	},
 	{ GFS3_OP_FSYNCDIR, "FSYNCDIR", NULL, NULL },
 	{ GFS3_OP_ACCESS, "ACCESS", NULL, NULL },
 	{ GFS3_OP_CREATE, "CREATE", NULL, NULL },
@@ -1029,7 +1084,10 @@ static const vsff gluster3_1_fop_proc[] = {
 		/* SETATTR and SETFATTS calls and reply are encoded the same */
 		gluster_gfs3_op_setattr_call, gluster_gfs3_op_setattr_reply
 	},
-	{ GFS3_OP_READDIRP, "READDIRP", NULL, NULL },
+	{
+		GFS3_OP_READDIRP, "READDIRP",
+		gluster_gfs3_op_readdirp_call, gluster_gfs3_op_readdirp_reply
+	},
 	{ GFS3_OP_RELEASE, "RELEASE", NULL, NULL },
 	{ GFS3_OP_RELEASEDIR, "RELEASEDIR", NULL, NULL },
 	{ 0, NULL, NULL, NULL }
@@ -1177,6 +1235,18 @@ proto_register_gluster(void)
 		{ &hf_gluster_op_errstr,
 			{ "Error String", "gluster.op_errstr", FT_STRING,
 				BASE_NONE, NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_fd,
+			{ "File Descriptor", "gluster.fd", FT_UINT64, BASE_DEC,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_offset,
+			{ "Offset", "gluster.offset", FT_UINT64, BASE_DEC,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_size,
+			{ "Size", "gluster.size", FT_UINT32, BASE_DEC,
+				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_flags,
 			{ "Flags", "gluster.flags", FT_UINT32, BASE_OCT,
