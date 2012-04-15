@@ -354,6 +354,61 @@ gluster_rpc_dissect_statfs(proto_tree *tree, tvbuff_t *tvb, int offset)
 	return offset;
 }
 
+/*
+ *  372          if (!xdr_int (xdrs, &objp->op_ret))
+ *   373                  return FALSE;
+ *    374          if (!xdr_int (xdrs, &objp->op_errno))
+ *     375                  return FALSE;
+ *      376          if (!xdr_gf_iatt (xdrs, &objp->preparent))
+ *       377                  return FALSE;
+ *        378          if (!xdr_gf_iatt (xdrs, &objp->postparent))
+ *
+ */
+static int
+gluster_gfs3_op_unlink_reply(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	proto_item *iatt_item;
+	proto_tree *iatt_tree;
+
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+
+	// FIXME: describe this better - gf_iatt (xdrs, &objp->preparent
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "PreParent IATT");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+
+	// FIXME: describe this better - gf_iatt (xdrs, &objp->postparent
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "PostParent IATT");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+
+	return offset;
+}
+
+/*
+ *  359          if (!xdr_opaque (xdrs, objp->pargfid, 16))
+ *   360                  return FALSE;
+ *    361          if (!xdr_string (xdrs, &objp->path, ~0))
+ *     362                  return FALSE;
+ *      363          if (!xdr_string (xdrs, &objp->bname, ~0))
+ *       364                  return FALSE;
+ *
+ */
+static int
+gluster_gfs3_op_unlink_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	gchar* path = NULL;
+	gchar* bname = NULL;
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_pargfid, offset, 16,
+								FALSE, NULL);
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_path, offset, &path);
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_bname, offset, &bname);
+	return offset;
+}
+
 static int
 gluster_gfs3_op_statfs_reply(tvbuff_t *tvb, int offset,
 				packet_info *pinfo _U_, proto_tree *tree)
@@ -1104,7 +1159,10 @@ static const vsff gluster3_1_fop_proc[] = {
 	{ GFS3_OP_READLINK, "READLINK", NULL, NULL },
 	{ GFS3_OP_MKNOD, "MKNOD", NULL, NULL },
 	{ GFS3_OP_MKDIR, "MKDIR", NULL, NULL },
-	{ GFS3_OP_UNLINK, "UNLINK", NULL, NULL },
+	{
+		GFS3_OP_UNLINK, "UNLINK",
+		gluster_gfs3_op_unlink_call, gluster_gfs3_op_unlink_reply
+	},
 	{ GFS3_OP_RMDIR, "RMDIR", NULL, NULL },
 	{ GFS3_OP_SYMLINK, "SYMLINK", NULL, NULL },
 	{ GFS3_OP_RENAME, "RENAME", NULL, NULL },
