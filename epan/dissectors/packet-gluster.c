@@ -378,6 +378,25 @@ gluster_gfs3_op_statfs_call(tvbuff_t *tvb, int offset,
 }
 
 static int
+gluster_gfs3_op_flush_reply(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	return offset;
+}
+
+static int
+gluster_gfs3_op_flush_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
+								FALSE, NULL);
+	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_fd, offset);
+	return offset;
+}
+
+static int
 gluster_gfs3_op_setxattr_reply(tvbuff_t *tvb, int offset,
 				packet_info *pinfo _U_, proto_tree *tree)
 {
@@ -1098,7 +1117,10 @@ static const vsff gluster3_1_fop_proc[] = {
 		GFS3_OP_STATFS, "STATFS",
 		gluster_gfs3_op_statfs_call, gluster_gfs3_op_statfs_reply
 	},
-	{ GFS3_OP_FLUSH, "FLUSH", NULL, NULL },
+	{
+		GFS3_OP_FLUSH, "FLUSH",
+		gluster_gfs3_op_flush_call, gluster_gfs3_op_flush_reply
+	},
 	{ GFS3_OP_FSYNC, "FSYNC", NULL, NULL },
 	{
 		GFS3_OP_SETXATTR, "SETXATTR",
