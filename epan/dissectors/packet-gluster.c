@@ -87,6 +87,9 @@ static gint hf_gluster_size = -1;
 static gint hf_gluster_flags = -1;
 static gint hf_gluster_path = -1;
 static gint hf_gluster_bname = -1;
+static gint hf_gluster_volume = -1;
+static gint hf_gluster_cmd = -1;
+static gint hf_gluster_type = -1;
 static gint hf_gluster_brick_status = -1;
 static gint hf_gluster_brick_port = -1;
 static gint hf_gluster_dict_key = -1;
@@ -114,6 +117,14 @@ static gint hf_gluster_ia_mtime = -1;
 static gint hf_gluster_ia_mtime_nsec = -1;
 static gint hf_gluster_ia_ctime = -1;
 static gint hf_gluster_ia_ctime_nsec = -1;
+
+/* gf_flock */
+static gint hf_gluster_flock_type = -1;
+static gint hf_gluster_flock_whence = -1;
+static gint hf_gluster_flock_start = -1;
+static gint hf_gluster_flock_len = -1;
+static gint hf_gluster_flock_pid = -1;
+static gint hf_gluster_flock_owner = -1;
 
 /* statfs */
 static gint hf_gluster_bsize = -1;
@@ -147,6 +158,7 @@ static gint ett_gluster_fs = -1;
 static gint ett_gluster3_1_fop = -1;
 static gint ett_gluster_dict = -1;
 static gint ett_gluster_iatt = -1;
+static gint ett_gluster_flock = -1;
 
 
 /* function for dissecting and adding a gluster dict_t to the tree */
@@ -238,6 +250,19 @@ gluster_rpc_dissect_gf_iatt(proto_tree *tree, tvbuff_t *tvb, int offset)
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_ia_mtime_nsec, offset);
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_ia_ctime, offset);
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_ia_ctime_nsec, offset);
+
+	return offset;
+}
+
+static int
+gluster_rpc_dissect_gf_flock(proto_tree *tree, tvbuff_t *tvb, int offset)
+{
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_flock_type, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_flock_whence, offset);
+	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_flock_start, offset);
+	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_flock_len, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_flock_pid, offset);
+	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_flock_owner, offset);
 
 	return offset;
 }
@@ -614,6 +639,39 @@ gluster_gfs3_op_lookup_call(tvbuff_t *tvb, int offset,
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_bname, offset, &bname);
 	offset = gluster_rpc_dissect_dict(tree, tvb, offset);
 	
+	return offset;
+}
+
+static int
+gluster_gfs3_op_inodelk_reply(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+
+	return offset;
+}
+
+static int
+gluster_gfs3_op_inodelk_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	proto_item *flock_item;
+	proto_tree *flock_tree;
+	gchar* path = NULL;
+	gchar* volume = NULL;
+
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
+								FALSE, NULL);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_cmd, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_type, offset);
+
+	flock_item = proto_tree_add_text(tree, tvb, offset, -1, "flock");
+	flock_tree = proto_item_add_subtree(flock_item, ett_gluster_flock);
+	offset = gluster_rpc_dissect_gf_flock(flock_tree, tvb, offset);
+
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_path, offset, &path);
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_volume, offset, &volume);
 	return offset;
 }
 
@@ -1204,7 +1262,10 @@ static const vsff gluster3_1_fop_proc[] = {
 		gluster_gfs3_op_lookup_call, gluster_gfs3_op_lookup_reply
 	},
 	{ GFS3_OP_READDIR, "READDIR", NULL, NULL },
-	{ GFS3_OP_INODELK, "INODELK", NULL, NULL },
+	{
+		GFS3_OP_INODELK, "INODELK",
+		gluster_gfs3_op_inodelk_call, gluster_gfs3_op_inodelk_reply
+	},
 	{ GFS3_OP_FINODELK, "FINODELK", NULL, NULL },
 	{ GFS3_OP_ENTRYLK, "ENTRYLK", NULL, NULL },
 	{ GFS3_OP_FENTRYLK, "FENTRYLK", NULL, NULL },
@@ -1398,6 +1459,18 @@ proto_register_gluster(void)
 			{ "BNAME (FIXME!)", "gluster.bname", FT_STRING, BASE_NONE,
 				NULL, 0, NULL, HFILL }
 		},
+		{ &hf_gluster_volume,
+			{ "Volume", "gluster.volume", FT_STRING, BASE_NONE,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_cmd,
+			{ "Command", "gluster.cmd", FT_INT32, BASE_DEC,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_type,
+			{ "Type", "gluster.type", FT_INT32, BASE_DEC,
+				NULL, 0, NULL, HFILL }
+		},
 		{ &hf_gluster_brick_status,
 			{ "Status", "gluster.brick.status", FT_INT32, BASE_DEC,
 				NULL, 0, NULL, HFILL }
@@ -1489,6 +1562,32 @@ proto_register_gluster(void)
 				NULL, 0, NULL, HFILL }
 		},
 
+		/* gf_flock */
+		{ &hf_gluster_flock_type,
+			{ "ia_flock_type", "gluster.flock.type", FT_UINT32, BASE_DEC,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_flock_whence,
+			{ "ia_flock_whence", "gluster.flock.whence", FT_UINT64, BASE_DEC,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_flock_start,
+			{ "ia_flock_start", "gluster.flock.start", FT_UINT64, BASE_DEC,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_flock_len,
+			{ "ia_flock_len", "gluster.flock.len", FT_UINT64, BASE_DEC,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_flock_pid,
+			{ "ia_flock_pid", "gluster.flock.pid", FT_INT32, BASE_DEC,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_flock_owner,
+			{ "ia_flock_owner", "gluster.flock.owner", FT_UINT64, BASE_DEC,
+				NULL, 0, NULL, HFILL }
+		},
+
 		/* FIXME: these statfs fields need a better name*/
 		{ &hf_gluster_bsize,
 			{ "bsize", "gluster.statfs.bsize", FT_UINT64, BASE_DEC,
@@ -1567,7 +1666,8 @@ proto_register_gluster(void)
 		&ett_gluster_fs,
 		&ett_gluster3_1_fop,
 		&ett_gluster_dict,
-		&ett_gluster_iatt
+		&ett_gluster_iatt,
+		&ett_gluster_flock
 	};
 
 	/* Register the protocol name and description */
