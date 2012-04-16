@@ -1433,7 +1433,7 @@ proto_register_gluster(void)
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_mode,
-			{ "mode", "gluster.mode", FT_INT32, BASE_DEC,
+			{ "mode", "gluster.mode", FT_INT32, BASE_OCT,
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_ia_nlink,
