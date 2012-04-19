@@ -50,7 +50,6 @@ gint proto_gluster = -1;
 static gint proto_gluster_dump = -1;
 static gint proto_gluster_mgmt = -1;
 static gint proto_gd_mgmt = -1;
-static gint proto_gluster_hndsk = -1;
 static gint proto_gluster_cli = -1;
 static gint proto_gluster_pmap = -1;
 static gint proto_gluster_cbk = -1;
@@ -59,7 +58,6 @@ static gint proto_gluster_cbk = -1;
 static gint hf_gluster_dump_proc = -1;
 static gint hf_gluster_mgmt_proc = -1;
 static gint hf_gd_mgmt_proc = -1;
-static gint hf_gluster_hndsk_proc = -1;
 static gint hf_gluster_cli_proc = -1;
 static gint hf_gluster_pmap_proc = -1;
 static gint hf_gluster_cbk_proc = -1;
@@ -94,7 +92,6 @@ static gint ett_gluster = -1;
 static gint ett_gluster_dump = -1;
 static gint ett_gluster_mgmt = -1;
 static gint ett_gd_mgmt = -1;
-static gint ett_gluster_hndsk = -1;
 static gint ett_gluster_cli = -1;
 static gint ett_gluster_pmap = -1;
 static gint ett_gluster_cbk = -1;
@@ -227,33 +224,6 @@ gluster_pmap_portbybrick_call(tvbuff_t *tvb, int offset,
 	gchar *brick = NULL;
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_brick, offset,
 								&brick);
-	return offset;
-}
-
-static int
-gluster_hndsk_ping_reply(tvbuff_t *tvb, int offset, packet_info *pinfo _U_,
-							proto_tree *tree)
-{
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
-	return offset;
-}
-
-static int
-gluster_hndsk_setvolume_reply(tvbuff_t *tvb, int offset,
-				packet_info *pinfo _U_, proto_tree *tree)
-{
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
-	offset = gluster_rpc_dissect_dict(tree, tvb, offset);
-	return offset;
-}
-
-static int
-gluster_hndsk_setvolume_call(tvbuff_t *tvb, int offset,
-				packet_info *pinfo _U_, proto_tree *tree)
-{
-	offset = gluster_rpc_dissect_dict(tree, tvb, offset);
 	return offset;
 }
 
@@ -541,25 +511,6 @@ static const value_string gd_mgmt_proc_vals[] = {
 	{ 0, NULL }
 };
 
-/* procedures for GLUSTER_HNDSK_PROGRAM */
-static const vsff gluster_hndsk_proc[] = {
-	{ GF_HNDSK_NULL, "NULL", NULL, NULL },
-	{
-		GF_HNDSK_SETVOLUME, "SETVOLUME",
-		gluster_hndsk_setvolume_call, gluster_hndsk_setvolume_reply
-	},
-	{ GF_HNDSK_GETSPEC, "GETSPEC", NULL, NULL },
-	{ GF_HNDSK_PING, "PING", NULL, gluster_hndsk_ping_reply },
-	{ 0, NULL, NULL, NULL }
-};
-static const value_string gluster_hndsk_proc_vals[] = {
-	{ GF_HNDSK_NULL, "NULL" },
-	{ GF_HNDSK_SETVOLUME, "DUMP" },
-	{ GF_HNDSK_GETSPEC, "GETSPEC" },
-	{ GF_HNDSK_PING, "PING" },
-	{ 0, NULL }
-};
-
 /* procedures for GLUSTER_CLI_PROGRAM */
 static const vsff gluster_cli_proc[] = {
 	{ GLUSTER_CLI_NULL, "GLUSTER_CLI_NULL", NULL, NULL },
@@ -721,11 +672,6 @@ proto_register_gluster(void)
 				FT_UINT32, BASE_DEC, VALS(gd_mgmt_proc_vals),
 				0, NULL, HFILL }
 		},
-		{ &hf_gluster_hndsk_proc,
-			{ "Gluster Handshake", "gluster.hndsk", FT_UINT32,
-				BASE_DEC, VALS(gluster_hndsk_proc_vals), 0,
-				NULL, HFILL }
-		},
 		{ &hf_gluster_cli_proc,
 			{ "Gluster CLI", "gluster.cli", FT_UINT32, BASE_DEC,
 				VALS(gluster_cli_proc_vals), 0, NULL, HFILL }
@@ -820,7 +766,6 @@ proto_register_gluster(void)
 		&ett_gluster_dump,
 		&ett_gluster_mgmt,
 		&ett_gd_mgmt,
-		&ett_gluster_hndsk,
 		&ett_gluster_cli,
 		&ett_gluster_pmap,
 		&ett_gluster_cbk,
@@ -841,9 +786,6 @@ proto_register_gluster(void)
 
 	proto_gd_mgmt = proto_register_protocol("Gluster Daemon Management",
 					"GlusterD Management", "gd-mgmt");
-
-	proto_gluster_hndsk = proto_register_protocol("GlusterFS Handshake",
-					"GlusterFS Handshake", "gluster-hndsk");
 
 	proto_gluster_cli = proto_register_protocol("Gluster CLI",
 					"Gluster CLI", "gluster-cli");
@@ -871,11 +813,6 @@ proto_reg_handoff_gluster(void)
 
 	rpc_init_prog(proto_gd_mgmt, GD_MGMT_PROGRAM, ett_gd_mgmt);
 	rpc_init_proc_table(GD_MGMT_PROGRAM, 1, gd_mgmt_proc, hf_gd_mgmt_proc);
-
-	rpc_init_prog(proto_gluster_hndsk, GLUSTER_HNDSK_PROGRAM,
-							ett_gluster_hndsk);
-	rpc_init_proc_table(GLUSTER_HNDSK_PROGRAM, 1, gluster_hndsk_proc,
-							hf_gluster_hndsk_proc);
 
 	rpc_init_prog(proto_gluster_cli, GLUSTER_CLI_PROGRAM, ett_gluster_cli);
 	rpc_init_proc_table(GLUSTER_CLI_PROGRAM, 1, gluster_cli_proc,
