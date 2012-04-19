@@ -194,12 +194,12 @@ gluster_gfs3_op_unlink_reply(tvbuff_t *tvb, int offset,
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
 
-	// FIXME: describe this better - gf_iatt (xdrs, &objp->preparent
+	/* FIXME: describe this better - gf_iatt (xdrs, &objp->preparent */
 	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "PreParent IATT");
 	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
 	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
 
-	// FIXME: describe this better - gf_iatt (xdrs, &objp->postparent
+	/* FIXME: describe this better - gf_iatt (xdrs, &objp->postparent */
 	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "PostParent IATT");
 	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
 	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
@@ -335,19 +335,19 @@ gluster_gfs3_op_create_reply(tvbuff_t *tvb, int offset,
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
 
-	// FIXME: describe this better - gf_iatt (xdrs, &objp->stat
+	/* FIXME: describe this better - gf_iatt (xdrs, &objp->stat */
 	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "Stat IATT");
 	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
 	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
 
 	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_fd, offset);
 
-	// FIXME: describe this better - gf_iatt (xdrs, &objp->preparent
+	/* FIXME: describe this better - gf_iatt (xdrs, &objp->preparent */
 	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "PreParent IATT");
 	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
 	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
 
-	// FIXME: describe this better - gf_iatt (xdrs, &objp->postparent
+	/* FIXME: describe this better - gf_iatt (xdrs, &objp->postparent */
 	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "PostParent IATT");
 	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
 	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
@@ -388,11 +388,11 @@ gluster_gfs3_op_lookup_reply(tvbuff_t *tvb, int offset,
 
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
-	// FIXME: describe this better - gf_iatt (xdrs, &objp->stat
+	/* FIXME: describe this better - gf_iatt (xdrs, &objp->stat */
 	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "Stat IATT");
 	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
 	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
-	// FIXME: describe this better - gf_iatt (xdrs, &objp->postparent
+	/* FIXME: describe this better - gf_iatt (xdrs, &objp->postparent */
 	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "PostParent IATT");
 	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
 	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
@@ -427,8 +427,6 @@ gluster_gfs3_op_lookup_call(tvbuff_t *tvb, int offset,
 	flags = tvb_get_ntohl(tvb, offset);
 	proto_tree_add_uint_format(tree, hf_gluster_flags, tvb, offset, 4, flags, "Flags: 0x%02x", flags);
 	offset += 4;
-//	field_tree = proto_item_add_subtree(tf, ett_gluster_lookup_flags);
-//	proto_tree_add_boolean(field_tree, hf_gluster_lookup_flag_cwr, tvb, offset + 13, 1, tcph->th_flags);
 
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_path, offset, &path);
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_bname, offset, &bname);

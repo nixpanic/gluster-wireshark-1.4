@@ -88,8 +88,6 @@ gluster_dump_reply(tvbuff_t *tvb, int offset, packet_info *pinfo _U_,
 
 	if (tree)
 		proto_tree_add_text(tree, tvb, offset, -1, "FIXME: The data that follows is a xdr_pointer from xdr_gf_prog_detail()");
-//	while (offset < tvb_reported_length(tvb))
-//		offset = gluster_dump_reply_item(tvb, offset, tree);
 
 	return offset;
 }
