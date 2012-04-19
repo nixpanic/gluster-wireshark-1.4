@@ -274,4 +274,13 @@ enum gf_fop_procnum {
         GFS3_OP_MAXVALUE
 };
 
+gint proto_gluster;
+gint hf_gluster_gfid;
+gint hf_gluster_op_ret;
+gint hf_gluster_op_errno;
+
+int
+gluster_rpc_dissect_dict(proto_tree *tree, tvbuff_t *tvb /* FIXME: add ", int hfindex" */, int offset);
+int
+gluster_dissect_rpc_uquad_t(tvbuff_t *tvb, proto_tree *tree, int hfindex, int offset);
 #endif /* __PACKET_GLUSTER_H__ */
