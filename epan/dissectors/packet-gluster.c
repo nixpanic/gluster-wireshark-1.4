@@ -67,32 +67,46 @@ static gint ett_gluster = -1;
 static gint ett_gluster_mgmt = -1;
 static gint ett_gluster_cbk = -1;
 static gint ett_gluster_dict = -1;
+static gint ett_gluster_dict_items = -1;
 
 /* function for dissecting and adding a gluster dict_t to the tree */
 int
-gluster_rpc_dissect_dict(proto_tree *tree, tvbuff_t *tvb /* FIXME: add ", int hfindex" */, int offset)
+gluster_rpc_dissect_dict(proto_tree *tree, tvbuff_t *tvb, int hfindex, int offset)
 {
 	gchar *key, *value;
 	gint items, i, len, roundup, value_len, key_len;
 
+	proto_item *subtree_item;
+	proto_tree *subtree;
+
 	proto_item *dict_item;
 	proto_tree *dict_tree;
 
+	/* create a subtree for all the items in the dict */
+	if (hfindex >= 0) {
+		header_field_info *hfinfo = proto_registrar_get_nth(hfindex);
+		subtree_item = proto_tree_add_text(tree, tvb, offset, -1, "%s", hfinfo->name);
+	} else {
+		subtree_item = proto_tree_add_text(tree, tvb, offset, -1, "<NAMELESS DICT STRUCTURE>");
+	}
+
+	subtree = proto_item_add_subtree(subtree_item, ett_gluster_dict);
+
 	len = tvb_get_ntohl(tvb, offset);
 	roundup = rpc_roundup(len) - len;
-	proto_tree_add_text(tree, tvb, offset, 4, "Size of the dict: %d (%d bytes inc. RPC-roundup)", len, rpc_roundup(len));
+	proto_tree_add_text(subtree, tvb, offset, 4, "[Size: %d (%d bytes inc. RPC-roundup)]", len, rpc_roundup(len));
 	offset += 4;
 
 	if (len == 0)
 		return offset;
 
 	items = tvb_get_ntohl(tvb, offset);
-	proto_tree_add_text(tree, tvb, offset, 4, "Items in the dict: %d", items);
+	proto_tree_add_text(subtree, tvb, offset, 4, "[Items: %d]", items);
 	offset += 4;
 
 	for (i = 0; i < items; i++) {
-		dict_item = proto_tree_add_text(tree, tvb, offset, -1, "Item %d", i);
-		dict_tree = proto_item_add_subtree(dict_item, ett_gluster_dict);
+		dict_item = proto_tree_add_text(subtree, tvb, offset, -1, "Item %d", i);
+		dict_tree = proto_item_add_subtree(dict_item, ett_gluster_dict_items);
 
 		/* key_len is the length of the key without the terminating '\0' */
 		/* key_len = tvb_get_ntohl(tvb, offset) + 1; // will be read later */
@@ -117,7 +131,7 @@ gluster_rpc_dissect_dict(proto_tree *tree, tvbuff_t *tvb /* FIXME: add ", int hf
 
 	if (roundup) {
 		if (tree)
-			proto_tree_add_text(tree, tvb, offset, -1, "RPC-roundup bytes: %d", roundup);
+			proto_tree_add_text(subtree, tvb, offset, -1, "RPC-roundup bytes: %d", roundup);
 		offset += roundup;
 	}
 
@@ -213,7 +227,8 @@ proto_register_gluster(void)
 		&ett_gluster,
 		&ett_gluster_mgmt,
 		&ett_gluster_cbk,
-		&ett_gluster_dict
+		&ett_gluster_dict,
+		&ett_gluster_dict_items
 	};
 
 	/* Register the protocol name and description */

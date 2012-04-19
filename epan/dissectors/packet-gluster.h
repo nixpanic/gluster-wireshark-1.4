@@ -280,7 +280,8 @@ gint hf_gluster_op;
 gint hf_gluster_op_ret;
 gint hf_gluster_op_errno;
 
-int
-gluster_rpc_dissect_dict(proto_tree *tree, tvbuff_t *tvb /* FIXME: add ", int hfindex" */, int offset);
+extern int
+gluster_rpc_dissect_dict(proto_tree *tree, tvbuff_t *tvb,
+int hfindex, int offset);
 
 #endif /* __PACKET_GLUSTER_H__ */

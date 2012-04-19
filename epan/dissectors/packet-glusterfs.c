@@ -295,7 +295,7 @@ gluster_gfs3_op_setxattr_call(tvbuff_t *tvb, int offset,
 	proto_tree_add_uint_format(tree, hf_gluster_flags, tvb, offset, 4, flags, "Flags: 0x%02x", flags);
 	offset += 4;
 
-	offset = gluster_rpc_dissect_dict(tree, tvb, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, -1, offset);
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_path, offset, &path);
 
 	return offset;
@@ -374,7 +374,7 @@ gluster_gfs3_op_create_call(tvbuff_t *tvb, int offset,
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_mode, offset);
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_path, offset, &path);
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_bname, offset, &bname);
-	offset = gluster_rpc_dissect_dict(tree, tvb, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, -1, offset);
 
 	return offset;
 }
@@ -396,7 +396,7 @@ gluster_gfs3_op_lookup_reply(tvbuff_t *tvb, int offset,
 	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "PostParent IATT");
 	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
 	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
-	offset = gluster_rpc_dissect_dict(tree, tvb, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, -1, offset);
 
 	return offset;
 }
@@ -430,7 +430,7 @@ gluster_gfs3_op_lookup_call(tvbuff_t *tvb, int offset,
 
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_path, offset, &path);
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_bname, offset, &bname);
-	offset = gluster_rpc_dissect_dict(tree, tvb, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, -1, offset);
 	
 	return offset;
 }

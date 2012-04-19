@@ -109,7 +109,7 @@ gluster_gd_mgmt_friend_add_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_hostname, offset, &hostname);
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_port, offset);
 	/* FIXME: how to call this one? vols? */
-	offset = gluster_rpc_dissect_dict(tree, tvb, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, -1, offset);
 
 	return offset;
 }
@@ -143,7 +143,7 @@ gluster_gd_mgmt_stage_op_reply(tvbuff_t *tvb, int offset, packet_info *pinfo _U_
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_op_errstr, offset, &errstr);
-	offset = gluster_rpc_dissect_dict(tree, tvb, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, -1, offset);
 	return offset;
 }
 
@@ -152,7 +152,7 @@ gluster_gd_mgmt_stage_op_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U_,
 {
 	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_uuid, offset, 16 * 4, FALSE, NULL);
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op, offset);
-	offset = gluster_rpc_dissect_dict(tree, tvb, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, -1, offset);
 
 	return offset;
 }
@@ -165,7 +165,7 @@ gluster_gd_mgmt_commit_op_reply(tvbuff_t *tvb, int offset, packet_info *pinfo _U
 	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_uuid, offset, 16 * 4, FALSE, NULL);
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
-	offset = gluster_rpc_dissect_dict(tree, tvb, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, -1, offset);
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_op_errstr, offset, &errstr);
 	return offset;
 }
@@ -175,7 +175,7 @@ gluster_gd_mgmt_commit_op_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U_
 {
 	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_uuid, offset, 16 * 4, FALSE, NULL);
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op, offset);
-	offset = gluster_rpc_dissect_dict(tree, tvb, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, -1, offset);
 
 	return offset;
 }
@@ -196,7 +196,7 @@ gluster_gd_mgmt_friend_update_call(tvbuff_t *tvb, int offset, packet_info *pinfo
 {
 	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_uuid, offset, 16 * 4, FALSE, NULL);
 	/* FIXME: how to call this one? vols? */
-	offset = gluster_rpc_dissect_dict(tree, tvb, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, -1, offset);
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_port, offset);
 
 	return offset;
