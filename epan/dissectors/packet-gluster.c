@@ -47,7 +47,6 @@
 
 /* Initialize the protocol and registered fields */
 gint proto_gluster = -1;
-static gint proto_gluster_dump = -1;
 static gint proto_gluster_mgmt = -1;
 static gint proto_gd_mgmt = -1;
 static gint proto_gluster_cli = -1;
@@ -55,7 +54,6 @@ static gint proto_gluster_pmap = -1;
 static gint proto_gluster_cbk = -1;
 
 /* programs and procedures */
-static gint hf_gluster_dump_proc = -1;
 static gint hf_gluster_mgmt_proc = -1;
 static gint hf_gd_mgmt_proc = -1;
 static gint hf_gluster_cli_proc = -1;
@@ -63,11 +61,7 @@ static gint hf_gluster_pmap_proc = -1;
 static gint hf_gluster_cbk_proc = -1;
 
 /* fields used by multiple programs/procedures */
-static gint hf_gluster_gfsid = -1;
 gint hf_gluster_gfid = -1;
-static gint hf_gluster_progname = -1;
-static gint hf_gluster_prognum = -1;
-static gint hf_gluster_progver = -1;
 static gint hf_gluster_brick = -1;
 gint hf_gluster_op = -1;
 gint hf_gluster_op_ret = -1;
@@ -89,7 +83,6 @@ static gint hf_gluster_unknown_int = -1;
 
 /* Initialize the subtree pointers */
 static gint ett_gluster = -1;
-static gint ett_gluster_dump = -1;
 static gint ett_gluster_mgmt = -1;
 static gint ett_gd_mgmt = -1;
 static gint ett_gluster_cli = -1;
@@ -157,50 +150,6 @@ int
 gluster_dissect_rpc_uquad_t(tvbuff_t *tvb, proto_tree *tree, int hfindex, int offset)
 {
 	offset = dissect_rpc_uint64(tvb, tree, hfindex, offset);
-	return offset;
-}
-
-/* from rpc/rpc-lib/src/rpc-common.c */
-static int
-gluster_dump_reply_item(tvbuff_t *tvb, int offset, proto_tree *tree)
-{
-	gchar *progname = NULL;
-
-	/* progname */
-	offset = dissect_rpc_string(tvb, tree, hf_gluster_progname, offset,
-								&progname);
-	/* prognumber */
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_prognum, offset);
-	/* progversion */
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_progver, offset);
-
-	return offset;
-}
-
-static int
-gluster_dump_reply(tvbuff_t *tvb, int offset, packet_info *pinfo _U_,
-							proto_tree *tree)
-{
-	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 8,
-								FALSE, NULL);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
-
-	if (tree)
-		proto_tree_add_text(tree, tvb, offset, -1, "FIXME: The data that follows is a xdr_pointer from xdr_gf_prog_detail()");
-//	while (offset < tvb_reported_length(tvb))
-//		offset = gluster_dump_reply_item(tvb, offset, tree);
-
-	return offset;
-}
-
-/* DUMP request */
-static int
-gluster_dump_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U_,
-							proto_tree *tree)
-{
-	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_gfsid, offset);
-
 	return offset;
 }
 
@@ -368,18 +317,6 @@ gluster_gd_mgmt_friend_update_call(tvbuff_t *tvb, int offset, packet_info *pinfo
 
 	return offset;
 }
-
-/* procedures for GLUSTER_DUMP_PROGRAM */
-static const vsff gluster_dump_proc[] = {
-	{ 0, "NULL", NULL, NULL },
-	{ GF_DUMP_DUMP, "DUMP", gluster_dump_call, gluster_dump_reply },
-	{ 0, NULL, NULL, NULL }
-};
-static const value_string gluster_dump_proc_vals[] = {
-	{ 0, "NULL" },
-	{ GF_DUMP_DUMP, "DUMP" },
-	{ 0, NULL }
-};
 
 /* GLUSTERD1_MGMT_PROGRAM from xlators/mgmt/glusterd/src/glusterd-rpc-ops.c */
 static const vsff gluster_mgmt_proc[] = {
@@ -646,22 +583,6 @@ proto_register_gluster(void)
 	/* Setup list of header fields  See Section 1.6.1 for details */
 	static hf_register_info hf[] = {
 		/* programs */
-		{ &hf_gluster_dump_proc,
-			{ "Gluster DUMP", "gluster.dump", FT_UINT32, BASE_DEC,
-				VALS(gluster_dump_proc_vals), 0, NULL, HFILL }
-		},
-		{ &hf_gluster_progname,
-			{ "DUMP Program", "gluster.dump.progname", FT_STRING,
-				BASE_NONE, NULL, 0, NULL, HFILL }
-		},
-		{ &hf_gluster_prognum,
-			{ "DUMP Program Number", "gluster.dump.prognum",
-				FT_UINT32, BASE_DEC, NULL, 0, NULL, HFILL }
-		},
-		{ &hf_gluster_progver,
-			{ "DUMP Program Version", "gluster.dump.progver",
-				FT_UINT32, BASE_DEC, NULL, 0, NULL, HFILL }
-		},
 		{ &hf_gluster_mgmt_proc,
 			{ "Gluster Management", "gluster.mgmt", FT_UINT32,
 				BASE_DEC, VALS(gluster_mgmt_proc_vals), 0,
@@ -689,10 +610,6 @@ proto_register_gluster(void)
 		/* fields used by procedures */
 		{ &hf_gluster_unknown_int,
 			{ "Unknown Integer", "gluster.unknown.int", FT_UINT32,
-				BASE_HEX, NULL, 0, NULL, HFILL }
-		},
-		{ &hf_gluster_gfsid,
-			{ "GFS ID", "gluster.gfsid", FT_UINT64,
 				BASE_HEX, NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_gfid,
@@ -763,7 +680,6 @@ proto_register_gluster(void)
 	/* Setup protocol subtree array */
 	static gint *ett[] = {
 		&ett_gluster,
-		&ett_gluster_dump,
 		&ett_gluster_mgmt,
 		&ett_gd_mgmt,
 		&ett_gluster_cli,
@@ -777,9 +693,6 @@ proto_register_gluster(void)
 								"gluster");
 	proto_register_subtree_array(ett, array_length(ett));
 	proto_register_field_array(proto_gluster, hf, array_length(hf));
-
-	proto_gluster_dump = proto_register_protocol("Gluster Dump",
-					"Gluster Dump", "gluster-dump");
 
 	proto_gluster_mgmt = proto_register_protocol("Gluster Management",
 					"Gluster Management", "gluster-mgmt");
@@ -801,11 +714,6 @@ proto_register_gluster(void)
 void
 proto_reg_handoff_gluster(void)
 {
-	rpc_init_prog(proto_gluster_dump, GLUSTER_DUMP_PROGRAM,
-							ett_gluster_dump);
-	rpc_init_proc_table(GLUSTER_DUMP_PROGRAM, 1, gluster_dump_proc,
-							hf_gluster_dump_proc);
-
 	rpc_init_prog(proto_gluster_mgmt, GLUSTERD1_MGMT_PROGRAM,
 							ett_gluster_mgmt);
 	rpc_init_proc_table(GLUSTERD1_MGMT_PROGRAM, 1, gluster_mgmt_proc,
