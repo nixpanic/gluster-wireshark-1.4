@@ -62,12 +62,6 @@ gint hf_gluster_op_errno = -1;
 static gint hf_gluster_dict_key = -1;
 static gint hf_gluster_dict_value = -1;
 
-static gint hf_gluster_vols = -1;
-
-/* temporarily used during development */
-static gint hf_gluster_dict = -1;
-static gint hf_gluster_unknown_int = -1;
-
 /* Initialize the subtree pointers */
 static gint ett_gluster = -1;
 static gint ett_gluster_mgmt = -1;
@@ -194,10 +188,6 @@ proto_register_gluster(void)
 				HFILL }
 		},
 		/* fields used by procedures */
-		{ &hf_gluster_unknown_int,
-			{ "Unknown Integer", "gluster.unknown.int", FT_UINT32,
-				BASE_HEX, NULL, 0, NULL, HFILL }
-		},
 		{ &hf_gluster_gfid,
 			{ "GFID", "gluster.gfid", FT_BYTES,
 				BASE_NONE, NULL, 0, NULL, HFILL }
@@ -215,16 +205,6 @@ proto_register_gluster(void)
 				NULL, 0, NULL, HFILL }
 		},
 
-		{ &hf_gluster_vols,
-			{ "Volumes", "gluster.vols", FT_INT32, BASE_DEC,
-				NULL, 0, NULL, HFILL }
-		},
-
-
-		{ &hf_gluster_dict,
-			{ "Dict (unparsed)", "gluster.dict", FT_STRING, BASE_NONE,
-				NULL, 0, NULL, HFILL }
-		},
 		{ &hf_gluster_dict_key,
 			{ "Key", "gluster.dict.key", FT_STRING, BASE_NONE,
 				NULL, 0, NULL, HFILL }
