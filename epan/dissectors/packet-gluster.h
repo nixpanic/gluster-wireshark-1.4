@@ -282,6 +282,5 @@ gint hf_gluster_op_errno;
 
 int
 gluster_rpc_dissect_dict(proto_tree *tree, tvbuff_t *tvb /* FIXME: add ", int hfindex" */, int offset);
-int
-gluster_dissect_rpc_uquad_t(tvbuff_t *tvb, proto_tree *tree, int hfindex, int offset);
+
 #endif /* __PACKET_GLUSTER_H__ */

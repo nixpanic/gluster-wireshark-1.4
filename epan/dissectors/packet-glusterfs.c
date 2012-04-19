@@ -122,16 +122,16 @@ gluster_rpc_dissect_gf_iatt(proto_tree *tree, tvbuff_t *tvb, int offset)
 {
 	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
 								FALSE, NULL);
-	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_ia_ino, offset);
-	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_ia_dev, offset);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_ia_ino, offset);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_ia_dev, offset);
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_mode, offset);
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_ia_nlink, offset);
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_ia_uid, offset);
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_ia_gid, offset);
-	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_ia_rdev, offset);
-	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_ia_size, offset);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_ia_rdev, offset);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_ia_size, offset);
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_ia_blksize, offset);
-	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_ia_blocks, offset);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_ia_blocks, offset);
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_ia_atime, offset);
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_ia_atime_nsec, offset);
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_ia_mtime, offset);
@@ -147,10 +147,10 @@ gluster_rpc_dissect_gf_flock(proto_tree *tree, tvbuff_t *tvb, int offset)
 {
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_flock_type, offset);
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_flock_whence, offset);
-	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_flock_start, offset);
-	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_flock_len, offset);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_flock_start, offset);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_flock_len, offset);
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_flock_pid, offset);
-	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_flock_owner, offset);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_flock_owner, offset);
 
 	return offset;
 }
@@ -158,17 +158,18 @@ gluster_rpc_dissect_gf_flock(proto_tree *tree, tvbuff_t *tvb, int offset)
 static int
 gluster_rpc_dissect_statfs(proto_tree *tree, tvbuff_t *tvb, int offset)
 {
-	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_bsize, offset);
-	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_frsize, offset);
-	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_blocks, offset);
-	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_bfree, offset);
-	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_bavail, offset);
-	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_files, offset);
-	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_ffree, offset);
-	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_favail, offset);
-	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_fsid, offset);
-	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_flag, offset);
-	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_namemax, offset);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_bsize, offset);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_frsize, offset);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_blocks, offset);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_bfree, offset);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_bavail, offset);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_files, offset);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_ffree, offset);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_favail, offset);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_fsid, offset);
+	/* FIXME: hf_gluster_flag are flags, see 'man 2 statvfs' */
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_flag, offset);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_namemax, offset);
 
 	return offset;
 }
@@ -266,7 +267,7 @@ gluster_gfs3_op_flush_call(tvbuff_t *tvb, int offset,
 {
 	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
 								FALSE, NULL);
-	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_fd, offset);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_fd, offset);
 	return offset;
 }
 
@@ -306,7 +307,7 @@ gluster_gfs3_op_opendir_reply(tvbuff_t *tvb, int offset,
 {
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
-	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_fd, offset);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_fd, offset);
 	return offset;
 }
 
@@ -339,7 +340,7 @@ gluster_gfs3_op_create_reply(tvbuff_t *tvb, int offset,
 	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
 	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
 
-	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_fd, offset);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_fd, offset);
 
 	// FIXME: describe this better - gf_iatt (xdrs, &objp->preparent
 	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "PreParent IATT");
@@ -488,8 +489,8 @@ gluster_gfs3_op_readdirp_call(tvbuff_t *tvb, int offset,
 {
 	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
 								FALSE, NULL);
-	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_fd, offset);
-	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_offset, offset);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_fd, offset);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_offset, offset);
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_size, offset);
 
 	return offset;
@@ -881,7 +882,7 @@ proto_register_glusterfs(void)
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_flag,
-			{ "flag", "gluster.statfs.flag", FT_UINT64, BASE_OCT,
+			{ "flag", "gluster.statfs.flag", FT_UINT64, BASE_HEX,
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_namemax,

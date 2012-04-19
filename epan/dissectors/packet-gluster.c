@@ -124,13 +124,6 @@ gluster_rpc_dissect_dict(proto_tree *tree, tvbuff_t *tvb /* FIXME: add ", int hf
 	return offset;
 }
 
-int
-gluster_dissect_rpc_uquad_t(tvbuff_t *tvb, proto_tree *tree, int hfindex, int offset)
-{
-	offset = dissect_rpc_uint64(tvb, tree, hfindex, offset);
-	return offset;
-}
-
 /* GLUSTERD1_MGMT_PROGRAM from xlators/mgmt/glusterd/src/glusterd-rpc-ops.c */
 static const vsff gluster_mgmt_proc[] = {
 	{ GLUSTERD_MGMT_NULL, "NULL", NULL, NULL },

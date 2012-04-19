@@ -99,7 +99,7 @@ static int
 gluster_dump_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U_,
 							proto_tree *tree)
 {
-	offset = gluster_dissect_rpc_uquad_t(tvb, tree, hf_gluster_gfsid, offset);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_gfsid, offset);
 
 	return offset;
 }
