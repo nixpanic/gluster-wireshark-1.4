@@ -518,15 +518,6 @@ gluster_gfs3_op_setattr_reply(tvbuff_t *tvb, int offset, packet_info *pinfo _U_,
 static int
 gluster_gfs3_op_setattr_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
 {
-#if 0
-   1203          if (!xdr_opaque (xdrs, objp->gfid, 16)) 
-   1204                  return FALSE; 
-   1205          if (!xdr_gf_iatt (xdrs, &objp->stbuf)) 
-   1206                  return FALSE; 
-   1207          if (!xdr_int (xdrs, &objp->valid)) 
-   1208                  return FALSE; 
-   1209          if (!xdr_string (xdrs, &objp->path, ~0)) 
-#endif
 	proto_item *iatt_item;
 	proto_tree *iatt_tree;
 	gchar *path = NULL;
@@ -538,6 +529,9 @@ gluster_gfs3_op_setattr_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, 
 	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
 	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
 
+	/* FIXME: hf_gluster_setattr_valid is a flag
+         * see libglusterfs/src/xlator.h, #defines for GF_SET_ATTR_*
+         */
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_setattr_valid, offset);
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_path, offset, &path);
 
@@ -896,7 +890,7 @@ proto_register_glusterfs(void)
 		},
 
 		{ &hf_gluster_setattr_valid,
-			{ "valid", "gluster.setattr.valid", FT_UINT32, BASE_DEC,
+			{ "valid", "gluster.setattr.valid", FT_UINT32, BASE_HEX,
 				NULL, 0, NULL, HFILL }
 		}
 	};
