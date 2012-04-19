@@ -50,25 +50,20 @@ gint proto_gluster = -1;
 static gint proto_gluster_mgmt = -1;
 static gint proto_gd_mgmt = -1;
 static gint proto_gluster_cli = -1;
-static gint proto_gluster_pmap = -1;
 static gint proto_gluster_cbk = -1;
 
 /* programs and procedures */
 static gint hf_gluster_mgmt_proc = -1;
 static gint hf_gd_mgmt_proc = -1;
 static gint hf_gluster_cli_proc = -1;
-static gint hf_gluster_pmap_proc = -1;
 static gint hf_gluster_cbk_proc = -1;
 
 /* fields used by multiple programs/procedures */
 gint hf_gluster_gfid = -1;
-static gint hf_gluster_brick = -1;
 gint hf_gluster_op = -1;
 gint hf_gluster_op_ret = -1;
 gint hf_gluster_op_errno = -1;
 static gint hf_gluster_op_errstr = -1;
-static gint hf_gluster_brick_status = -1;
-static gint hf_gluster_brick_port = -1;
 static gint hf_gluster_dict_key = -1;
 static gint hf_gluster_dict_value = -1;
 
@@ -86,7 +81,6 @@ static gint ett_gluster = -1;
 static gint ett_gluster_mgmt = -1;
 static gint ett_gd_mgmt = -1;
 static gint ett_gluster_cli = -1;
-static gint ett_gluster_pmap = -1;
 static gint ett_gluster_cbk = -1;
 static gint ett_gluster_dict = -1;
 
@@ -150,29 +144,6 @@ int
 gluster_dissect_rpc_uquad_t(tvbuff_t *tvb, proto_tree *tree, int hfindex, int offset)
 {
 	offset = dissect_rpc_uint64(tvb, tree, hfindex, offset);
-	return offset;
-}
-
-/* PMAP PORTBYBRICK */
-static int
-gluster_pmap_portbybrick_reply(tvbuff_t *tvb, int offset,
-				packet_info *pinfo _U_, proto_tree *tree)
-{
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_brick_status, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_brick_port, offset);
-
-	return offset;
-}
-
-static int
-gluster_pmap_portbybrick_call(tvbuff_t *tvb, int offset,
-				packet_info *pinfo _U_, proto_tree *tree)
-{
-	gchar *brick = NULL;
-	offset = dissect_rpc_string(tvb, tree, hf_gluster_brick, offset,
-								&brick);
 	return offset;
 }
 
@@ -540,29 +511,6 @@ static const value_string gluster_cli_proc_vals[] = {
 	{ 0, NULL }
 };
 
-/* GLUSTER_PMAP_PROGRAM from xlators/mgmt/glusterd/src/glusterd-pmap.c */
-static const vsff gluster_pmap_proc[] = {
-	{ GF_PMAP_NULL, "NULL", NULL, NULL },
-	{
-		GF_PMAP_PORTBYBRICK, "PORTBYBRICK",
-		gluster_pmap_portbybrick_call, gluster_pmap_portbybrick_reply
-	},
-	{ GF_PMAP_BRICKBYPORT, "BRICKBYPORT", NULL, NULL },
-	{ GF_PMAP_SIGNIN, "SIGNIN", NULL, NULL },
-	{ GF_PMAP_SIGNOUT, "SIGNOUT", NULL, NULL },
-	{ GF_PMAP_SIGNUP, "SIGNUP", NULL, NULL },
-	{ 0, NULL, NULL, NULL }
-};
-static const value_string gluster_pmap_proc_vals[] = {
-	{ GF_PMAP_NULL, "NULL" },
-	{ GF_PMAP_PORTBYBRICK, "PORTBYBRICK" },
-	{ GF_PMAP_BRICKBYPORT, "BRICKBYPORT" },
-	{ GF_PMAP_SIGNIN, "SIGNIN" },
-	{ GF_PMAP_SIGNOUT, "SIGNOUT" },
-	{ GF_PMAP_SIGNUP, "SIGNUP" },
-	{ 0, NULL }
-};
-
 /* procedures for GLUSTER_CBK_PROGRAM */
 static const vsff gluster_cbk_proc[] = {
         { GF_CBK_NULL, "NULL", NULL, NULL },
@@ -597,11 +545,6 @@ proto_register_gluster(void)
 			{ "Gluster CLI", "gluster.cli", FT_UINT32, BASE_DEC,
 				VALS(gluster_cli_proc_vals), 0, NULL, HFILL }
 		},
-		{ &hf_gluster_pmap_proc,
-			{ "Gluster Portmap", "gluster.pmap", FT_UINT32,
-				BASE_DEC, VALS(gluster_pmap_proc_vals), 0,
-				NULL, HFILL }
-		},
 		{ &hf_gluster_cbk_proc,
 			{ "GlusterFS Callback", "gluster.cbk", FT_UINT32,
 				BASE_DEC, VALS(gluster_cbk_proc_vals), 0, NULL,
@@ -615,10 +558,6 @@ proto_register_gluster(void)
 		{ &hf_gluster_gfid,
 			{ "GFID", "gluster.gfid", FT_BYTES,
 				BASE_NONE, NULL, 0, NULL, HFILL }
-		},
-		{ &hf_gluster_brick,
-			{ "Brick", "gluster.brick", FT_STRINGZ, BASE_NONE,
-				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_op,
 			{ "Operation (FIXME?)", "gluster.op", FT_INT32, BASE_DEC,
@@ -635,14 +574,6 @@ proto_register_gluster(void)
 		{ &hf_gluster_op_errstr,
 			{ "Error String", "gluster.op_errstr", FT_STRING,
 				BASE_NONE, NULL, 0, NULL, HFILL }
-		},
-		{ &hf_gluster_brick_status,
-			{ "Status", "gluster.brick.status", FT_INT32, BASE_DEC,
-				NULL, 0, NULL, HFILL }
-		},
-		{ &hf_gluster_brick_port,
-			{ "Port", "gluster.brick.port", FT_INT32, BASE_DEC,
-				NULL, 0, NULL, HFILL }
 		},
 
 		{ &hf_gluster_uuid,
@@ -683,7 +614,6 @@ proto_register_gluster(void)
 		&ett_gluster_mgmt,
 		&ett_gd_mgmt,
 		&ett_gluster_cli,
-		&ett_gluster_pmap,
 		&ett_gluster_cbk,
 		&ett_gluster_dict
 	};
@@ -702,9 +632,6 @@ proto_register_gluster(void)
 
 	proto_gluster_cli = proto_register_protocol("Gluster CLI",
 					"Gluster CLI", "gluster-cli");
-
-	proto_gluster_pmap = proto_register_protocol("Gluster Portmap",
-					"Gluster Portmap", "gluster-pmap");
 
 	proto_gluster_cbk = proto_register_protocol("GlusterFS Callback",
 					"GlusterFS Callback", "gluster-cbk");
@@ -725,11 +652,6 @@ proto_reg_handoff_gluster(void)
 	rpc_init_prog(proto_gluster_cli, GLUSTER_CLI_PROGRAM, ett_gluster_cli);
 	rpc_init_proc_table(GLUSTER_CLI_PROGRAM, 1, gluster_cli_proc,
 							hf_gluster_cli_proc);
-
-	rpc_init_prog(proto_gluster_pmap, GLUSTER_PMAP_PROGRAM,
-							ett_gluster_pmap);
-	rpc_init_proc_table(GLUSTER_PMAP_PROGRAM, 1, gluster_pmap_proc,
-							hf_gluster_pmap_proc);
 
 	rpc_init_prog(proto_gluster_cbk, GLUSTER_CBK_PROGRAM, ett_gluster_cbk);
 	rpc_init_proc_table(GLUSTER_CBK_PROGRAM, 1, gluster_cbk_proc,
