@@ -475,6 +475,7 @@ DISSECTOR_SRC = \
 	packet-git.c		\
 	packet-glbp.c		\
 	packet-gluster.c		\
+	packet-gluster_cli.c		\
 	packet-gluster_dump.c		\
 	packet-gluster_hndsk.c		\
 	packet-gluster_pmap.c		\
