@@ -276,6 +276,7 @@ enum gf_fop_procnum {
 
 gint proto_gluster;
 gint hf_gluster_gfid;
+gint hf_gluster_op;
 gint hf_gluster_op_ret;
 gint hf_gluster_op_errno;
 
