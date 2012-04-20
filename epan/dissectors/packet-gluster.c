@@ -59,6 +59,7 @@ gint hf_gluster_gfid = -1;
 gint hf_gluster_op = -1;
 gint hf_gluster_op_ret = -1;
 gint hf_gluster_op_errno = -1;
+gint hf_gluster_dict = -1;
 static gint hf_gluster_dict_key = -1;
 static gint hf_gluster_dict_value = -1;
 
@@ -212,6 +213,10 @@ proto_register_gluster(void)
 				NULL, 0, NULL, HFILL }
 		},
 
+		{ &hf_gluster_dict,
+			{ "Dict", "gluster.dict", FT_STRING, BASE_NONE,
+				NULL, 0, NULL, HFILL }
+		},
 		{ &hf_gluster_dict_key,
 			{ "Key", "gluster.dict.key", FT_STRING, BASE_NONE,
 				NULL, 0, NULL, HFILL }

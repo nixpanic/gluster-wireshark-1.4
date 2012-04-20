@@ -279,6 +279,7 @@ gint hf_gluster_gfid;
 gint hf_gluster_op;
 gint hf_gluster_op_ret;
 gint hf_gluster_op_errno;
+gint hf_gluster_dict;
 
 extern int
 gluster_rpc_dissect_dict(proto_tree *tree, tvbuff_t *tvb,
