@@ -69,7 +69,7 @@ gluster_hndsk_setvolume_reply(tvbuff_t *tvb, int offset,
 {
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
-	offset = gluster_rpc_dissect_dict(tree, tvb, -1, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
 	return offset;
 }
 
@@ -77,7 +77,7 @@ static int
 gluster_hndsk_setvolume_call(tvbuff_t *tvb, int offset,
 				packet_info *pinfo _U_, proto_tree *tree)
 {
-	offset = gluster_rpc_dissect_dict(tree, tvb, -1, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
 	return offset;
 }
 
