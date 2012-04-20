@@ -48,11 +48,9 @@
 /* Initialize the protocol and registered fields */
 gint proto_gluster = -1;
 static gint proto_gluster_mgmt = -1;
-static gint proto_gluster_cbk = -1;
 
 /* programs and procedures */
 static gint hf_gluster_mgmt_proc = -1;
-static gint hf_gluster_cbk_proc = -1;
 
 /* fields used by multiple programs/procedures */
 gint hf_gluster_gfid = -1;
@@ -63,13 +61,9 @@ gint hf_gluster_dict = -1;
 static gint hf_gluster_dict_key = -1;
 static gint hf_gluster_dict_value = -1;
 
-static gint hf_gluster_spec = -1;	/* FETCHSPEC Reply */
-static gint hf_gluster_key = -1;	/* FETCHSPEC Call */
-
 /* Initialize the subtree pointers */
 static gint ett_gluster = -1;
 static gint ett_gluster_mgmt = -1;
-static gint ett_gluster_cbk = -1;
 static gint ett_gluster_dict = -1;
 static gint ett_gluster_dict_items = -1;
 
@@ -168,45 +162,6 @@ static const value_string gluster_mgmt_proc_vals[] = {
 	{ 0, NULL }
 };
 
-/* procedures for GLUSTER_CBK_PROGRAM */
-static int
-gluster_cbk_fetchspec_reply(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
-{
-	gchar* spec = NULL;
-
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
-	offset = dissect_rpc_string(tvb, tree, hf_gluster_spec, offset, &spec);
-
-	return offset;
-}
-
-static int
-gluster_cbk_fetchspec_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
-{
-	gchar* key = NULL;
-
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
-	offset = dissect_rpc_string(tvb, tree, hf_gluster_key, offset, &key);
-	
-	return offset;
-}
-
-static const vsff gluster_cbk_proc[] = {
-        { GF_CBK_NULL, "NULL", NULL, NULL },
-        {
-		GF_CBK_FETCHSPEC, "FETCHSPEC",
-		gluster_cbk_fetchspec_call, gluster_cbk_fetchspec_reply,
-	},
-        { GF_CBK_INO_FLUSH, "INO_FLUSH", NULL, NULL },
-	{ 0, NULL, NULL, NULL }
-};
-static const value_string gluster_cbk_proc_vals[] = {
-        { GF_CBK_NULL, "NULL" },
-        { GF_CBK_FETCHSPEC, "FETCHSPEC" },
-        { GF_CBK_INO_FLUSH, "INO_FLUSH" },
-	{ 0, NULL }
-};
 
 void
 proto_register_gluster(void)
@@ -218,11 +173,6 @@ proto_register_gluster(void)
 			{ "Gluster Management", "gluster.mgmt", FT_UINT32,
 				BASE_DEC, VALS(gluster_mgmt_proc_vals), 0,
 				NULL, HFILL }
-		},
-		{ &hf_gluster_cbk_proc,
-			{ "GlusterFS Callback", "gluster.cbk", FT_UINT32,
-				BASE_DEC, VALS(gluster_cbk_proc_vals), 0, NULL,
-				HFILL }
 		},
 		/* fields used by procedures */
 		{ &hf_gluster_gfid,
@@ -253,16 +203,6 @@ proto_register_gluster(void)
 		{ &hf_gluster_dict_value,
 			{ "Value", "gluster.dict.value", FT_STRING, BASE_NONE,
 				NULL, 0, NULL, HFILL }
-		},
-		/* fields used by GlusterFS Callback */
-		{ &hf_gluster_spec,
-			/* FIXME: rename spec to something clearer */
-			{ "Spec", "gluster.fetchspec", FT_STRING, BASE_NONE,
-				NULL, 0, NULL, HFILL }
-		},
-		{ &hf_gluster_key,
-			{ "Key", "gluster.fetchspec.key", FT_STRING, BASE_NONE,
-				NULL, 0, NULL, HFILL }
 		}
 	};
 
@@ -270,7 +210,6 @@ proto_register_gluster(void)
 	static gint *ett[] = {
 		&ett_gluster,
 		&ett_gluster_mgmt,
-		&ett_gluster_cbk,
 		&ett_gluster_dict,
 		&ett_gluster_dict_items
 	};
@@ -283,9 +222,6 @@ proto_register_gluster(void)
 
 	proto_gluster_mgmt = proto_register_protocol("Gluster Management",
 					"Gluster Management", "gluster-mgmt");
-
-	proto_gluster_cbk = proto_register_protocol("GlusterFS Callback",
-					"GlusterFS Callback", "gluster-cbk");
 }
 
 
@@ -297,8 +233,5 @@ proto_reg_handoff_gluster(void)
 	rpc_init_proc_table(GLUSTERD1_MGMT_PROGRAM, 1, gluster_mgmt_proc,
 							hf_gluster_mgmt_proc);
 
-	rpc_init_prog(proto_gluster_cbk, GLUSTER_CBK_PROGRAM, ett_gluster_cbk);
-	rpc_init_proc_table(GLUSTER_CBK_PROGRAM, 1, gluster_cbk_proc,
-							hf_gluster_cbk_proc);
 }
 

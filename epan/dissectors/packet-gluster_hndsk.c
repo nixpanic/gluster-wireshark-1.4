@@ -46,14 +46,60 @@
 #include "packet-gluster.h"
 
 /* Initialize the protocol and registered fields */
+static gint proto_gluster_cbk = -1;
 static gint proto_gluster_hndsk = -1;
 
 /* programs and procedures */
+static gint hf_gluster_cbk_proc = -1;
 static gint hf_gluster_hndsk_proc = -1;
+static gint hf_gluster_spec = -1;	/* FETCHSPEC Reply */
+static gint hf_gluster_key = -1;	/* FETCHSPEC Call */
 
 /* Initialize the subtree pointers */
+static gint ett_gluster_cbk = -1;
 static gint ett_gluster_hndsk = -1;
 
+/* procedures for GLUSTER_CBK_PROGRAM */
+static int
+gluster_cbk_fetchspec_reply(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
+{
+	gchar* spec = NULL;
+
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_spec, offset, &spec);
+
+	return offset;
+}
+
+static int
+gluster_cbk_fetchspec_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
+{
+	gchar* key = NULL;
+
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_key, offset, &key);
+	
+	return offset;
+}
+
+static const vsff gluster_cbk_proc[] = {
+        { GF_CBK_NULL, "NULL", NULL, NULL },
+        {
+		GF_CBK_FETCHSPEC, "FETCHSPEC",
+		gluster_cbk_fetchspec_call, gluster_cbk_fetchspec_reply,
+	},
+        { GF_CBK_INO_FLUSH, "INO_FLUSH", NULL, NULL },
+	{ 0, NULL, NULL, NULL }
+};
+static const value_string gluster_cbk_proc_vals[] = {
+        { GF_CBK_NULL, "NULL" },
+        { GF_CBK_FETCHSPEC, "FETCHSPEC" },
+        { GF_CBK_INO_FLUSH, "INO_FLUSH" },
+	{ 0, NULL }
+};
+
+/* procedures for GLUSTER_HNDSK_PROGRAM */
 static int
 gluster_hndsk_ping_reply(tvbuff_t *tvb, int offset, packet_info *pinfo _U_,
 							proto_tree *tree)
@@ -81,7 +127,6 @@ gluster_hndsk_setvolume_call(tvbuff_t *tvb, int offset,
 	return offset;
 }
 
-/* procedures for GLUSTER_HNDSK_PROGRAM */
 static const vsff gluster_hndsk_proc[] = {
 	{ GF_HNDSK_NULL, "NULL", NULL, NULL },
 	{
@@ -106,21 +151,40 @@ proto_register_gluster_hndsk(void)
 	/* Setup list of header fields  See Section 1.6.1 for details */
 	static hf_register_info hf[] = {
 		/* programs */
+		{ &hf_gluster_cbk_proc,
+			{ "GlusterFS Callback", "gluster.cbk", FT_UINT32,
+				BASE_DEC, VALS(gluster_cbk_proc_vals), 0, NULL,
+				HFILL }
+		},
 		{ &hf_gluster_hndsk_proc,
 			{ "Gluster Handshake", "gluster.hndsk", FT_UINT32,
 				BASE_DEC, VALS(gluster_hndsk_proc_vals), 0,
 				NULL, HFILL }
+		},
+		/* fields used by GlusterFS Callback */
+		{ &hf_gluster_spec,
+			/* FIXME: rename spec to something clearer */
+			{ "Spec", "gluster.fetchspec", FT_STRING, BASE_NONE,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_key,
+			{ "Key", "gluster.fetchspec.key", FT_STRING, BASE_NONE,
+				NULL, 0, NULL, HFILL }
 		}
 	};
 
 	/* Setup protocol subtree array */
 	static gint *ett[] = {
+		&ett_gluster_cbk,
 		&ett_gluster_hndsk
 	};
 
 	/* Register the protocol name and description */
 	proto_register_subtree_array(ett, array_length(ett));
 	proto_register_field_array(proto_gluster, hf, array_length(hf));
+
+	proto_gluster_cbk = proto_register_protocol("GlusterFS Callback",
+					"GlusterFS Callback", "gluster-cbk");
 
 	proto_gluster_hndsk = proto_register_protocol("GlusterFS Handshake",
 					"GlusterFS Handshake", "gluster-hndsk");
@@ -129,6 +193,10 @@ proto_register_gluster_hndsk(void)
 void
 proto_reg_handoff_gluster_hndsk(void)
 {
+	rpc_init_prog(proto_gluster_cbk, GLUSTER_CBK_PROGRAM, ett_gluster_cbk);
+	rpc_init_proc_table(GLUSTER_CBK_PROGRAM, 1, gluster_cbk_proc,
+							hf_gluster_cbk_proc);
+
 	rpc_init_prog(proto_gluster_hndsk, GLUSTER_HNDSK_PROGRAM,
 							ett_gluster_hndsk);
 	rpc_init_proc_table(GLUSTER_HNDSK_PROGRAM, 1, gluster_hndsk_proc,
