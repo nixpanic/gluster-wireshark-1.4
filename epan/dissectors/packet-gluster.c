@@ -241,7 +241,7 @@ proto_register_gluster(void)
 			{ "Errno", "gluster.op_errno", FT_INT32, BASE_DEC,
 				NULL, 0, NULL, HFILL }
 		},
-
+		/* fields used by gluster_rpc_dissect_dict() */
 		{ &hf_gluster_dict,
 			{ "Dict", "gluster.dict", FT_STRING, BASE_NONE,
 				NULL, 0, NULL, HFILL }
