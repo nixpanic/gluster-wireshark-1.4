@@ -719,7 +719,7 @@ proto_register_glusterfs(void)
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_bname,
-			{ "BNAME (FIXME!)", "gluster.bname", FT_STRING, BASE_NONE,
+			{ "Basename", "gluster.bname", FT_STRING, BASE_NONE,
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_fd,
