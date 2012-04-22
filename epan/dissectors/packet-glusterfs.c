@@ -693,6 +693,24 @@ static const value_string gluster3_1_fop_proc_vals[] = {
 	{ 0, NULL }
 };
 
+/* Normal locking commands */
+static const value_string gluster_lk_cmd_names[] = {
+	{ GF_LK_GETLK, "GF_LK_GETLK" },
+	{ GF_LK_SETLK, "GF_LK_SETLK" },
+	{ GF_LK_SETLKW, "GF_LK_SETLKW" },
+	{ GF_LK_RESLK_LCK, "GF_LK_RESLK_LCK" },
+	{ GF_LK_RESLK_LCKW, "GF_LK_RESLK_LCKW" },
+	{ GF_LK_RESLK_UNLCK, "GF_LK_RESLK_UNLCK" },
+	{ GF_LK_GETLK_FD, "GF_LK_GETLK_FD" }
+};
+
+/* Different lock types */
+static const value_string gluster_lk_type_names[] = {
+	{ GF_LK_F_RDLCK, "GF_LK_F_RDLCK" },
+	{ GF_LK_F_WRLCK, "GF_LK_F_WRLCK" },
+	{ GF_LK_F_UNLCK, "GF_LK_F_UNLCK" },
+	{ GF_LK_EOL, "GF_LK_EOL" }
+};
 
 void
 proto_register_glusterfs(void)
@@ -740,11 +758,11 @@ proto_register_glusterfs(void)
 		},
 		{ &hf_gluster_type,
 			{ "Type", "gluster.type", FT_INT32, BASE_DEC,
-				NULL, 0, NULL, HFILL }
+				VALS(gluster_lk_type_names), 0, NULL, HFILL }
 		},
 		{ &hf_gluster_cmd,
 			{ "Command", "gluster.cmd", FT_INT32, BASE_DEC,
-				NULL, 0, NULL, HFILL }
+				VALS(gluster_lk_cmd_names), 0, NULL, HFILL }
 		},
 		{ &hf_gluster_volume,
 			{ "Volume", "gluster.volume", FT_STRING, BASE_NONE,
@@ -819,7 +837,7 @@ proto_register_glusterfs(void)
 		/* gf_flock */
 		{ &hf_gluster_flock_type,
 			{ "ia_flock_type", "gluster.flock.type", FT_UINT32, BASE_DEC,
-				NULL, 0, NULL, HFILL }
+				VALS(gluster_lk_type_names), 0, NULL, HFILL }
 		},
 		{ &hf_gluster_flock_whence,
 			{ "ia_flock_whence", "gluster.flock.whence", FT_UINT64, BASE_DEC,
