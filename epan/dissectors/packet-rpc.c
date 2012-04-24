@@ -61,6 +61,11 @@
  *	RFC 2695, "Authentication Mechanisms for ONC RPC"
  *
  *	although we don't currently dissect AUTH_DES or AUTH_KERB.
+ *
+ *	RFC 5531, "Appendix C: Current Number Assignments" defines AUTH_RSA.
+ *	AUTH_RSA is not implemented for any known RPC-protocols. The Gluster
+ *	protocols (ab)use AUTH_RSA for their own AUTH-flavor. AUTH_RSA is
+ *	therefore dissected as the inofficial AUTH_GLUSTER.
  */
 
 /* desegmentation of RPC over TCP */
@@ -98,6 +103,7 @@ const value_string rpc_auth_flavor[] = {
 	{ AUTH_UNIX, "AUTH_UNIX" },
 	{ AUTH_SHORT, "AUTH_SHORT" },
 	{ AUTH_DES, "AUTH_DES" },
+	{ AUTH_RSA, "AUTH_RSA/Gluster" },
 	{ RPCSEC_GSS, "RPCSEC_GSS" },
 	{ AUTH_GSSAPI, "AUTH_GSSAPI" },
 	{ RPCSEC_GSS_KRB5, "RPCSEC_GSS_KRB5" },
@@ -189,6 +195,8 @@ static int hf_rpc_auth_flavor = -1;
 static int hf_rpc_auth_length = -1;
 static int hf_rpc_auth_machinename = -1;
 static int hf_rpc_auth_stamp = -1;
+static int hf_rpc_auth_lk_owner = -1;
+static int hf_rpc_auth_pid = -1;
 static int hf_rpc_auth_uid = -1;
 static int hf_rpc_auth_gid = -1;
 static int hf_rpc_authgss_v = -1;
@@ -937,6 +945,65 @@ dissect_rpc_authdes_cred(tvbuff_t* tvb, proto_tree* tree, int offset)
 }
 
 static int
+dissect_rpc_authgluster_cred(tvbuff_t* tvb, proto_tree* tree, int offset)
+{
+	guint lk_owner;
+	guint pid;
+	guint uid;
+	guint gid;
+	guint gids_count;
+	guint gids_i;
+	guint gids_entry;
+	proto_item *gitem;
+	proto_tree *gtree = NULL;
+
+	lk_owner = tvb_get_ntoh64(tvb,offset+0);
+	if (tree)
+		proto_tree_add_uint64(tree, hf_rpc_auth_lk_owner, tvb,
+			offset+0, 8, lk_owner);
+	offset += 8;
+
+	pid = tvb_get_ntohl(tvb,offset+0);
+	if (tree)
+		proto_tree_add_uint(tree, hf_rpc_auth_pid, tvb,
+			offset+0, 4, pid);
+	offset += 4;
+
+	uid = tvb_get_ntohl(tvb,offset+0);
+	if (tree)
+		proto_tree_add_uint(tree, hf_rpc_auth_uid, tvb,
+			offset+0, 4, uid);
+	offset += 4;
+
+	gid = tvb_get_ntohl(tvb,offset+0);
+	if (tree)
+		proto_tree_add_uint(tree, hf_rpc_auth_gid, tvb,
+			offset+0, 4, gid);
+	offset += 4;
+
+	gids_count = tvb_get_ntohl(tvb,offset+0);
+	if (tree) {
+		gitem = proto_tree_add_text(tree, tvb, offset,
+			4+gids_count*4, "Auxiliary GIDs (%d)", gids_count);
+		gtree = proto_item_add_subtree(gitem, ett_rpc_gids);
+	}
+	offset += 4;
+
+	for (gids_i = 0 ; gids_i < gids_count ; gids_i++) {
+		gids_entry = tvb_get_ntohl(tvb,offset+0);
+		if (gtree)
+		proto_tree_add_uint(gtree, hf_rpc_auth_gid, tvb,
+			offset, 4, gids_entry);
+		offset+=4;
+	}
+	/* how can I NOW change the gitem to print a list with
+		the first 16 gids? */
+
+	return offset;
+}
+
+
+static int
 dissect_rpc_authgssapi_cred(tvbuff_t* tvb, proto_tree* tree, int offset)
 {
 	guint agc_v;
@@ -993,6 +1060,11 @@ dissect_rpc_cred(tvbuff_t* tvb, proto_tree* tree, int offset)
 		*/
 		case AUTH_DES:
 			dissect_rpc_authdes_cred(tvb, ctree, offset+8);
+			break;
+
+		case AUTH_RSA:
+			/* AUTH_RSA is (ab)used by Gluster */
+			dissect_rpc_authgluster_cred(tvb, ctree, offset+8);
 			break;
 
 		case RPCSEC_GSS:
@@ -3615,6 +3687,12 @@ proto_register_rpc(void)
 			NULL, 0, NULL, HFILL }},
 		{ &hf_rpc_auth_stamp, {
 			"Stamp", "rpc.auth.stamp", FT_UINT32, BASE_HEX,
+			NULL, 0, NULL, HFILL }},
+		{ &hf_rpc_auth_lk_owner, {
+			"Lock Owner", "rpc.auth.lk_owner", FT_UINT64, BASE_DEC,
+			NULL, 0, NULL, HFILL }},
+		{ &hf_rpc_auth_pid, {
+			"PID", "rpc.auth.pid", FT_UINT32, BASE_DEC,
 			NULL, 0, NULL, HFILL }},
 		{ &hf_rpc_auth_uid, {
 			"UID", "rpc.auth.uid", FT_UINT32, BASE_DEC,
