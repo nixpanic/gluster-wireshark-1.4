@@ -947,41 +947,18 @@ dissect_rpc_authdes_cred(tvbuff_t* tvb, proto_tree* tree, int offset)
 static int
 dissect_rpc_authgluster_cred(tvbuff_t* tvb, proto_tree* tree, int offset)
 {
-	guint lk_owner;
-	guint pid;
-	guint uid;
-	guint gid;
 	guint gids_count;
 	guint gids_i;
 	guint gids_entry;
 	proto_item *gitem;
 	proto_tree *gtree = NULL;
 
-	lk_owner = tvb_get_ntoh64(tvb,offset+0);
-	if (tree)
-		proto_tree_add_uint64(tree, hf_rpc_auth_lk_owner, tvb,
-			offset+0, 8, lk_owner);
-	offset += 8;
+	offset = dissect_rpc_uint64(tvb, tree, hf_rpc_auth_lk_owner, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_rpc_auth_pid, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_rpc_auth_uid, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_rpc_auth_gid, offset);
 
-	pid = tvb_get_ntohl(tvb,offset+0);
-	if (tree)
-		proto_tree_add_uint(tree, hf_rpc_auth_pid, tvb,
-			offset+0, 4, pid);
-	offset += 4;
-
-	uid = tvb_get_ntohl(tvb,offset+0);
-	if (tree)
-		proto_tree_add_uint(tree, hf_rpc_auth_uid, tvb,
-			offset+0, 4, uid);
-	offset += 4;
-
-	gid = tvb_get_ntohl(tvb,offset+0);
-	if (tree)
-		proto_tree_add_uint(tree, hf_rpc_auth_gid, tvb,
-			offset+0, 4, gid);
-	offset += 4;
-
-	gids_count = tvb_get_ntohl(tvb,offset+0);
+	gids_count = tvb_get_ntohl(tvb,offset);
 	if (tree) {
 		gitem = proto_tree_add_text(tree, tvb, offset,
 			4+gids_count*4, "Auxiliary GIDs (%d)", gids_count);
@@ -989,15 +966,32 @@ dissect_rpc_authgluster_cred(tvbuff_t* tvb, proto_tree* tree, int offset)
 	}
 	offset += 4;
 
-	for (gids_i = 0 ; gids_i < gids_count ; gids_i++) {
-		gids_entry = tvb_get_ntohl(tvb,offset+0);
-		if (gtree)
-		proto_tree_add_uint(gtree, hf_rpc_auth_gid, tvb,
-			offset, 4, gids_entry);
-		offset+=4;
+	/* first, open with [ */
+	if (tree && gids_count > 0)
+		proto_item_append_text(gitem, " [");
+
+	for (gids_i = 0 ; gids_i < gids_count; gids_i++) {
+		gids_entry = tvb_get_ntohl(tvb,offset);
+		if (gtree) {
+			proto_tree_add_uint(gtree, hf_rpc_auth_gid, tvb,
+				offset, 4, gids_entry);
+		}
+
+		/* add at most 16 GIDs to the text */
+		if (tree && gids_i < 16) {
+			if (gids_i > 0)
+				proto_item_append_text(gitem, ", ");
+
+			proto_item_append_text(gitem, "%d", gids_entry);
+		} else if (tree && gids_i == 16) {
+			proto_item_append_text(gitem, "...");
+		}
+		offset += 4;
 	}
-	/* how can I NOW change the gitem to print a list with
-		the first 16 gids? */
+
+	/* finally, close with ] */
+	if (tree && gids_count > 0)
+		proto_item_append_text(gitem, "]");
 
 	return offset;
 }
