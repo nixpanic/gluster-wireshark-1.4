@@ -64,6 +64,14 @@ static gint hf_gluster_flags = -1;
 static gint hf_gluster_volume = -1;
 static gint hf_gluster_cmd = -1;
 static gint hf_gluster_type = -1;
+static gint hf_gluster_entries = -1;
+
+/* dir-entry */
+static gint hf_gluster_entry_ino = -1;
+static gint hf_gluster_entry_off = -1;
+static gint hf_gluster_entry_len = -1;
+static gint hf_gluster_entry_type = -1;
+static gint hf_gluster_entry_path = -1;
 
 /* gf_iatt */
 static gint hf_gluster_ia_ino = -1;
@@ -110,6 +118,7 @@ static gint hf_gluster_setattr_valid = -1;
 static gint ett_gluster_fs = -1;
 static gint ett_gluster3_1_fop = -1;
 static gint ett_gluster_iatt = -1;
+static gint ett_gluster_entry = -1;
 static gint ett_gluster_flock = -1;
 
 /*
@@ -469,14 +478,57 @@ gluster_gfs3_op_inodelk_call(tvbuff_t *tvb, int offset,
 }
 
 static int
+gluster_gfs3_op_readdirp_entry(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	proto_item *entry_item, *iatt_item;
+	proto_tree *entry_tree, *iatt_tree;
+	gchar* path = NULL;
+
+	entry_item = proto_tree_add_text(tree, tvb, offset, -1, "Entry");
+	entry_tree = proto_item_add_subtree(entry_item, ett_gluster_entry);
+
+	offset = dissect_rpc_uint64(tvb, entry_tree, hf_gluster_entry_ino, offset);
+	offset = dissect_rpc_uint64(tvb, entry_tree, hf_gluster_entry_off, offset);
+	offset = dissect_rpc_uint32(tvb, entry_tree, hf_gluster_entry_len, offset);
+	offset = dissect_rpc_uint32(tvb, entry_tree, hf_gluster_entry_type, offset);
+	offset = dissect_rpc_string(tvb, entry_tree, hf_gluster_entry_path, offset, &path);
+
+	proto_item_append_text(entry_item, " Path:%s", path);
+
+	iatt_item = proto_tree_add_text(entry_tree, tvb, offset, -1, "Stat");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+
+	return offset;
+}
+
+
+/* details in xlators/storage/posix/src/posix.c:posix_fill_readdir() */
+static int
 gluster_gfs3_op_readdirp_reply(tvbuff_t *tvb, int offset,
 				packet_info *pinfo _U_, proto_tree *tree)
 {
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	proto_item *errno_item;
+	guint op_errno;
 
-	if (tree)
-		proto_tree_add_text(tree, tvb, offset, -1, "FIXME: The data that follows is a xdr_pointer from xdr_gfs3_dirplist");
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_entries, offset);
+
+	if (tree) {
+		op_errno = tvb_get_ntohl(tvb, offset);
+		errno_item = proto_tree_add_int(tree, hf_gluster_op_errno, tvb,
+					    offset, 4, op_errno);
+		if (op_errno == 0)
+			proto_item_append_text(errno_item,
+					    " (More READDIRP replies follow)");
+		else if (op_errno == 2 /* ENOENT */)
+			proto_item_append_text(errno_item,
+					    " (Last READDIRP reply)");
+	}
+	offset += 4;
+
+	offset = dissect_rpc_list(tvb, pinfo, tree, offset,
+					    gluster_gfs3_op_readdirp_entry);
 
 	return offset;
 }
@@ -693,6 +745,19 @@ static const value_string gluster3_1_fop_proc_vals[] = {
 	{ 0, NULL }
 };
 
+/* dir-entry types */
+static const value_string gluster_entry_type_names[] = {
+	{ DT_UNKNOWN, "DT_UNKNOWN" },
+	{ DT_FIFO, "DT_FIFO" },
+	{ DT_CHR, "DT_CHR" },
+	{ DT_DIR, "DT_DIR" },
+	{ DT_BLK, "DT_BLK" },
+	{ DT_REG, "DT_REG" },
+	{ DT_LNK, "DT_LNK" },
+	{ DT_SOCK, "DT_SOCK" },
+	{ DT_WHT, "DT_WHT" }
+};
+
 /* Normal locking commands */
 static const value_string gluster_lk_cmd_names[] = {
 	{ GF_LK_GETLK, "GF_LK_GETLK" },
@@ -766,6 +831,31 @@ proto_register_glusterfs(void)
 		},
 		{ &hf_gluster_volume,
 			{ "Volume", "gluster.volume", FT_STRING, BASE_NONE,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_entries, /* READDIRP returned <x> entries */
+			{ "Entries returned", "gluster.entries", FT_INT32, BASE_DEC,
+				NULL, 0, NULL, HFILL }
+		},
+		/* the dir-entry structure */
+		{ &hf_gluster_entry_ino,
+			{ "Inode", "gluster.entry.ino", FT_UINT64, BASE_DEC,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_entry_off, /* like telldir() */
+			{ "Offset", "gluster.entry.d_off", FT_UINT64, BASE_DEC,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_entry_len, /* length of the path string */
+			{ "Path length", "gluster.entry.len", FT_UINT32, BASE_DEC,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_entry_type,
+			{ "Type", "gluster.entry.d_type", FT_UINT32, BASE_DEC,
+				VALS(gluster_entry_type_names), 0, NULL, HFILL }
+		},
+		{ &hf_gluster_entry_path,
+			{ "Path", "gluster.entry.path", FT_STRING, BASE_NONE,
 				NULL, 0, NULL, HFILL }
 		},
 		/* the IATT structure */
@@ -916,6 +1006,7 @@ proto_register_glusterfs(void)
 	static gint *ett[] = {
 		&ett_gluster_fs,
 		&ett_gluster3_1_fop,
+		&ett_gluster_entry,
 		&ett_gluster_iatt,
 		&ett_gluster_flock
 	};
