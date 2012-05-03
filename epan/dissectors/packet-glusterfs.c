@@ -71,6 +71,8 @@ static gint hf_gluster_entries = -1;
 static gint hf_gluster_xflags = -1;
 static gint hf_gluster_linkname = -1;
 static gint hf_gluster_umask = -1;
+static gint hf_gluster_mask = -1;
+
 /* dir-entry */
 static gint hf_gluster_entry_ino = -1;
 static gint hf_gluster_entry_off = -1;
@@ -1093,6 +1095,17 @@ gluster_gfs3_3_op_opendir_call(tvbuff_t *tvb, int offset,
 }
 
 static int
+gluster_gfs3_3_op_access_call(tvbuff_t *tvb, int offset,
+                                packet_info *pinfo _U_, proto_tree *tree)
+{
+        offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
+                                                                FALSE, NULL);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_mask, offset);
+        offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+        return offset;
+}
+
+static int
 gluster_gfs3_3_op_lookup_reply(tvbuff_t *tvb, int offset,
                                 packet_info *pinfo _U_, proto_tree *tree)
 {
@@ -1499,7 +1512,11 @@ static const vsff gluster3_3_fop_proc[] = {
 		gluster_gfs3_3_op_opendir_call, gluster_gfs3_3_op_opendir_reply
 	},
 	{ GFS3_OP_FSYNCDIR, "FSYNCDIR", NULL, NULL },
-	{ GFS3_OP_ACCESS, "ACCESS", NULL, NULL },
+	{
+		GFS3_OP_ACCESS, "ACCESS",
+                gluster_gfs3_3_op_access_call, gluster_gfs3_3_op_common_reply
+
+	},
 	{
 		GFS3_OP_CREATE, "CREATE",
 		gluster_gfs3_op_create_call, gluster_gfs3_op_create_reply
@@ -1710,6 +1727,11 @@ proto_register_glusterfs(void)
                         { "Umask", "gluster.umask", FT_UINT32, BASE_DEC,
                                 NULL, 0, NULL, HFILL }
                 },
+		{ &hf_gluster_mask,
+                        { "Mask", "gluster.mask", FT_UINT32, BASE_DEC,
+                                NULL, 0, NULL, HFILL }
+                },
+
 		{ &hf_gluster_entries, /* READDIRP returned <x> entries */
 			{ "Entries returned", "gluster.entries", FT_INT32, BASE_DEC,
 				NULL, 0, NULL, HFILL }
