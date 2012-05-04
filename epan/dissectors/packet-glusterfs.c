@@ -127,6 +127,9 @@ static gint hf_gluster_setattr_valid = -1;
 static gint hf_gluster_oldbname = -1;
 static gint hf_gluster_newbname = -1;
 
+/* for FSYNCDIR */
+static gint hf_gluster_fsyncdir_data = -1;
+
 /* Initialize the subtree pointers */
 static gint ett_gluster_fs = -1;
 static gint ett_gluster3_1_fop = -1;
@@ -1191,6 +1194,18 @@ gluster_gfs3_3_op_removexattr_call(tvbuff_t *tvb, int offset,
         offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
         return offset;
 }
+static int
+gluster_gfs3_3_op_fsyncdir_call(tvbuff_t *tvb, int offset,
+                                packet_info *pinfo _U_, proto_tree *tree)
+{
+        offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
+                                                                FALSE, NULL);
+
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_fd, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_fsyncdir_data, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+        return offset;
+}
 
 static int
 gluster_gfs3_3_op_opendir_reply(tvbuff_t *tvb, int offset,
@@ -1858,7 +1873,11 @@ static const vsff gluster3_3_fop_proc[] = {
 		GFS3_OP_OPENDIR, "OPENDIR",
 		gluster_gfs3_3_op_opendir_call, gluster_gfs3_3_op_opendir_reply
 	},
-	{ GFS3_OP_FSYNCDIR, "FSYNCDIR", NULL, NULL },
+	{
+		GFS3_OP_FSYNCDIR, "FSYNCDIR",
+                gluster_gfs3_3_op_fsyncdir_call, gluster_gfs3_3_op_common_reply
+
+	},
 	{
 		GFS3_OP_ACCESS, "ACCESS",
                 gluster_gfs3_3_op_access_call, gluster_gfs3_3_op_common_reply
@@ -2284,8 +2303,11 @@ proto_register_glusterfs(void)
 		{ &hf_gluster_name,
                         { "Name", "gluster.name", FT_STRING, BASE_NONE,
                                 NULL, 0, NULL, HFILL }
+                },
+		{&hf_gluster_fsyncdir_data,
+                        { "Data", "gluster.fsyncdir.data", FT_INT32, BASE_DEC,
+                                NULL, 0, NULL, HFILL }
                 }
-
 	};
 
 	/* Setup protocol subtree array */
