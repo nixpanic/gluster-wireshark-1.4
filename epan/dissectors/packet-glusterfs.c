@@ -130,6 +130,9 @@ static gint hf_gluster_newbname = -1;
 /* for FSYNCDIR */
 static gint hf_gluster_fsyncdir_data = -1;
 
+/* for entrylk */
+static gint hf_gluster_entrylk_namelen = -1;
+
 /* Initialize the subtree pointers */
 static gint ett_gluster_fs = -1;
 static gint ett_gluster3_1_fop = -1;
@@ -1217,7 +1220,7 @@ gluster_gfs3_3_op_getxattr_call(tvbuff_t *tvb, int offset,
         gchar* name = NULL;
         offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
                                                                 FALSE, NULL);
-        offset = dissect_rpc_uint64(tvb, tree, hf_gluster_namelen, offset);
+        offset = dissect_rpc_uint32(tvb, tree, hf_gluster_namelen, offset);
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_name, offset, &name);
 	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
         return offset;
@@ -1574,7 +1577,7 @@ gluster_gfs3_3_op_entrylk_call(tvbuff_t *tvb, int offset,
                                                                 FALSE, NULL);
         offset = dissect_rpc_uint32(tvb, tree, hf_gluster_cmd, offset);
         offset = dissect_rpc_uint32(tvb, tree, hf_gluster_type, offset);
-        offset = dissect_rpc_uint64(tvb, tree, hf_gluster_namelen, offset);
+        offset = dissect_rpc_uint64(tvb, tree, hf_gluster_entrylk_namelen, offset);
         offset = dissect_rpc_string(tvb, tree, hf_gluster_name, offset, &name);
         offset = dissect_rpc_string(tvb, tree, hf_gluster_volume, offset, &volume);
         offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
@@ -1592,7 +1595,7 @@ gluster_gfs3_3_op_fentrylk_call(tvbuff_t *tvb, int offset,
         offset = dissect_rpc_uint64(tvb, tree, hf_gluster_fd, offset);
         offset = dissect_rpc_uint32(tvb, tree, hf_gluster_cmd, offset);
         offset = dissect_rpc_uint32(tvb, tree, hf_gluster_type, offset);
-        offset = dissect_rpc_uint64(tvb, tree, hf_gluster_namelen, offset);
+        offset = dissect_rpc_uint64(tvb, tree, hf_gluster_entrylk_namelen, offset);
         offset = dissect_rpc_string(tvb, tree, hf_gluster_name, offset, &name);
         offset = dissect_rpc_string(tvb, tree, hf_gluster_volume, offset, &volume);
         offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
@@ -1655,7 +1658,7 @@ gluster_gfs3_3_op_fgetxattr_call(tvbuff_t *tvb, int offset,
 	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
                                                                 FALSE, NULL);
         offset = dissect_rpc_uint64(tvb, tree, hf_gluster_fd, offset);
-	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_namelen, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_namelen, offset);
         offset = dissect_rpc_string(tvb, tree, hf_gluster_name, offset, &name);
         offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
 
@@ -2238,7 +2241,7 @@ proto_register_glusterfs(void)
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_namelen,
-                        { "Name Lenth", "gluster.namelen", FT_UINT64, BASE_DEC,
+                        { "Name Lenth", "gluster.namelen", FT_UINT32, BASE_DEC,
                                 NULL, 0, NULL, HFILL }
                 },
 		{ &hf_gluster_linkname,
@@ -2440,9 +2443,12 @@ proto_register_glusterfs(void)
 		{&hf_gluster_fsyncdir_data,
                         { "Data", "gluster.fsyncdir.data", FT_INT32, BASE_DEC,
                                 NULL, 0, NULL, HFILL }
-                }
+                },/* For entry an fentry lk */
+		{ &hf_gluster_entrylk_namelen,
+                        { "File Descriptor", "gluster.entrylk.namelen", FT_UINT64, BASE_DEC,
+                                NULL, 0, NULL, HFILL }
+                },
 	};
-
 	/* Setup protocol subtree array */
 	static gint *ett[] = {
 		&ett_gluster_fs,
