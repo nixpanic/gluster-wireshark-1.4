@@ -41,6 +41,11 @@
 #define AUTH_RSA 5
 #define RPCSEC_GSS 6
 #define AUTH_GSSAPI 300001
+/* GlusterFS requested an RPC-AUTH number from IANA,
+ * until a number has been granted 390039 is used.
+ * See also: http://review.gluster.com/3230
+ */
+#define AUTH_GLUSTERFS 390039
 /* Pseudo-flavors used for security mechanisms while using 
  * RPCSEC_GSS
  */
