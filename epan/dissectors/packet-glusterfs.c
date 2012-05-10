@@ -1731,7 +1731,6 @@ gluster_gfs3_3_op_readdirp_reply(tvbuff_t *tvb, int offset,
 	guint op_errno;
 
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_entries, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
 
 	if (tree) {
 		op_errno = tvb_get_ntohl(tvb, offset);
@@ -1743,15 +1742,11 @@ gluster_gfs3_3_op_readdirp_reply(tvbuff_t *tvb, int offset,
 		else if (op_errno == 2 /* ENOENT */)
 			proto_item_append_text(errno_item,
 					    " (Last READDIRP reply)");
-		else
-			proto_item_append_text(errno_item,
-					    " (%s)", g_strerror(op_errno));
 	}
 	offset += 4;
 
 	offset = dissect_rpc_list(tvb, pinfo, tree, offset,
 					    gluster_gfs3_op_readdirp_entry);
-	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
 
 	return offset;
 }
