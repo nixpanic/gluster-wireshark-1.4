@@ -1728,32 +1728,27 @@ gluster_gfs3_3_op_readdirp_reply(tvbuff_t *tvb, int offset,
 				packet_info *pinfo _U_, proto_tree *tree)
 {
 	proto_item *errno_item;
-	guint op_errno;
+        guint op_errno;
 
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_entries, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+        offset = dissect_rpc_uint32(tvb, tree, hf_gluster_entries, offset);
 
-	if (tree) {
-		op_errno = tvb_get_ntohl(tvb, offset);
-		errno_item = proto_tree_add_int(tree, hf_gluster_op_errno, tvb,
-					    offset, 4, op_errno);
-		if (op_errno == 0)
-			proto_item_append_text(errno_item,
-					    " (More READDIRP replies follow)");
-		else if (op_errno == 2 /* ENOENT */)
-			proto_item_append_text(errno_item,
-					    " (Last READDIRP reply)");
-		else
-			proto_item_append_text(errno_item,
-					    " (%s)", g_strerror(op_errno));
-	}
-	offset += 4;
+        if (tree) {
+                op_errno = tvb_get_ntohl(tvb, offset);
+                errno_item = proto_tree_add_int(tree, hf_gluster_op_errno, tvb,
+                                            offset, 4, op_errno);
+                if (op_errno == 0)
+                        proto_item_append_text(errno_item,
+                                            " (More READDIRP replies follow)");
+                else if (op_errno == 2 /* ENOENT */)
+                        proto_item_append_text(errno_item,
+                                            " (Last READDIRP reply)");
+        }
+        offset += 4;
 
-	offset = dissect_rpc_list(tvb, pinfo, tree, offset,
-					    gluster_gfs3_op_readdirp_entry);
-	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+        offset = dissect_rpc_list(tvb, pinfo, tree, offset,
+                                            gluster_gfs3_op_readdirp_entry);
 
-	return offset;
+        return offset;
 }
 
 static int
