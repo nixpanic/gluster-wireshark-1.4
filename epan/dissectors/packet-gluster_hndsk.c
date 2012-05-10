@@ -123,6 +123,101 @@ gluster_hndsk_setvolume_call(tvbuff_t *tvb, int offset,
 	return offset;
 }
 
+static int
+gluster_hndsk_2_setvolume_reply(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+	return offset;
+}
+
+static int
+gluster_hndsk_2_setvolume_call(tvbuff_t *tvb, int offset,
+                                packet_info *pinfo _U_, proto_tree *tree)
+{
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+	return offset;
+}
+
+static int
+gluster_hndsk_2_getspec_reply(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	gchar* spec = NULL;
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_spec, offset, &spec);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+	return offset;
+}
+
+static int
+gluster_hndsk_2_getspec_call(tvbuff_t *tvb, int offset,
+                                packet_info *pinfo _U_, proto_tree *tree)
+{
+	guint flags;
+	gchar *key = NULL;
+	flags = tvb_get_ntohl(tvb, offset);
+	proto_tree_add_uint_format(tree, hf_gluster_flags, tvb, offset, 4, flags, "Flags: 0x%02x", flags);
+	offset += 4;
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_key, offset, &key);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+	return offset;
+}
+
+static int
+gluster_hndsk_2_set_lk_ver_reply(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	offset = dissect_rpc_uint32(tvb, tree,hf_gluster_lk_ver, offset);
+	return offset;
+}
+
+static int
+gluster_hndsk_2_set_lk_ver_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	gchar* uid = NULL;
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_uid, offset, &uid);
+	offset = dissect_rpc_uint32(tvb, tree,hf_gluster_lk_ver, offset);
+	return offset;
+}
+
+static int
+gluster_hndsk_2_event_notify_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_hndsk_event_op, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+	return offset;
+}
+
+/* In  rpc/xdr/src/glusterfs3-xdr.c. xdr_gf_event_notify_rsp */
+
+static int
+gluster_hndsk_2_event_notify_reply(tvbuff_t *tvb, int offset,
+                                packet_info *pinfo _U_, proto_tree *tree)
+{
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+	return offset;
+}
+
+static int
+gluster_hndsk_2_ping_reply(tvbuff_t *tvb, int offset, packet_info *pinfo _U_,
+				proto_tree *tree)
+{
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	return offset;
+}
+
+
 static const vsff gluster_hndsk_proc[] = {
 	{ GF_HNDSK_NULL, "NULL", NULL, NULL },
 	{
@@ -142,7 +237,7 @@ static const vsff gluster_hndsk_2_proc[] = {
 	},
 	{
 		GF_HNDSK_GETSPEC, "GETSPEC",
-		gluster_hndsk_getspec_call,gluster_hndsk_getspec_reply
+		gluster_hndsk_2_getspec_call,gluster_hndsk_2_getspec_reply
 	},
 	{ GF_HNDSK_PING, "PING", NULL, gluster_hndsk_2_ping_reply },
 	{
@@ -192,8 +287,8 @@ proto_register_gluster_hndsk(void)
 		{ &hf_gluster_key,
 			{ "Key", "gluster.fetchspec.key", FT_STRING, BASE_NONE,
 				NULL, 0, NULL, HFILL }
-		}
-/* For Gluster handshake event notify */
+		},
+		/* For Gluster handshake event notify */
                 { &hf_gluster_hndsk_event_op,
                        { "Event Op", "gluster.event_notify_op", FT_UINT32, BASE_DEC,
                                  NULL, 0, NULL, HFILL }
