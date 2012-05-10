@@ -54,6 +54,13 @@ static gint hf_gluster_cbk_proc = -1;
 static gint hf_gluster_hndsk_proc = -1;
 static gint hf_gluster_spec = -1;	/* FETCHSPEC Reply */
 static gint hf_gluster_key = -1;	/* FETCHSPEC Call */
+static gint hf_gluster_hndsk_event_op = -1;       /* EVENT NOTIFY call */
+static gint hf_gluster_uid = -1;              /* LOCK VERSION*/
+static gint hf_gluster_lk_ver= -1;
+static gint hf_gluster_op_errno = -1;
+
+/* for getspec */
+static gint hf_gluster_flags = -1;
 
 /* Initialize the subtree pointers */
 static gint ett_gluster_cbk = -1;
@@ -126,11 +133,37 @@ static const vsff gluster_hndsk_proc[] = {
 	{ GF_HNDSK_PING, "PING", NULL, gluster_dissect_common_reply },
 	{ 0, NULL, NULL, NULL }
 };
+
+static const vsff gluster_hndsk_2_proc[] = {
+	{ GF_HNDSK_NULL, "NULL", NULL, NULL },
+	{
+		GF_HNDSK_SETVOLUME, "SETVOLUME",
+		gluster_hndsk_2_setvolume_call, gluster_hndsk_2_setvolume_reply
+	},
+	{
+		GF_HNDSK_GETSPEC, "GETSPEC",
+		gluster_hndsk_getspec_call,gluster_hndsk_getspec_reply
+	},
+	{ GF_HNDSK_PING, "PING", NULL, gluster_hndsk_2_ping_reply },
+	{
+		GF_HNDSK_SET_LK_VER,"LOCK VERSION",
+		gluster_hndsk_2_set_lk_ver_call, gluster_hndsk_2_set_lk_ver_reply
+	},
+	{
+		GF_HNDSK_EVENT_NOTIFY, "EVENTNOTIFY",
+		gluster_hndsk_2_event_notify_call, gluster_hndsk_2_event_notify_reply
+	},
+	{ 0, NULL, NULL, NULL }
+};
+
+
 static const value_string gluster_hndsk_proc_vals[] = {
 	{ GF_HNDSK_NULL, "NULL" },
 	{ GF_HNDSK_SETVOLUME, "DUMP" },
 	{ GF_HNDSK_GETSPEC, "GETSPEC" },
 	{ GF_HNDSK_PING, "PING" },
+	{ GF_HNDSK_SET_LK_VER,"LOCK VERSION" },
+	{ GF_HNDSK_EVENT_NOTIFY, "EVENTNOTIFY" },
 	{ 0, NULL }
 };
 
@@ -160,7 +193,28 @@ proto_register_gluster_hndsk(void)
 			{ "Key", "gluster.fetchspec.key", FT_STRING, BASE_NONE,
 				NULL, 0, NULL, HFILL }
 		}
-	};
+/* For Gluster handshake event notify */
+                { &hf_gluster_hndsk_event_op,
+                       { "Event Op", "gluster.event_notify_op", FT_UINT32, BASE_DEC,
+                                 NULL, 0, NULL, HFILL }
+                },/*For hand shake set_lk_ver */
+		{ &hf_gluster_uid,
+			{ "Name", "gluster.uid", FT_STRING, BASE_NONE,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_lk_ver,
+			{ "Event Op", "gluster.lk_ver", FT_UINT32, BASE_DEC,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_flags,
+			{ "Flags", "gluster.flags", FT_UINT32, BASE_OCT,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_op_errno,
+			{ "Errno", "gluster.op_errno", FT_INT32, BASE_DEC,
+				NULL, 0, NULL, HFILL }
+		}
+};
 
 	/* Setup protocol subtree array */
 	static gint *ett[] = {
@@ -189,6 +243,8 @@ proto_reg_handoff_gluster_hndsk(void)
 	rpc_init_prog(proto_gluster_hndsk, GLUSTER_HNDSK_PROGRAM,
 							ett_gluster_hndsk);
 	rpc_init_proc_table(GLUSTER_HNDSK_PROGRAM, 1, gluster_hndsk_proc,
+							hf_gluster_hndsk_proc);
+	rpc_init_proc_table(GLUSTER_HNDSK_PROGRAM, 2, gluster_hndsk_2_proc,
 							hf_gluster_hndsk_proc);
 }
 
