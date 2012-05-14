@@ -185,6 +185,19 @@ gluster_rpc_dissect_gf_flock(proto_tree *tree, tvbuff_t *tvb, int offset)
 }
 
 static int
+gluster_rpc_dissect_gf_2_flock(proto_tree *tree, tvbuff_t *tvb, int offset)
+{
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_flock_type, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_flock_whence, offset);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_flock_start, offset);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_flock_len, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_flock_pid, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+
+static int
 gluster_rpc_dissect_statfs(proto_tree *tree, tvbuff_t *tvb, int offset)
 {
 	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_bsize, offset);
@@ -1399,8 +1412,8 @@ gluster_gfs3_3_op_lk_call(tvbuff_t *tvb, int offset,
 
 	flock_item = proto_tree_add_text(tree, tvb, offset, -1, "flock");
 	flock_tree = proto_item_add_subtree(flock_item, ett_gluster_flock);
-	offset = gluster_rpc_dissect_gf_flock(flock_tree, tvb, offset);
-
+	offset = gluster_rpc_dissect_gf_2_flock(flock_tree, tvb, offset);
+	
 	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
 
 	return offset;
@@ -1416,7 +1429,7 @@ gluster_gfs3_3_op_lk_reply(tvbuff_t *tvb, int offset,
 	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
 	flock_item = proto_tree_add_text(tree, tvb, offset, -1, "flock");
 	flock_tree = proto_item_add_subtree(flock_item, ett_gluster_flock);
-	offset = gluster_rpc_dissect_gf_flock(flock_tree, tvb, offset);
+	offset = gluster_rpc_dissect_gf_2_flock(flock_tree, tvb, offset);
 	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
 
 	return offset;
@@ -1515,7 +1528,7 @@ gluster_gfs3_3_op_inodelk_call(tvbuff_t *tvb, int offset,
 
 	flock_item = proto_tree_add_text(tree, tvb, offset, -1, "flock");
 	flock_tree = proto_item_add_subtree(flock_item, ett_gluster_flock);
-	offset = gluster_rpc_dissect_gf_flock(flock_tree, tvb, offset);
+	offset = gluster_rpc_dissect_gf_2_flock(flock_tree, tvb, offset);
 
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_volume, offset, &volume);
 	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
@@ -1540,7 +1553,7 @@ gluster_gfs3_3_op_finodelk_call(tvbuff_t *tvb, int offset,
 
 	flock_item = proto_tree_add_text(tree, tvb, offset, -1, "flock");
 	flock_tree = proto_item_add_subtree(flock_item, ett_gluster_flock);
-	offset = gluster_rpc_dissect_gf_flock(flock_tree, tvb, offset);
+	offset = gluster_rpc_dissect_gf_2_flock(flock_tree, tvb, offset);
 
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_volume, offset, &volume);
 	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
