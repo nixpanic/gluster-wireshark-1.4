@@ -220,6 +220,17 @@ enum glusterd_mgmt_procnum {
 	GLUSTERD_MGMT_MAXVALUE
 };
 
+/* GLUSTERD1_MGMT_PROGRAM  for version 2*/
+enum glusterd_mgmt_2_procnum {
+        GLUSTERD_MGMT_2_NULL = 0,    /* 0 */
+        GLUSTERD_MGMT_2_CLUSTER_LOCK,
+        GLUSTERD_MGMT_2_CLUSTER_UNLOCK,
+        GLUSTERD_MGMT_2_STAGE_OP,
+        GLUSTERD_MGMT_2_COMMIT_OP,
+        GLUSTERD_MGMT_2_MAXVALUE,
+};
+
+
 /* GLUSTERFS_PROGRAM */
 enum gf_brick_procnum {
 	GF_BRICK_NULL = 0,
