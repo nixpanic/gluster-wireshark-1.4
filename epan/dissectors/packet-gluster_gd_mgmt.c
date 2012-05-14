@@ -47,10 +47,11 @@
 
 /* Initialize the protocol and registered fields */
 static gint proto_gd_mgmt = -1;
-
+static gint proto_gd_brick = -1;
 /* programs and procedures */
 static gint hf_gd_mgmt_proc = -1;
 static gint hf_gd_mgmt_2_proc = -1;
+static gint hf_gd_mgmt_brick_2_proc = -1;
 
 /* fields used by multiple programs/procedures */
 static gint hf_gluster_op_errstr = -1;
@@ -60,10 +61,11 @@ static gint hf_gluster_port = -1;
 static gint hf_gluster_vols = -1;
 static gint hf_gluster_buf = -1;
 static gint hf_gluster_op_errno = -1;
+static gint hf_gluster_name = -1;
 
 /* Initialize the subtree pointers */
 static gint ett_gd_mgmt = -1;
-
+static gint ett_gd_brick = -1;
 static int
 gluster_gd_mgmt_probe_reply(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
 {
@@ -266,6 +268,34 @@ glusterd_mgmt_2_commit_op_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U_
 	return offset;
 }
 
+/* Brick management common function */
+
+static int
+glusterd_brick_2_common_reply(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
+{
+	gchar *errstr = NULL;
+
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_op_errstr, offset, &errstr);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+
+static int
+glusterd_brick_2_common_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
+{
+	gchar *name = NULL;
+	
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_name, offset, &name);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+
+
 
 /*
  * GD_MGMT_PROGRAM
@@ -346,14 +376,52 @@ static const vsff gd_mgmt_2_proc[] = {
 	},
 	{
 		GLUSTERD_MGMT_2_STAGE_OP, "GD_MGMT_STAGE_OP",
-		gluster_gd_mgmt_stage_op_call, gluster_gd_mgmt_stage_op_reply
+		glusterd_mgmt_2_stage_op_call, glusterd_mgmt_2_stage_op_reply
 	},
 	{
 		GLUSTERD_MGMT_2_COMMIT_OP, "GD_MGMT_COMMIT_OP",
-		gluster_gd_mgmt_commit_op_call, gluster_gd_mgmt_commit_op_reply
+		glusterd_mgmt_2_commit_op_call, glusterd_mgmt_2_commit_op_reply
 	},
 	{ GLUSTERD_MGMT_2_MAXVALUE, "GD_MGMT_MAXVALUE", NULL, NULL},
 	{ 0, NULL, NULL, NULL}
+};
+
+static const value_string gd_mgmt_brick_2_proc[] = {
+	{ GLUSTERD_2_BRICK_NULL,"GLUSTERD_2_BRICK_NULL", NULL , NULL },    /* 0 */
+	{ 
+		GLUSTERD_2_BRICK_TERMINATE, "GLUSTERD_2_BRICK_TERMINATE", 
+		glusterd_brick_2_common_call,glusterd_brick_2_common_reply
+	},
+        { 
+		GLUSTERD_2_BRICK_XLATOR_INFO, "GLUSTERD_2_BRICK_XLATOR_INFO", 
+ 		glusterd_brick_2_common_call,glusterd_brick_2_common_reply
+	},
+        { 
+		GLUSTERD_2_BRICK_XLATOR_OP, "GLUSTERD_2_BRICK_XLATOR_OP" ,
+		glusterd_brick_2_common_call,glusterd_brick_2_common_reply
+	},
+        { 
+		GLUSTERD_2_BRICK_STATUS, "GLUSTERD_2_BRICK_STATUS", 
+		glusterd_brick_2_common_call,glusterd_brick_2_common_reply
+	},
+        { 
+		GLUSTERD_2_BRICK_OP, "GLUSTERD_2_BRICK_OP",
+		glusterd_brick_2_common_call,glusterd_brick_2_common_reply
+	},
+        { 
+		GLUSTERD_2_BRICK_XLATOR_DEFRAG, "GLUSTERD_2_BRICK_XLATOR_DEFRAG", 
+		glusterd_brick_2_common_call,glusterd_brick_2_common_reply
+	},
+        { 
+		GLUSTERD_2_NODE_PROFILE, "GLUSTERD_2_NODE_PROFILE", 
+		glusterd_brick_2_common_call,glusterd_brick_2_common_reply
+	},
+        { 
+		GLUSTERD_2_NODE_STATUS, "GLUSTERD_2_NODE_PROFILE", 
+		glusterd_brick_2_common_call,glusterd_brick_2_common_reply
+	},
+        { GLUSTERD_2_BRICK_MAXVALUE, "GLUSTERD_2_BRICK_MAXVALUE",NULL,NULL },
+        { 0, NULL }
 };
 
 static const value_string gd_mgmt_proc_vals[] = {
@@ -405,6 +473,20 @@ static const value_string gd_mgmt_2_proc_vals[] = {
 	{ 0, NULL }
 };
 
+static const value_string gd_mgmt_brick_2_proc_vals[] = {
+	{ GLUSTERD_2_BRICK_NULL,"GLUSTERD_2_BRICK_NULL" },    /* 0 */
+	{ GLUSTERD_2_BRICK_TERMINATE, "GLUSTERD_2_BRICK_TERMINATE" },
+	{ GLUSTERD_2_BRICK_XLATOR_INFO, "GLUSTERD_2_BRICK_XLATOR_INFO" },
+	{ GLUSTERD_2_BRICK_XLATOR_OP, "GLUSTERD_2_BRICK_XLATOR_OP" },
+	{ GLUSTERD_2_BRICK_STATUS, "GLUSTERD_2_BRICK_STATUS" },
+	{ GLUSTERD_2_BRICK_OP, "GLUSTERD_2_BRICK_OP" },
+	{ GLUSTERD_2_BRICK_XLATOR_DEFRAG, "GLUSTERD_2_BRICK_XLATOR_DEFRAG" },
+	{ GLUSTERD_2_NODE_PROFILE, "GLUSTERD_2_NODE_PROFILE" },
+	{ GLUSTERD_2_NODE_STATUS, "GLUSTERD_2_NODE_PROFILE" },
+	{ GLUSTERD_2_BRICK_MAXVALUE, "GLUSTERD_2_BRICK_MAXVALUE" },
+	{ 0, NULL }
+};
+
 void
 proto_register_gluster_gd_mgmt(void)
 {
@@ -421,6 +503,12 @@ proto_register_gluster_gd_mgmt(void)
 				FT_UINT32, BASE_DEC, VALS(gd_mgmt_2_proc_vals),
 				0, NULL, HFILL }
 		},
+		{ &hf_gd_mgmt_brick_2_proc,
+                        { "Gluster Daemon Management", "glusterd.mgmt",
+                                FT_UINT32, BASE_DEC, VALS(gd_mgmt_brick_2_proc_vals),
+                                0, NULL, HFILL }
+                },
+
 		{ &hf_gluster_op_errstr,
 			{ "Error String", "gluster.op_errstr", FT_STRING,
 				BASE_NONE, NULL, 0, NULL, HFILL }
@@ -448,12 +536,17 @@ proto_register_gluster_gd_mgmt(void)
 		{ &hf_gluster_op_errno,
 			{ "Errno", "gluster.op_errno", FT_INT32, BASE_DEC,
 				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_name,
+			{ "Name", "gluster.name", FT_STRING, BASE_NONE,
+				NULL, 0, NULL, HFILL }
 		}
 	};
 
 	/* Setup protocol subtree array */
 	static gint *ett[] = {
-		&ett_gd_mgmt
+		&ett_gd_mgmt,
+		&ett_gd_brick
 	};
 
 	/* Register the protocol name and description */
@@ -462,14 +555,17 @@ proto_register_gluster_gd_mgmt(void)
 
 	proto_gd_mgmt = proto_register_protocol("Gluster Daemon Management",
 					"GlusterD Management", "gd-mgmt");
+	proto_gd_brick = proto_register_protocol("Gluster Daemon Brick",
+					"GlusterD Brick", "gd-brick");
 }
 
 void
 proto_reg_handoff_gluster_gd_mgmt(void)
 {
 	rpc_init_prog(proto_gd_mgmt, GD_MGMT_PROGRAM, ett_gd_mgmt);
+	rpc_init_prog(proto_gd_brick, GD_BRICK_PROGRAM, ett_gd_brick);
 	rpc_init_proc_table(GD_MGMT_PROGRAM, 1, gd_mgmt_proc, hf_gd_mgmt_proc);
 	rpc_init_proc_table(GD_MGMT_PROGRAM, 2, gd_mgmt_2_proc, hf_gd_mgmt_2_proc);
-
+	rpc_init_proc_table(GD_BRICK_PROGRAM, 2,gd_mgmt_brick_2_proc,hf_gd_mgmt_brick_2_proc );
 }
 
