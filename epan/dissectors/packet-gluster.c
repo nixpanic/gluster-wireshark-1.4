@@ -56,7 +56,6 @@ static gint hf_gluster_mgmt_proc = -1;
 gint hf_gluster_gfid = -1;
 gint hf_gluster_op = -1;
 gint hf_gluster_op_ret = -1;
-gint hf_gluster_op_errno = -1;
 gint hf_gluster_dict = -1;
 static gint hf_gluster_dict_key = -1;
 static gint hf_gluster_dict_value = -1;
@@ -185,10 +184,6 @@ proto_register_gluster(void)
 		},
 		{ &hf_gluster_op_ret,
 			{ "Return value", "gluster.op_ret", FT_INT32, BASE_DEC,
-				NULL, 0, NULL, HFILL }
-		},
-		{ &hf_gluster_op_errno,
-			{ "Errno", "gluster.op_errno", FT_INT32, BASE_DEC,
 				NULL, 0, NULL, HFILL }
 		},
 		/* fields used by gluster_rpc_dissect_dict() */

@@ -83,8 +83,7 @@ gluster_dump_reply(tvbuff_t *tvb, int offset, packet_info *pinfo _U_,
 {
 	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 8,
 								FALSE, NULL);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
 
 	if (tree)
 		proto_tree_add_text(tree, tvb, offset, -1, "FIXME: The data that follows is a xdr_pointer from xdr_gf_prog_detail()");

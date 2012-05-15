@@ -65,8 +65,7 @@ gluster_cbk_fetchspec_reply(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, p
 {
 	gchar* spec = NULL;
 
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_spec, offset, &spec);
 
 	return offset;
@@ -101,20 +100,10 @@ static const value_string gluster_cbk_proc_vals[] = {
 
 /* procedures for GLUSTER_HNDSK_PROGRAM */
 static int
-gluster_hndsk_ping_reply(tvbuff_t *tvb, int offset, packet_info *pinfo _U_,
-							proto_tree *tree)
-{
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
-	return offset;
-}
-
-static int
 gluster_hndsk_setvolume_reply(tvbuff_t *tvb, int offset,
 				packet_info *pinfo _U_, proto_tree *tree)
 {
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
 	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
 	return offset;
 }
@@ -134,7 +123,7 @@ static const vsff gluster_hndsk_proc[] = {
 		gluster_hndsk_setvolume_call, gluster_hndsk_setvolume_reply
 	},
 	{ GF_HNDSK_GETSPEC, "GETSPEC", NULL, NULL },
-	{ GF_HNDSK_PING, "PING", NULL, gluster_hndsk_ping_reply },
+	{ GF_HNDSK_PING, "PING", NULL, gluster_dissect_common_reply },
 	{ 0, NULL, NULL, NULL }
 };
 static const value_string gluster_hndsk_proc_vals[] = {

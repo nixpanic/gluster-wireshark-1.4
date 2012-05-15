@@ -54,6 +54,7 @@ static gint hf_gluster_fs_proc = -1;
 static gint hf_gluster3_1_fop_proc = -1;
 
 /* fields used by multiple programs/procedures */
+static gint hf_gluster_op_errno = -1;
 static gint hf_gluster_pargfid = -1;
 static gint hf_gluster_path = -1;
 static gint hf_gluster_bname = -1;
@@ -183,6 +184,28 @@ gluster_rpc_dissect_statfs(proto_tree *tree, tvbuff_t *tvb, int offset)
 	return offset;
 }
 
+int
+gluster_dissect_common_reply(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	proto_item *errno_item;
+	guint op_errno;
+
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+
+	if (tree) {
+		op_errno = tvb_get_ntohl(tvb, offset);
+		errno_item = proto_tree_add_int(tree, hf_gluster_op_errno, tvb,
+					    offset, 4, op_errno);
+		proto_item_append_text(errno_item, " (%s)",
+							g_strerror(op_errno));
+	}
+
+	offset += 4;
+
+	return offset;
+}
+
 /*
  *  372          if (!xdr_int (xdrs, &objp->op_ret))
  *   373                  return FALSE;
@@ -199,9 +222,6 @@ gluster_gfs3_op_unlink_reply(tvbuff_t *tvb, int offset,
 {
 	proto_item *iatt_item;
 	proto_tree *iatt_tree;
-
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
 
 	/* FIXME: describe this better - gf_iatt (xdrs, &objp->preparent */
 	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "PreParent IATT");
@@ -242,8 +262,7 @@ static int
 gluster_gfs3_op_statfs_reply(tvbuff_t *tvb, int offset,
 				packet_info *pinfo _U_, proto_tree *tree)
 {
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
 	offset = gluster_rpc_dissect_statfs(tree, tvb, offset);
 	return offset;
 }
@@ -262,30 +281,12 @@ gluster_gfs3_op_statfs_call(tvbuff_t *tvb, int offset,
 }
 
 static int
-gluster_gfs3_op_flush_reply(tvbuff_t *tvb, int offset,
-				packet_info *pinfo _U_, proto_tree *tree)
-{
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
-	return offset;
-}
-
-static int
 gluster_gfs3_op_flush_call(tvbuff_t *tvb, int offset,
 				packet_info *pinfo _U_, proto_tree *tree)
 {
 	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
 								FALSE, NULL);
 	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_fd, offset);
-	return offset;
-}
-
-static int
-gluster_gfs3_op_setxattr_reply(tvbuff_t *tvb, int offset,
-				packet_info *pinfo _U_, proto_tree *tree)
-{
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
 	return offset;
 }
 
@@ -314,8 +315,7 @@ static int
 gluster_gfs3_op_opendir_reply(tvbuff_t *tvb, int offset,
 				packet_info *pinfo _U_, proto_tree *tree)
 {
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
 	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_fd, offset);
 	return offset;
 }
@@ -341,8 +341,7 @@ gluster_gfs3_op_create_reply(tvbuff_t *tvb, int offset,
 	proto_item *iatt_item;
 	proto_tree *iatt_tree;
 
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
 
 	/* FIXME: describe this better - gf_iatt (xdrs, &objp->stat */
 	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "Stat IATT");
@@ -395,8 +394,7 @@ gluster_gfs3_op_lookup_reply(tvbuff_t *tvb, int offset,
 	proto_item *iatt_item;
 	proto_tree *iatt_tree;
 
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
 	/* FIXME: describe this better - gf_iatt (xdrs, &objp->stat */
 	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "Stat IATT");
 	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
@@ -441,16 +439,6 @@ gluster_gfs3_op_lookup_call(tvbuff_t *tvb, int offset,
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_bname, offset, &bname);
 	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
 	
-	return offset;
-}
-
-static int
-gluster_gfs3_op_inodelk_reply(tvbuff_t *tvb, int offset,
-				packet_info *pinfo _U_, proto_tree *tree)
-{
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
-
 	return offset;
 }
 
@@ -524,6 +512,9 @@ gluster_gfs3_op_readdirp_reply(tvbuff_t *tvb, int offset,
 		else if (op_errno == 2 /* ENOENT */)
 			proto_item_append_text(errno_item,
 					    " (Last READDIRP reply)");
+		else
+			proto_item_append_text(errno_item,
+					    " (%s)", g_strerror(op_errno));
 	}
 	offset += 4;
 
@@ -552,8 +543,7 @@ gluster_gfs3_op_setattr_reply(tvbuff_t *tvb, int offset, packet_info *pinfo _U_,
 	proto_item *iatt_item;
 	proto_tree *iatt_tree;
 
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
 
 	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "StatPre IATT");
 	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
@@ -642,12 +632,12 @@ static const vsff gluster3_1_fop_proc[] = {
 	},
 	{
 		GFS3_OP_FLUSH, "FLUSH",
-		gluster_gfs3_op_flush_call, gluster_gfs3_op_flush_reply
+		gluster_gfs3_op_flush_call, gluster_dissect_common_reply
 	},
 	{ GFS3_OP_FSYNC, "FSYNC", NULL, NULL },
 	{
 		GFS3_OP_SETXATTR, "SETXATTR",
-		gluster_gfs3_op_setxattr_call, gluster_gfs3_op_setxattr_reply
+		gluster_gfs3_op_setxattr_call, gluster_dissect_common_reply
 	},
 	{ GFS3_OP_GETXATTR, "GETXATTR", NULL, NULL },
 	{ GFS3_OP_REMOVEXATTR, "REMOVEXATTR", NULL, NULL },
@@ -671,7 +661,7 @@ static const vsff gluster3_1_fop_proc[] = {
 	{ GFS3_OP_READDIR, "READDIR", NULL, NULL },
 	{
 		GFS3_OP_INODELK, "INODELK",
-		gluster_gfs3_op_inodelk_call, gluster_gfs3_op_inodelk_reply
+		gluster_gfs3_op_inodelk_call, gluster_dissect_common_reply
 	},
 	{ GFS3_OP_FINODELK, "FINODELK", NULL, NULL },
 	{ GFS3_OP_ENTRYLK, "ENTRYLK", NULL, NULL },
@@ -793,6 +783,10 @@ proto_register_glusterfs(void)
 				VALS(gluster3_1_fop_proc_vals), 0, NULL, HFILL }
 		},
 		/* fields used by multiple programs/procedures */
+		{ &hf_gluster_op_errno,
+			{ "Errno", "gluster.op_errno", FT_INT32, BASE_DEC,
+				NULL, 0, NULL, HFILL }
+		},
 		{ &hf_gluster_pargfid,
 			{ "PARGFID (FIXME?)", "gluster.pargfid", FT_BYTES,
 				BASE_NONE, NULL, 0, NULL, HFILL }
