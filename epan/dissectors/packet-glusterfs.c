@@ -2455,7 +2455,6 @@ proto_register_glusterfs(void)
 	static gint *ett[] = {
 		&ett_gluster_fs,
 		&ett_gluster3_1_fop,
-		&ett_gluster3_3_fop,
 		&ett_gluster_entry,
 		&ett_gluster_iatt,
 		&ett_gluster_flock
@@ -2479,11 +2478,9 @@ proto_reg_handoff_glusterfs(void)
 	rpc_init_proc_table(GLUSTERFS_PROGRAM, 1, gluster_fs_proc,
 							hf_gluster_fs_proc);
 
-/*	rpc_init_prog(proto_gluster3_1_fop, GLUSTER3_1_FOP_PROGRAM, ett_gluster3_1_fop);
-	rpc_init_proc_table(GLUSTER3_1_FOP_PROGRAM, 330, gluster3_1_fop_proc,
-							hf_gluster3_1_fop_proc); */
-
-	rpc_init_prog(proto_gluster3_1_fop, GLUSTER3_1_FOP_PROGRAM, ett_gluster3_3_fop);
+	rpc_init_prog(proto_gluster3_1_fop, GLUSTER3_1_FOP_PROGRAM, ett_gluster3_1_fop);
+	rpc_init_proc_table(GLUSTER3_1_FOP_PROGRAM, 310, gluster3_1_fop_proc,
+							hf_gluster3_1_fop_proc);
 	rpc_init_proc_table(GLUSTER3_1_FOP_PROGRAM, 330, gluster3_3_fop_proc,
 							hf_gluster3_3_fop_proc);
 
