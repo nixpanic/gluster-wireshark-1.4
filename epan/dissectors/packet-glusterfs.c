@@ -52,10 +52,13 @@ static gint proto_gluster3_1_fop = -1;
 /* programs and procedures */
 static gint hf_gluster_fs_proc = -1;
 static gint hf_gluster3_1_fop_proc = -1;
+static gint hf_gluster3_3_fop_proc = -1;
 
 /* fields used by multiple programs/procedures */
 static gint hf_gluster_op_errno = -1;
 static gint hf_gluster_pargfid = -1;
+static gint hf_gluster_oldgfid = -1;
+static gint hf_gluster_newgfid = -1;
 static gint hf_gluster_path = -1;
 static gint hf_gluster_bname = -1;
 static gint hf_gluster_fd = -1;
@@ -66,6 +69,12 @@ static gint hf_gluster_volume = -1;
 static gint hf_gluster_cmd = -1;
 static gint hf_gluster_type = -1;
 static gint hf_gluster_entries = -1;
+static gint hf_gluster_xflags = -1;
+static gint hf_gluster_linkname = -1;
+static gint hf_gluster_umask = -1;
+static gint hf_gluster_mask = -1;
+static gint hf_gluster_name = -1;
+static gint hf_gluster_namelen = -1;
 
 /* dir-entry */
 static gint hf_gluster_entry_ino = -1;
@@ -114,6 +123,16 @@ static gint hf_gluster_flag = -1;
 static gint hf_gluster_namemax = -1;
 
 static gint hf_gluster_setattr_valid = -1;
+
+/* Rename */
+static gint hf_gluster_oldbname = -1;
+static gint hf_gluster_newbname = -1;
+
+/* for FSYNCDIR */
+static gint hf_gluster_fsyncdir_data = -1;
+
+/* for entrylk */
+static gint hf_gluster_entrylk_namelen = -1;
 
 /* Initialize the subtree pointers */
 static gint ett_gluster_fs = -1;
@@ -207,13 +226,13 @@ gluster_dissect_common_reply(tvbuff_t *tvb, int offset,
 }
 
 /*
- *  372          if (!xdr_int (xdrs, &objp->op_ret))
- *   373                  return FALSE;
- *    374          if (!xdr_int (xdrs, &objp->op_errno))
- *     375                  return FALSE;
- *      376          if (!xdr_gf_iatt (xdrs, &objp->preparent))
- *       377                  return FALSE;
- *        378          if (!xdr_gf_iatt (xdrs, &objp->postparent))
+ *  372	  if (!xdr_int (xdrs, &objp->op_ret))
+ *   373		  return FALSE;
+ *    374	  if (!xdr_int (xdrs, &objp->op_errno))
+ *     375		  return FALSE;
+ *      376	  if (!xdr_gf_iatt (xdrs, &objp->preparent))
+ *	377		  return FALSE;
+ *	378	  if (!xdr_gf_iatt (xdrs, &objp->postparent))
  *
  */
 static int
@@ -237,12 +256,12 @@ gluster_gfs3_op_unlink_reply(tvbuff_t *tvb, int offset,
 }
 
 /*
- *  359          if (!xdr_opaque (xdrs, objp->pargfid, 16))
- *   360                  return FALSE;
- *    361          if (!xdr_string (xdrs, &objp->path, ~0))
- *     362                  return FALSE;
- *      363          if (!xdr_string (xdrs, &objp->bname, ~0))
- *       364                  return FALSE;
+ *  359	  if (!xdr_opaque (xdrs, objp->pargfid, 16))
+ *   360		  return FALSE;
+ *    361	  if (!xdr_string (xdrs, &objp->path, ~0))
+ *     362		  return FALSE;
+ *      363	  if (!xdr_string (xdrs, &objp->bname, ~0))
+ *	364		  return FALSE;
  *
  */
 static int
@@ -422,7 +441,7 @@ gluster_gfs3_op_lookup_call(tvbuff_t *tvb, int offset,
 								FALSE, NULL);
 #if 0 /* example from epan/dissectors/packet-tcp.c */
     tf = proto_tree_add_uint_format(tcp_tree, hf_tcp_flags, tvb, offset + 13, 1,
-        tcph->th_flags, "Flags: 0x%02x (%s)", tcph->th_flags, flags_strbuf->str);
+	tcph->th_flags, "Flags: 0x%02x (%s)", tcph->th_flags, flags_strbuf->str);
     field_tree = proto_item_add_subtree(tf, ett_tcp_flags);
     proto_tree_add_boolean(field_tree, hf_tcp_flags_cwr, tvb, offset + 13, 1, tcph->th_flags);
     proto_tree_add_boolean(field_tree, hf_tcp_flags_ecn, tvb, offset + 13, 1, tcph->th_flags);
@@ -439,6 +458,16 @@ gluster_gfs3_op_lookup_call(tvbuff_t *tvb, int offset,
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_bname, offset, &bname);
 	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
 	
+	return offset;
+}
+
+static int
+gluster_gfs3_op_inodelk_reply(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+
 	return offset;
 }
 
@@ -512,9 +541,6 @@ gluster_gfs3_op_readdirp_reply(tvbuff_t *tvb, int offset,
 		else if (op_errno == 2 /* ENOENT */)
 			proto_item_append_text(errno_item,
 					    " (Last READDIRP reply)");
-		else
-			proto_item_append_text(errno_item,
-					    " (%s)", g_strerror(op_errno));
 	}
 	offset += 4;
 
@@ -543,7 +569,8 @@ gluster_gfs3_op_setattr_reply(tvbuff_t *tvb, int offset, packet_info *pinfo _U_,
 	proto_item *iatt_item;
 	proto_tree *iatt_tree;
 
-	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
 
 	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "StatPre IATT");
 	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
@@ -571,13 +598,1211 @@ gluster_gfs3_op_setattr_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, 
 	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
 
 	/* FIXME: hf_gluster_setattr_valid is a flag
-         * see libglusterfs/src/xlator.h, #defines for GF_SET_ATTR_*
-         */
+	 * see libglusterfs/src/xlator.h, #defines for GF_SET_ATTR_*
+	 */
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_setattr_valid, offset);
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_path, offset, &path);
 
 	return offset;
 }
+
+/*GlusterFS 3_3 fops */
+
+static int
+gluster_gfs3_3_op_stat_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	guint flags;
+
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
+								FALSE, NULL);
+	flags = tvb_get_ntohl(tvb, offset);
+	proto_tree_add_uint_format(tree, hf_gluster_flags, tvb, offset, 4, flags, "Flags: 0x%02x", flags);
+	offset += 4;
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+	return offset;
+
+}
+
+static int
+gluster_gfs3_3_op_stat_reply(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	proto_item *iatt_item;
+	proto_tree *iatt_tree;
+
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+
+	// FIXME: describe this better - gf_iatt (xdrs, &objp->stat
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "Stat Buf");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+static int
+gluster_gfs3_3_op_mknod_reply(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	proto_item *iatt_item;
+	proto_tree *iatt_tree;
+
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	/* FIXME: describe this better - gf_iatt (xdrs, &objp->stat */
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "Stat IATT");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+	/* FIXME: describe this better - gf_iatt (xdrs, &objp->preparent */
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "PreParent IATT");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+
+
+	/* FIXME: describe this better - gf_iatt (xdrs, &objp->postparent */
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "PostParent IATT");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+
+static int
+gluster_gfs3_3_op_mknod_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+
+
+	gchar *bname = NULL;
+
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_pargfid, offset, 16,
+								FALSE, NULL);
+
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_offset, offset);
+
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_mode, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_umask, offset);
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_bname, offset, &bname);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+
+static int
+gluster_gfs3_3_op_mkdir_reply(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	proto_item *iatt_item;
+	proto_tree *iatt_tree;
+
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	/* FIXME: describe this better - gf_iatt (xdrs, &objp->stat */
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "Stat IATT");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+	/* FIXME: describe this better - gf_iatt (xdrs, &objp->preparent */
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "PreParent IATT");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+
+
+	/* FIXME: describe this better - gf_iatt (xdrs, &objp->postparent */
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "PostParent IATT");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+
+static int
+gluster_gfs3_3_op_mkdir_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	gchar *bname = NULL;
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_pargfid, offset, 16,
+								FALSE, NULL);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_mode, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_umask, offset);
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_bname, offset, &bname);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+
+static int
+gluster_gfs3_3_op_readlink_reply(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	proto_item *iatt_item;
+	proto_tree *iatt_tree;
+
+	gchar* path = NULL;
+
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "Buf IATT");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_path, offset, &path);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+
+static int
+gluster_gfs3_3_op_readlink_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
+								FALSE, NULL);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_size, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+static int
+gluster_gfs3_3_op_unlink_reply(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	proto_item *iatt_item;
+	proto_tree *iatt_tree;
+
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+
+	/* FIXME: describe this better - gf_iatt (xdrs, &objp->preparent */
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "PreParent IATT");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+
+	/* FIXME: describe this better - gf_iatt (xdrs, &objp->postparent */
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "PostParent IATT");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+		offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+
+static int
+gluster_gfs3_3_op_unlink_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	guint xflags;
+	gchar* bname = NULL;
+ 
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_pargfid, offset, 16,
+								FALSE, NULL);
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_bname, offset, &bname);
+
+	xflags = tvb_get_ntohl(tvb, offset);
+	proto_tree_add_uint_format(tree, hf_gluster_xflags, tvb, offset, 4, xflags, "Flags: 0x%02x", xflags);
+	offset += 4;
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+
+static int
+gluster_gfs3_3_op_rmdir_reply(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	proto_item *iatt_item;
+	proto_tree *iatt_tree;
+
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+
+	/* FIXME: describe this better - gf_iatt (xdrs, &objp->preparent */
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "PreParent IATT");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+
+	/* FIXME: describe this better - gf_iatt (xdrs, &objp->postparent */
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "PostParent IATT");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+	return offset;
+}
+static int
+gluster_gfs3_3_op_rmdir_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	gchar* bname = NULL;
+	guint xflags;
+
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_pargfid, offset, 16,
+								FALSE, NULL);
+	xflags = tvb_get_ntohl(tvb, offset);
+	proto_tree_add_uint_format(tree, hf_gluster_xflags, tvb, offset, 4, xflags, "Flags: 0x%02x", xflags);
+	offset += 4;
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_bname, offset, &bname);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+	return offset;
+}
+static int
+gluster_gfs3_3_op_symlink_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	gchar *bname = NULL;
+	gchar *linkname = NULL;
+
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_pargfid, offset, 16,
+								FALSE, NULL);
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_bname, offset, &bname);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_umask, offset);
+
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_linkname, offset, &linkname);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+
+static int
+gluster_gfs3_3_op_symlink_reply(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	proto_item *iatt_item;
+	proto_tree *iatt_tree;
+
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	/* FIXME: describe this better - gf_iatt (xdrs, &objp->stat */
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "Stat IATT");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+	/* FIXME: describe this better - gf_iatt (xdrs, &objp->preparent */
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "PreParent IATT");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+
+
+	/* FIXME: describe this better - gf_iatt (xdrs, &objp->postparent */
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "PostParent IATT");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+
+static int
+gluster_gfs3_3_op_rename_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+
+	gchar *oldbname = NULL;
+	gchar *newbname = NULL;
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_oldgfid, offset, 16,
+								FALSE, NULL);
+
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_newgfid, offset, 16,
+								FALSE, NULL);
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_oldbname, offset, &oldbname);
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_newbname, offset, &newbname);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+
+static int
+gluster_gfs3_3_op_rename_reply(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+
+	proto_item *iatt_item;
+	proto_tree *iatt_tree;
+
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "Stat IATT");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "PreOldParent IATT");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "PostOldParent IATT");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "PreNewParent IATT");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "PostNewParent IATT");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+
+}
+static int
+gluster_gfs3_3_op_link_reply(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	proto_item *iatt_item;
+	proto_tree *iatt_tree;
+
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	 /* FIXME: describe this better - gf_iatt (xdrs, &objp->stat */
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "Stat IATT");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+
+
+	/* FIXME: describe this better - gf_iatt (xdrs, &objp->preparent */
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "PreParent IATT");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+
+	/* FIXME: describe this better - gf_iatt (xdrs, &objp->postparent */
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "PostParent IATT");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+
+static int
+gluster_gfs3_3_op_link_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	gchar *newbname = NULL;
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_oldgfid, offset, 16,
+								FALSE, NULL);
+
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_newgfid, offset, 16,
+								FALSE, NULL);
+
+	// offset = dissect_rpc_uint64(tvb, tree, hf_gluster_offset, offset);
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_newbname, offset, &newbname);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+static int
+gluster_gfs3_3_op_truncate_reply(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	proto_item *iatt_item;
+	proto_tree *iatt_tree;
+
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+
+	/* FIXME: describe this better - gf_iatt (xdrs, &objp->prestat */
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "PreStat IATT");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+
+	/* FIXME: describe this better - gf_iatt (xdrs, &objp->postStat */
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "PostStat IATT");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+static int
+gluster_gfs3_3_op_truncate_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
+								FALSE, NULL);
+    //    offset = dissect_rpc_uint64(tvb, tree, hf_gluster_fd, offset);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_offset, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+
+static int
+gluster_gfs3_3_op_open_reply(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_fd, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+	return offset;
+}
+static int
+gluster_gfs3_3_op_open_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	guint flags;
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
+								FALSE, NULL);
+	flags = tvb_get_ntohl(tvb, offset);
+	proto_tree_add_uint_format(tree, hf_gluster_flags, tvb, offset, 4, flags, "Flags: 0x%02x", flags);
+	offset += 4;
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+	return offset;
+}
+static int
+gluster_gfs3_3_op_read_reply(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	proto_item *iatt_item;
+	proto_tree *iatt_tree;
+
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	/* FIXME: describe this better - gf_iatt (xdrs, &objp->stat */
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "Stat IATT");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_size, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+static int
+gluster_gfs3_3_op_read_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	guint flags;
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
+								FALSE, NULL);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_fd, offset);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_offset, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_size, offset);
+	/* FIXME: display as a list of fields */
+	flags = tvb_get_ntohl(tvb, offset);
+	proto_tree_add_uint_format(tree, hf_gluster_flags, tvb, offset, 4, flags, "Flags: 0x%02x", flags);
+	offset += 4;
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+static int
+gluster_gfs3_3_op_write_reply(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	proto_item *iatt_item;
+	proto_tree *iatt_tree;
+
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	/* FIXME: describe this better - gf_iatt (xdrs, &objp->prestat */
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "PreStat IATT");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+	/* FIXME: describe this better - gf_iatt (xdrs, &objp->poststat */
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "PostStat IATT");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+
+static int
+gluster_gfs3_3_op_write_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	guint flags;
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
+								FALSE, NULL);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_fd, offset);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_offset, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_size, offset);
+	/* FIXME: display as a list of fields */
+	flags = tvb_get_ntohl(tvb, offset);
+	proto_tree_add_uint_format(tree, hf_gluster_flags, tvb, offset, 4, flags, "Flags: 0x%02x", flags);
+	offset += 4;
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+
+static int
+gluster_gfs3_3_op_statfs_reply(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	offset = gluster_rpc_dissect_statfs(tree, tvb, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+	return offset;
+}
+
+static int
+gluster_gfs3_3_op_statfs_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
+								FALSE, NULL);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+	return offset;
+}
+
+static int
+gluster_gfs3_3_op_flush_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
+								FALSE, NULL);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_fd, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+	return offset;
+}
+
+static int
+gluster_gfs3_3_op_fsync_reply(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	proto_item *iatt_item;
+	proto_tree *iatt_tree;
+
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+
+	/* FIXME: describe this better - gf_iatt (xdrs, &objp->prestat */
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "PreStat IATT");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+
+	/* FIXME: describe this better - gf_iatt (xdrs, &objp->postStat */
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "PostStat IATT");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+static int
+gluster_gfs3_3_op_fsync_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
+								FALSE, NULL);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_fd, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+	return offset;
+}
+static int
+gluster_gfs3_3_op_setxattr_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	guint flags;
+
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
+								FALSE, NULL);
+
+	/* FIXME: these flags need to be displayed in a sane way */
+	flags = tvb_get_ntohl(tvb, offset);
+	proto_tree_add_uint_format(tree, hf_gluster_flags, tvb, offset, 4, flags, "Flags: 0x%02x", flags);
+	offset += 4;
+
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+static int
+gluster_gfs3_3_op_getxattr_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	gchar* name = NULL;
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
+								FALSE, NULL);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_namelen, offset);
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_name, offset, &name);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+	return offset;
+}
+
+
+static int
+gluster_gfs3_3_op_getxattr_reply(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+static int
+gluster_gfs3_3_op_removexattr_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	gchar* name = NULL;
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
+								FALSE, NULL);
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_name, offset, &name);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+	return offset;
+}
+static int
+gluster_gfs3_3_op_fsyncdir_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
+								FALSE, NULL);
+
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_fd, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_fsyncdir_data, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+	return offset;
+}
+
+static int
+gluster_gfs3_3_op_opendir_reply(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_fd, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+	return offset;
+}
+
+static int
+gluster_gfs3_3_op_opendir_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
+								FALSE, NULL);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+	return offset;
+}
+static int
+gluster_gfs3_3_op_create_reply(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	proto_item *iatt_item;
+	proto_tree *iatt_tree;
+
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+
+	/* FIXME: describe this better - gf_iatt (xdrs, &objp->stat */
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "Stat IATT");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_fd, offset);
+
+	/* FIXME: describe this better - gf_iatt (xdrs, &objp->preparent */
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "PreParent IATT");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+
+	/* FIXME: describe this better - gf_iatt (xdrs, &objp->postparent */
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "PostParent IATT");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+
+
+static int
+gluster_gfs3_3_op_create_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	guint flags;
+	gchar *bname = NULL;
+
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_pargfid, offset, 16,
+								FALSE, NULL);
+	/* FIXME: display as a list of fields */
+	flags = tvb_get_ntohl(tvb, offset);
+	proto_tree_add_uint_format(tree, hf_gluster_flags, tvb, offset, 4, flags, "Flags: 0x%02x", flags);
+	offset += 4;
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_mode, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_umask, offset);
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_bname, offset, &bname);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+
+static int
+gluster_gfs3_3_op_ftruncate_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
+								FALSE, NULL);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_fd, offset);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_offset, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+
+
+static int
+gluster_gfs3_3_op_ftruncate_reply(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	proto_item *iatt_item;
+	proto_tree *iatt_tree;
+
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+
+	/* FIXME: describe this better - gf_iatt (xdrs, &objp->prestat */
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "PreStat IATT");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+
+	/* FIXME: describe this better - gf_iatt (xdrs, &objp->postStat */
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "PostStat IATT");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+static int
+gluster_gfs3_3_op_fstat_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
+								FALSE, NULL);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_fd, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+static int
+gluster_gfs3_3_op_fstat_reply(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	proto_item *iatt_item;
+	proto_tree *iatt_tree;
+
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+
+	/* FIXME: describe this better - gf_iatt (xdrs, &objp->prestat */
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "Stat IATT");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+
+
+static int
+gluster_gfs3_3_op_lk_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	proto_item *flock_item;
+	proto_tree *flock_tree;
+
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
+								FALSE, NULL);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_fd, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_cmd, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_type, offset);
+
+	flock_item = proto_tree_add_text(tree, tvb, offset, -1, "flock");
+	flock_tree = proto_item_add_subtree(flock_item, ett_gluster_flock);
+	offset = gluster_rpc_dissect_gf_flock(flock_tree, tvb, offset);
+
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+
+static int
+gluster_gfs3_3_op_lk_reply(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	proto_item *flock_item;
+	proto_tree *flock_tree;
+
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	flock_item = proto_tree_add_text(tree, tvb, offset, -1, "flock");
+	flock_tree = proto_item_add_subtree(flock_item, ett_gluster_flock);
+	offset = gluster_rpc_dissect_gf_flock(flock_tree, tvb, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+
+
+static int
+gluster_gfs3_3_op_access_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
+								FALSE, NULL);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_mask, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+	return offset;
+}
+
+static int
+gluster_gfs3_3_op_lookup_reply(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	proto_item *iatt_item;
+	proto_tree *iatt_tree;
+
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	/* FIXME: describe this better - gf_iatt (xdrs, &objp->stat */
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "Stat IATT");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+	/* FIXME: describe this better - gf_iatt (xdrs, &objp->postparent */
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "PostParent IATT");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+
+static int
+gluster_gfs3_3_op_lookup_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	gchar *bname = NULL;
+	guint flags;
+
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
+								FALSE, NULL);
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_pargfid, offset, 16,
+								FALSE, NULL);
+#if 0 /* example from epan/dissectors/packet-tcp.c */
+    tf = proto_tree_add_uint_format(tcp_tree, hf_tcp_flags, tvb, offset + 13, 1,
+	tcph->th_flags, "Flags: 0x%02x (%s)", tcph->th_flags, flags_strbuf->str);
+    field_tree = proto_item_add_subtree(tf, ett_tcp_flags);
+    proto_tree_add_boolean(field_tree, hf_tcp_flags_cwr, tvb, offset + 13, 1, tcph->th_flags);
+    proto_tree_add_boolean(field_tree, hf_tcp_flags_ecn, tvb, offset + 13, 1, tcph->th_flags);
+    proto_tree_add_boolean(field_tree, hf_tcp_flags_urg, tvb, offset + 13, 1, tcph->th_flags);
+    proto_tree_add_boolean(field_tree, hf_tcp_flags_ack, tvb, offset + 13, 1, tcph->th_flags);
+    proto_tree_add_boolean(field_tree, hf_tcp_flags_push, tvb, offset + 13, 1, tcph->th_flags);
+#endif
+	/* FIXME: display as a list of fields */
+	flags = tvb_get_ntohl(tvb, offset);
+	proto_tree_add_uint_format(tree, hf_gluster_flags, tvb, offset, 4, flags, "Flags: 0x%02x", flags);
+	offset += 4;
+
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_bname, offset, &bname);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+
+static int
+gluster_gfs3_3_op_readdir_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
+								FALSE, NULL);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_fd, offset);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_offset, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_size, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+	return offset;
+}
+
+static int
+gluster_gfs3_3_op_inodelk_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	proto_item *flock_item;
+	proto_tree *flock_tree;
+	gchar* volume = NULL;
+
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
+								FALSE, NULL);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_cmd, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_type, offset);
+
+	flock_item = proto_tree_add_text(tree, tvb, offset, -1, "flock");
+	flock_tree = proto_item_add_subtree(flock_item, ett_gluster_flock);
+	offset = gluster_rpc_dissect_gf_flock(flock_tree, tvb, offset);
+
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_volume, offset, &volume);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+static int
+gluster_gfs3_3_op_finodelk_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	proto_item *flock_item;
+	proto_tree *flock_tree;
+	gchar* volume = NULL;
+
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
+								FALSE, NULL);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_fd, offset);
+
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_cmd, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_type, offset);
+
+	flock_item = proto_tree_add_text(tree, tvb, offset, -1, "flock");
+	flock_tree = proto_item_add_subtree(flock_item, ett_gluster_flock);
+	offset = gluster_rpc_dissect_gf_flock(flock_tree, tvb, offset);
+
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_volume, offset, &volume);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+static int
+gluster_gfs3_3_op_entrylk_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	gchar* volume = NULL;
+	gchar* name = NULL;
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
+								FALSE, NULL);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_cmd, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_type, offset);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_entrylk_namelen, offset);
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_name, offset, &name);
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_volume, offset, &volume);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+static int
+gluster_gfs3_3_op_fentrylk_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	gchar* volume = NULL;
+	gchar* name = NULL;
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
+								FALSE, NULL);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_fd, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_cmd, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_type, offset);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_entrylk_namelen, offset);
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_name, offset, &name);
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_volume, offset, &volume);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+static int
+gluster_gfs3_3_op_xattrop_reply(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+
+static int
+gluster_gfs3_3_op_xattrop_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	guint flags;
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
+								FALSE, NULL);
+	flags = tvb_get_ntohl(tvb, offset);
+	proto_tree_add_uint_format(tree, hf_gluster_flags, tvb, offset, 4, flags, "Flags: 0x%02x",
+										flags);
+	offset += 4;
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+
+static int
+gluster_gfs3_3_op_fxattrop_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	guint flags;
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
+								FALSE, NULL);
+	    flags = tvb_get_ntohl(tvb, offset);
+	proto_tree_add_uint_format(tree, hf_gluster_flags, tvb, offset, 4, flags, "Flags: 0x%02x",
+										flags);
+	offset += 4;
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_fd, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+
+static int
+gluster_gfs3_3_op_fgetxattr_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	gchar* name = NULL;
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
+								FALSE, NULL);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_fd, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_namelen, offset);
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_name, offset, &name);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+
+static int
+gluter_gfs3_3_op_fsetxattr_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	guint flags;
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
+								FALSE, NULL);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_fd, offset);
+	flags = tvb_get_ntohl(tvb, offset);
+	proto_tree_add_uint_format(tree, hf_gluster_flags, tvb, offset, 4, flags, "Flags: 0x%02x",
+										flags);
+	offset += 4;
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+
+
+static int
+gluster_gfs3_3_op_setattr_reply(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
+{
+	proto_item *iatt_item;
+	proto_tree *iatt_tree;
+
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "StatPre IATT");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "StatPost IATT");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+ 	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+	return offset;
+}
+
+static int
+gluster_gfs3_3_op_setattr_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
+{
+	proto_item *iatt_item;
+	proto_tree *iatt_tree;
+	
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
+								FALSE, NULL);
+
+	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "stbuff IATT");
+	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
+	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+
+	/* FIXME: hf_gluster_setattr_valid is a flag
+	 * see libglusterfs/src/xlator.h, #defines for GF_SET_ATTR_*
+	 */
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_setattr_valid, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+
+static int
+gluster_gfs3_3_op_readdirp_reply(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	proto_item *errno_item;
+	guint op_errno;
+
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_entries, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+
+	if (tree) {
+		op_errno = tvb_get_ntohl(tvb, offset);
+		errno_item = proto_tree_add_int(tree, hf_gluster_op_errno, tvb,
+					    offset, 4, op_errno);
+		if (op_errno == 0)
+			proto_item_append_text(errno_item,
+					    " (More READDIRP replies follow)");
+		else if (op_errno == 2 /* ENOENT */)
+			proto_item_append_text(errno_item,
+					    " (Last READDIRP reply)");
+		else
+			proto_item_append_text(errno_item,
+					    " (%s)", g_strerror(op_errno));
+	}
+	offset += 4;
+
+	offset = dissect_rpc_list(tvb, pinfo, tree, offset,
+					    gluster_gfs3_op_readdirp_entry);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+
+	return offset;
+}
+
+static int
+gluster_gfs3_3_op_readdirp_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
+								FALSE, NULL);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_fd, offset);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_offset, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_size, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+	return offset;
+}
+
+static int
+gluster_gfs3_3_op_release_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
+								FALSE, NULL);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_fd, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+	return offset;
+}
+
+static int
+gluster_gfs3_3_op_releasedir_call(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
+								FALSE, NULL);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_fd, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+	return offset;
+}
+
+/* This function is for common replay. RELEASE , RELEASEDIR and some other function use this method */
+
+static int
+gluster_gfs3_3_op_common_reply(tvbuff_t *tvb, int offset,
+				packet_info *pinfo _U_, proto_tree *tree)
+{
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+	return offset;
+}
+
 
 /*
  * procedures for GLUSTERFS_PROGRAM "GlusterFS Mops"
@@ -688,6 +1913,189 @@ static const vsff gluster3_1_fop_proc[] = {
 	{ GFS3_OP_RELEASEDIR, "RELEASEDIR", NULL, NULL },
 	{ 0, NULL, NULL, NULL }
 };
+
+
+/*
+ * GLUSTER3_1_FOP_PROGRAM for 3_3
+ * - xlators/protocol/client/src/client3_1-fops.c
+ * - xlators/protocol/server/src/server3_1-fops.c
+ */
+static const vsff gluster3_3_fop_proc[] = {
+	{ GFS3_OP_NULL, "NULL", NULL, NULL },
+	{ 
+	 	GFS3_OP_STAT, "STAT", 
+		gluster_gfs3_3_op_stat_call, gluster_gfs3_3_op_stat_reply
+	},
+	{ 
+		GFS3_OP_READLINK, "READLINK", 
+		gluster_gfs3_3_op_readlink_call, gluster_gfs3_3_op_readlink_reply
+	},
+	{
+		GFS3_OP_MKNOD, "MKNOD",
+		gluster_gfs3_3_op_mknod_call, gluster_gfs3_3_op_mknod_reply
+	},
+	{
+		 GFS3_OP_MKDIR, "MKDIR",
+		gluster_gfs3_3_op_mkdir_call, gluster_gfs3_3_op_mkdir_reply
+	},
+	{
+		GFS3_OP_UNLINK, "UNLINK",
+		gluster_gfs3_3_op_unlink_call, gluster_gfs3_3_op_unlink_reply
+	},
+	{
+		GFS3_OP_RMDIR, "RMDIR",
+		gluster_gfs3_3_op_rmdir_call, gluster_gfs3_3_op_rmdir_reply
+	},
+	{ 	GFS3_OP_SYMLINK, "SYMLINK",
+		gluster_gfs3_3_op_symlink_call, gluster_gfs3_3_op_symlink_reply
+	},
+	{
+		GFS3_OP_RENAME, "RENAME",
+		gluster_gfs3_3_op_rename_call, gluster_gfs3_3_op_rename_reply
+	},
+	{
+		 GFS3_OP_LINK, "LINK",
+		gluster_gfs3_3_op_link_call, gluster_gfs3_3_op_link_reply
+	},
+	{
+		GFS3_OP_TRUNCATE, "TRUNCATE",
+		gluster_gfs3_3_op_truncate_call, gluster_gfs3_3_op_truncate_reply
+	},
+	{
+		GFS3_OP_OPEN, "OPEN",
+		gluster_gfs3_3_op_open_call, gluster_gfs3_3_op_open_reply
+	},
+	{
+		GFS3_OP_READ, "READ",
+		gluster_gfs3_3_op_read_call, gluster_gfs3_3_op_read_reply
+	},
+	{
+		GFS3_OP_WRITE, "WRITE",
+		gluster_gfs3_3_op_write_call, gluster_gfs3_3_op_write_reply
+	},
+	{
+		GFS3_OP_STATFS, "STATFS",
+		gluster_gfs3_3_op_statfs_call, gluster_gfs3_3_op_statfs_reply
+	},
+	{
+		GFS3_OP_FLUSH, "FLUSH",
+		gluster_gfs3_3_op_flush_call, gluster_gfs3_3_op_common_reply
+	},
+	{
+		GFS3_OP_FSYNC, "FSYNC",
+		gluster_gfs3_3_op_fsync_call, gluster_gfs3_3_op_fsync_reply
+	},
+	{
+		GFS3_OP_SETXATTR, "SETXATTR",
+		gluster_gfs3_3_op_setxattr_call, gluster_gfs3_3_op_common_reply
+	},
+	{
+		GFS3_OP_GETXATTR, "GETXATTR",
+		gluster_gfs3_3_op_getxattr_call, gluster_gfs3_3_op_getxattr_reply
+	},
+	{
+		GFS3_OP_REMOVEXATTR, "REMOVEXATTR",
+		gluster_gfs3_3_op_removexattr_call, gluster_gfs3_3_op_common_reply
+	},
+	{
+		GFS3_OP_OPENDIR, "OPENDIR",
+		gluster_gfs3_3_op_opendir_call, gluster_gfs3_3_op_opendir_reply
+	},
+	{
+		GFS3_OP_FSYNCDIR, "FSYNCDIR",
+		gluster_gfs3_3_op_fsyncdir_call, gluster_gfs3_3_op_common_reply
+
+	},
+	{
+		GFS3_OP_ACCESS, "ACCESS",
+		gluster_gfs3_3_op_access_call, gluster_gfs3_3_op_common_reply
+
+	},
+	{
+		GFS3_OP_CREATE, "CREATE",
+		gluster_gfs3_3_op_create_call, gluster_gfs3_3_op_create_reply
+	},
+	{
+		GFS3_OP_FTRUNCATE, "FTRUNCATE",
+		gluster_gfs3_3_op_ftruncate_call, gluster_gfs3_3_op_ftruncate_reply
+	},
+	{
+		GFS3_OP_FSTAT, "FSTAT",
+		gluster_gfs3_3_op_fstat_call, gluster_gfs3_3_op_fstat_reply
+	},
+	{
+		GFS3_OP_LK, "LK",
+		gluster_gfs3_3_op_lk_call, gluster_gfs3_3_op_lk_reply
+	},
+	{
+		GFS3_OP_LOOKUP, "LOOKUP",
+		gluster_gfs3_3_op_lookup_call, gluster_gfs3_3_op_lookup_reply
+	},
+	{
+		GFS3_OP_READDIR, "READDIR",
+		gluster_gfs3_3_op_readdir_call, gluster_gfs3_3_op_common_reply
+	},
+	{
+		GFS3_OP_INODELK, "INODELK",
+		gluster_gfs3_3_op_inodelk_call,gluster_gfs3_3_op_common_reply
+	},
+	{
+		GFS3_OP_FINODELK, "FINODELK",
+		gluster_gfs3_3_op_finodelk_call,gluster_gfs3_3_op_common_reply
+	},
+	{
+		GFS3_OP_ENTRYLK, "ENTRYLK",
+		gluster_gfs3_3_op_entrylk_call, gluster_gfs3_3_op_common_reply
+	},
+	{
+		GFS3_OP_FENTRYLK, "FENTRYLK",
+		gluster_gfs3_3_op_fentrylk_call, gluster_gfs3_3_op_common_reply
+
+	},
+	{
+		GFS3_OP_XATTROP, "XATTROP",
+		gluster_gfs3_3_op_xattrop_call, gluster_gfs3_3_op_xattrop_reply
+	},
+	/*xattrop and fxattrop replay both are same */
+	{
+		GFS3_OP_FXATTROP, "FXATTROP",
+		gluster_gfs3_3_op_fxattrop_call, gluster_gfs3_3_op_xattrop_reply
+	},
+	{
+		GFS3_OP_FGETXATTR, "FGETXATTR",
+		gluster_gfs3_3_op_fgetxattr_call, gluster_gfs3_3_op_xattrop_reply
+
+	},
+	{
+		GFS3_OP_FSETXATTR, "FSETXATTR",
+		gluter_gfs3_3_op_fsetxattr_call, gluster_gfs3_3_op_common_reply
+	},
+	{ GFS3_OP_RCHECKSUM, "RCHECKSUM", NULL, NULL },
+	{
+		GFS3_OP_SETATTR, "SETATTR",
+		gluster_gfs3_3_op_setattr_call, gluster_gfs3_3_op_setattr_reply
+	},
+	{
+		GFS3_OP_FSETATTR, "FSETATTR",
+		/* SETATTR and SETFATTS calls and reply are encoded the same */
+		gluster_gfs3_3_op_setattr_call, gluster_gfs3_3_op_setattr_reply
+	},
+	{
+		GFS3_OP_READDIRP, "READDIRP",
+		gluster_gfs3_3_op_readdirp_call, gluster_gfs3_3_op_readdirp_reply
+	},
+	{ 
+		GFS3_OP_RELEASE, "RELEASE", 
+		gluster_gfs3_3_op_release_call, gluster_gfs3_3_op_common_reply 
+	},
+	{ 
+		GFS3_OP_RELEASEDIR, "RELEASEDIR",
+ 		gluster_gfs3_3_op_releasedir_call, gluster_gfs3_3_op_common_reply    
+	},
+	{ 0, NULL, NULL, NULL }
+};
+
+
 static const value_string gluster3_1_fop_proc_vals[] = {
 	{ GFS3_OP_NULL, "NULL" },
 	{ GFS3_OP_STAT, "STAT" },
@@ -782,6 +2190,10 @@ proto_register_glusterfs(void)
 			{ "GlusterFS", "glusterfs", FT_UINT32, 	BASE_DEC,
 				VALS(gluster3_1_fop_proc_vals), 0, NULL, HFILL }
 		},
+		{ &hf_gluster3_3_fop_proc,
+			{ "GlusterFS", "glusterfs", FT_UINT32,  BASE_DEC,
+				   VALS(gluster3_1_fop_proc_vals), 0, NULL, HFILL }
+		},
 		/* fields used by multiple programs/procedures */
 		{ &hf_gluster_op_errno,
 			{ "Errno", "gluster.op_errno", FT_INT32, BASE_DEC,
@@ -789,6 +2201,14 @@ proto_register_glusterfs(void)
 		},
 		{ &hf_gluster_pargfid,
 			{ "PARGFID (FIXME?)", "gluster.pargfid", FT_BYTES,
+				BASE_NONE, NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_oldgfid,
+			{ "OldGFID", "gluster.oldgfid", FT_BYTES,
+				BASE_NONE, NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_newgfid,
+			{ "NewGFID", "gluster.newgfid", FT_BYTES,
 				BASE_NONE, NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_path,
@@ -827,6 +2247,23 @@ proto_register_glusterfs(void)
 			{ "Volume", "gluster.volume", FT_STRING, BASE_NONE,
 				NULL, 0, NULL, HFILL }
 		},
+		{ &hf_gluster_namelen,
+			{ "Name Lenth", "gluster.namelen", FT_UINT32, BASE_DEC,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_linkname,
+			{ "Linkname", "gluster.linkname", FT_STRING, BASE_NONE,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_umask,
+			{ "Umask", "gluster.umask", FT_UINT32, BASE_DEC,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_mask,
+			{ "Mask", "gluster.mask", FT_UINT32, BASE_DEC,
+				NULL, 0, NULL, HFILL }
+		},
+
 		{ &hf_gluster_entries, /* READDIRP returned <x> entries */
 			{ "Entries returned", "gluster.entries", FT_INT32, BASE_DEC,
 				NULL, 0, NULL, HFILL }
@@ -993,9 +2430,32 @@ proto_register_glusterfs(void)
 		{ &hf_gluster_setattr_valid,
 			{ "valid", "gluster.setattr.valid", FT_UINT32, BASE_HEX,
 				NULL, 0, NULL, HFILL }
-		}
+		},
+		{ &hf_gluster_xflags,
+			{ "XFlags", "gluster.xflags", FT_UINT32, BASE_OCT,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_oldbname,
+			{ "OldBasename", "gluster.oldbname", FT_STRING, BASE_NONE,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_newbname,
+			{ "NewBasename", "gluster.newbname", FT_STRING, BASE_NONE,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_name,
+			{ "Name", "gluster.name", FT_STRING, BASE_NONE,
+				NULL, 0, NULL, HFILL }
+		},
+		{&hf_gluster_fsyncdir_data,
+			{ "Data", "gluster.fsyncdir.data", FT_INT32, BASE_DEC,
+				NULL, 0, NULL, HFILL }
+		},/* For entry an fentry lk */
+		{ &hf_gluster_entrylk_namelen,
+			{ "File Descriptor", "gluster.entrylk.namelen", FT_UINT64, BASE_DEC,
+				NULL, 0, NULL, HFILL }
+		},
 	};
-
 	/* Setup protocol subtree array */
 	static gint *ett[] = {
 		&ett_gluster_fs,
@@ -1026,5 +2486,8 @@ proto_reg_handoff_glusterfs(void)
 	rpc_init_prog(proto_gluster3_1_fop, GLUSTER3_1_FOP_PROGRAM, ett_gluster3_1_fop);
 	rpc_init_proc_table(GLUSTER3_1_FOP_PROGRAM, 310, gluster3_1_fop_proc,
 							hf_gluster3_1_fop_proc);
+	rpc_init_proc_table(GLUSTER3_1_FOP_PROGRAM, 330, gluster3_3_fop_proc,
+							hf_gluster3_3_fop_proc);
+
 }
 
