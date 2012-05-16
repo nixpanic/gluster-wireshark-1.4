@@ -136,7 +136,6 @@ static gint hf_gluster_entrylk_namelen = -1;
 /* Initialize the subtree pointers */
 static gint ett_gluster_fs = -1;
 static gint ett_gluster3_1_fop = -1;
-static gint ett_gluster3_3_fop = -1;
 static gint ett_gluster_iatt = -1;
 static gint ett_gluster_entry = -1;
 static gint ett_gluster_flock = -1;
@@ -619,6 +618,7 @@ gluster_gfs3_3_op_stat_call(tvbuff_t *tvb, int offset,
 
 	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
 								FALSE, NULL);
+	flags = tvb_get_ntohl(tvb, offset);
 	proto_tree_add_uint_format(tree, hf_gluster_flags, tvb, offset, 4, flags, "Flags: 0x%02x", flags);
 	offset += 4;
 	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
@@ -1751,7 +1751,7 @@ gluster_gfs3_3_op_readdirp_reply(tvbuff_t *tvb, int offset,
 	offset = dissect_rpc_list(tvb, pinfo, tree, offset,
 					    gluster_gfs3_op_readdirp_entry);
 	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
-	
+
 	return offset;
 }
 
