@@ -302,7 +302,7 @@ gluster_gfs3_op_setxattr_call(tvbuff_t *tvb, int offset,
 
 	/* FIXME: these flags need to be displayed in a sane way */
 	flags = tvb_get_ntohl(tvb, offset);
-	proto_tree_add_uint_format(tree, hf_gluster_flags, tvb, offset, 4, flags, "Flags: 0x%02x", flags);
+	proto_tree_add_uint_format(tree, hf_gluster_flags, tvb, offset, 4, flags, "Flags: 0%02o", flags);
 	offset += 4;
 
 	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
@@ -376,7 +376,7 @@ gluster_gfs3_op_create_call(tvbuff_t *tvb, int offset,
 								FALSE, NULL);
 	/* FIXME: display as a list of fields */
 	flags = tvb_get_ntohl(tvb, offset);
-	proto_tree_add_uint_format(tree, hf_gluster_flags, tvb, offset, 4, flags, "Flags: 0x%02x", flags);
+	proto_tree_add_uint_format(tree, hf_gluster_flags, tvb, offset, 4, flags, "Flags: 0%02o", flags);
 	offset += 4;
 
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_mode, offset);
@@ -432,7 +432,7 @@ gluster_gfs3_op_lookup_call(tvbuff_t *tvb, int offset,
 #endif
 	/* FIXME: display as a list of fields */
 	flags = tvb_get_ntohl(tvb, offset);
-	proto_tree_add_uint_format(tree, hf_gluster_flags, tvb, offset, 4, flags, "Flags: 0x%02x", flags);
+	proto_tree_add_uint_format(tree, hf_gluster_flags, tvb, offset, 4, flags, "Flags: 0%02o", flags);
 	offset += 4;
 
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_path, offset, &path);
