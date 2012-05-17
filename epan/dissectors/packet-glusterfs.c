@@ -612,13 +612,8 @@ static int
 gluster_gfs3_3_op_stat_call(tvbuff_t *tvb, int offset,
 				packet_info *pinfo _U_, proto_tree *tree)
 {
-	guint flags;
-
 	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 16,
 								FALSE, NULL);
-	flags = tvb_get_ntohl(tvb, offset);
-	proto_tree_add_uint_format(tree, hf_gluster_flags, tvb, offset, 4, flags, "Flags: 0%02o", flags);
-	offset += 4;
 	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
 	return offset;
 
