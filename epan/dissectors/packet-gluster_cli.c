@@ -65,7 +65,6 @@ static gint hf_gluster_flags = -1;
 
 /* Initialize the subtree pointers */
 static gint ett_gluster_cli = -1;
-static gint ett_gluster_cli_2 = -1;
 
 /* CLI Operations */
 
