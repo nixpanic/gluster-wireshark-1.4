@@ -661,7 +661,7 @@ gluster_gfs3_3_op_mknod_call(tvbuff_t *tvb, int offset,
 	gchar *bname = NULL;
 
 	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_pargfid, offset, 16,
-								FALSE, NULL);
+							FALSE, NULL);
 	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_offset, offset);
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_mode, offset);
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_umask, offset);
@@ -727,8 +727,7 @@ gluster_gfs3_3_op_readlink_reply(tvbuff_t *tvb, int offset,
 	iatt_tree = proto_item_add_subtree(iatt_item, ett_gluster_iatt);
 	offset = gluster_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_path, offset, &path);
-	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
-
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);	
 	return offset;
 }
 
