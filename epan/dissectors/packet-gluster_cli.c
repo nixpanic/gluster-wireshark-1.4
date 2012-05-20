@@ -101,7 +101,7 @@ gluster_cli_2_probe_reply(tvbuff_t *tvb, int offset,
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_port, offset);
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_hostname, offset, &hostname);
-	
+
 	return offset;
 }
 
@@ -113,7 +113,7 @@ gluster_cli_2_probe_call(tvbuff_t *tvb, int offset,
 	gchar* hostname = NULL;
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_hostname, offset, &hostname);
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_port, offset);
-	
+
 	return offset;
 }
 
@@ -127,7 +127,7 @@ gluster_cli_2_deprobe_reply(tvbuff_t *tvb, int offset,
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_hostname, offset, &hostname);
-	
+
 	return offset;
 }
 
@@ -137,7 +137,7 @@ gluster_cli_2_deprobe_call(tvbuff_t *tvb, int offset,
 {
 
 	gchar* hostname = NULL;
-        
+
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_hostname, offset, &hostname);
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_port, offset);
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_flags, offset);
@@ -152,7 +152,7 @@ gluster_cli_2_fsm_log_call(tvbuff_t *tvb, int offset,
 	gchar* name = NULL;
 
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_wd, offset, &name);
-        
+
 	return offset;
 }
 
@@ -165,7 +165,7 @@ gluster_cli_2_getwd_reply(tvbuff_t *tvb, int offset,
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_wd, offset, &wd);
-        
+
 	return offset;
 }
 
@@ -174,7 +174,7 @@ gluster_cli_2_getwd_call(tvbuff_t *tvb, int offset,
 				packet_info *pinfo _U_, proto_tree *tree)
 {
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_unused, offset);
-        
+
 	return offset;
 }
 
@@ -183,10 +183,10 @@ gluster_cli_2_mount_call(tvbuff_t *tvb, int offset,
 				packet_info *pinfo _U_, proto_tree *tree)
 {
 	gchar* label = NULL;
-        
+
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_label, offset, &label);
 	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
-        
+
 	return offset;
 }
 
@@ -199,7 +199,7 @@ gluster_cli_2_mount_reply(tvbuff_t *tvb, int offset,
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_path, offset, &path);
-        
+
 	return offset;
 }
 
@@ -208,10 +208,10 @@ gluster_cli_2_umount_call(tvbuff_t *tvb, int offset,
 				packet_info *pinfo _U_, proto_tree *tree)
 {
         gchar* path = NULL;
-        
+
 	offset = dissect_rpc_uint32(tvb, tree,hf_gluster_lazy, offset);
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_path, offset, &path);
-        
+
 	return offset;
 }
 
@@ -221,7 +221,7 @@ gluster_cli_2_umount_reply(tvbuff_t *tvb, int offset,
 {
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
-        
+
 	return offset;
 }
 
@@ -308,7 +308,7 @@ static const vsff gluster_cli_2_proc[] = {
 		GLUSTER_CLI_2_GET_NEXT_VOLUME, "GLUSTER_CLI_GET_NEXT_VOLUME",
 		gluster_cli_2_common_call,gluster_cli_2_common_reply
 	},
-	{	
+	{
 		GLUSTER_CLI_2_DELETE_VOLUME, "GLUSTER_CLI_DELETE_VOLUME",
 		gluster_cli_2_common_call,gluster_cli_2_common_reply
 	},
@@ -337,7 +337,7 @@ static const vsff gluster_cli_2_proc[] = {
 		gluster_cli_2_common_call,gluster_cli_2_common_reply
 	},
 	{
-		GLUSTER_CLI_2_REMOVE_BRICK, "GLUSTER_CLI_REMOVE_BRICK",	
+		GLUSTER_CLI_2_REMOVE_BRICK, "GLUSTER_CLI_REMOVE_BRICK",
 		gluster_cli_2_common_call,gluster_cli_2_common_reply
 	},
 	{
@@ -372,7 +372,7 @@ static const vsff gluster_cli_2_proc[] = {
 		GLUSTER_CLI_2_GSYNC_SET, "GLUSTER_CLI_GSYNC_SET",
 		gluster_cli_2_common_call,gluster_cli_2_common_reply
 	},
-	{	
+	{
 		GLUSTER_CLI_2_PROFILE_VOLUME, "GLUSTER_CLI_PROFILE_VOLUME",
 		gluster_cli_2_common_call,gluster_cli_2_common_reply
 	},
@@ -388,7 +388,7 @@ static const vsff gluster_cli_2_proc[] = {
 		GLUSTER_CLI_2_GETWD, "GLUSTER_CLI_GETWD",
 		gluster_cli_2_getwd_call, gluster_cli_2_getwd_reply
 	},
-	{      
+	{
 		GLUSTER_CLI_2_STATUS_VOLUME, "GLUSTER_CLI_STATUS_VOLUME",
 		gluster_cli_2_common_call,gluster_cli_2_common_reply
 	},
@@ -403,7 +403,7 @@ static const vsff gluster_cli_2_proc[] = {
 	{
 		GLUSTER_CLI_2_UMOUNT, "GLUSTER_CLI_UMOUNT",
 		gluster_cli_2_umount_call, gluster_cli_2_umount_reply
-	},	
+	},
 	{
 		GLUSTER_CLI_2_HEAL_VOLUME, "GLUSTER_CLI_HEAL_VOLUME",
 		gluster_cli_2_common_call, gluster_cli_2_common_reply
@@ -470,7 +470,7 @@ static const value_string gluster_cli_proc_vals[] = {
 
 static const value_string gluster_cli_2_proc_vals[] = {
 	{ GLUSTER_CLI_2_NULL, "GLUSTER_CLI_NULL" },
-	{ GLUSTER_CLI_2_PROBE, "GLUSTER_CLI_PROBE" },	
+	{ GLUSTER_CLI_2_PROBE, "GLUSTER_CLI_PROBE" },
 	{ GLUSTER_CLI_2_DEPROBE, "GLUSTER_CLI_DEPROBE" },
 	{ GLUSTER_CLI_2_LIST_FRIENDS, "GLUSTER_CLI_LIST_FRIENDS" },
 	{ GLUSTER_CLI_2_CREATE_VOLUME, "GLUSTER_CLI_CREATE_VOLUME" },

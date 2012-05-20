@@ -85,7 +85,7 @@ gluster_cbk_fetchspec_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, pr
 
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_key, offset, &key);
-	
+
 	return offset;
 }
 
