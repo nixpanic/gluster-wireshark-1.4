@@ -220,6 +220,17 @@ enum glusterd_mgmt_procnum {
 	GLUSTERD_MGMT_MAXVALUE
 };
 
+/* GLUSTERD1_MGMT_PROGRAM  for version 2*/
+enum glusterd_mgmt_2_procnum {
+        GLUSTERD_MGMT_2_NULL = 0,    /* 0 */
+        GLUSTERD_MGMT_2_CLUSTER_LOCK,
+        GLUSTERD_MGMT_2_CLUSTER_UNLOCK,
+        GLUSTERD_MGMT_2_STAGE_OP,
+        GLUSTERD_MGMT_2_COMMIT_OP,
+        GLUSTERD_MGMT_2_MAXVALUE,
+};
+
+
 /* GLUSTERFS_PROGRAM */
 enum gf_brick_procnum {
 	GF_BRICK_NULL = 0,
@@ -260,6 +271,21 @@ enum glusterd_brick_procnum {
 	GLUSTERD_BRICK_OP,
 	GLUSTERD_BRICK_MAXVALUE
 };
+
+/* "rpc/rpc-lib/src/protocol-common.h" line 174 of 228 */
+enum glusterd_brick_2_procnum {
+        GLUSTERD_2_BRICK_NULL,    /* 0 */
+        GLUSTERD_2_BRICK_TERMINATE,
+        GLUSTERD_2_BRICK_XLATOR_INFO,
+        GLUSTERD_2_BRICK_XLATOR_OP,
+        GLUSTERD_2_BRICK_STATUS,
+        GLUSTERD_2_BRICK_OP,
+        GLUSTERD_2_BRICK_XLATOR_DEFRAG,
+        GLUSTERD_2_NODE_PROFILE,
+        GLUSTERD_2_NODE_STATUS,
+        GLUSTERD_2_BRICK_MAXVALUE,
+};
+
 
 /* GLUSTER_CBK_PROGRAM */
 enum gf_cbk_procnum {
