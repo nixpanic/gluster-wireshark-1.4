@@ -1592,7 +1592,6 @@ gluster_gfs3_3_op_xattrop_reply(tvbuff_t *tvb, int offset,
 	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
 	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
 	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
-	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
 
 	return offset;
 }
