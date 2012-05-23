@@ -102,9 +102,6 @@ gluster_rpc_dissect_dict(proto_tree *tree, tvbuff_t *tvb, int hfindex, int offse
 	offset += 4;
 
 	for (i = 0; i < items; i++) {
-		dict_item = proto_tree_add_text(subtree, tvb, offset, -1, "Item %d", i);
-		dict_tree = proto_item_add_subtree(dict_item, ett_gluster_dict_items);
-
 		/* key_len is the length of the key without the terminating '\0' */
 		/* key_len = tvb_get_ntohl(tvb, offset) + 1; // will be read later */
 		offset += 4;
@@ -114,21 +111,21 @@ gluster_rpc_dissect_dict(proto_tree *tree, tvbuff_t *tvb, int hfindex, int offse
 		/* read the key, '\0' terminated */
 		key = tvb_get_stringz(tvb, offset, &key_len);
 		if (tree)
-			proto_tree_add_string(dict_tree, hf_gluster_dict_key, tvb, offset, key_len, key);
+			dict_item = proto_tree_add_text(subtree, tvb, offset, -1, "%s: ", key);
 		offset += key_len;
 		g_free(key);
 
 		/* read the value, '\0' terminated */
 		value = tvb_get_string(tvb, offset, value_len);
 		if (tree)
-			proto_tree_add_string(dict_tree, hf_gluster_dict_value, tvb, offset, value_len, value);
+			proto_item_append_text(dict_item, "%s", value);
 		offset += value_len;
 		g_free(value);
 	}
 
 	if (roundup) {
 		if (tree)
-			proto_tree_add_text(subtree, tvb, offset, -1, "RPC-roundup bytes: %d", roundup);
+			proto_tree_add_text(subtree, tvb, offset, -1, "[RPC-roundup bytes: %d]", roundup);
 		offset += roundup;
 	}
 
