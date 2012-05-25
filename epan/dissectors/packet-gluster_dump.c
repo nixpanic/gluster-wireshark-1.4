@@ -59,20 +59,37 @@ static gint hf_gluster_progver = -1;
 
 /* Initialize the subtree pointers */
 static gint ett_gluster_dump = -1;
+static gint ett_gluster_dump_detail = -1;
 
-/* from rpc/rpc-lib/src/rpc-common.c */
+/* Based on rpc/rpc-lib/src/rpc-common.c, but xdr encoding/decoding is broken.
+ * The structure in rpc/rpc-lib/src/xdr-common.h lists 2x unit64_t, but to
+ * encode/decode, xdr_u_quad_t() is used (which is uint32_t).
+ */
 static int
-gluster_dump_reply_item(tvbuff_t *tvb, int offset, proto_tree *tree)
+gluster_dump_reply_detail(tvbuff_t *tvb, int offset, packet_info *pinfo _U_,
+							proto_tree *tree)
 {
+	proto_item *detail_item;
+	proto_tree *detail_tree;
 	gchar *progname = NULL;
 
+	detail_item = proto_tree_add_text(tree, tvb, offset, -1,
+							"Available Progam: ");
+	detail_tree = proto_item_add_subtree(detail_item,
+						ett_gluster_dump_detail);
+
 	/* progname */
-	offset = dissect_rpc_string(tvb, tree, hf_gluster_progname, offset,
-								&progname);
-	/* prognumber */
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_prognum, offset);
-	/* progversion */
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_progver, offset);
+	offset = dissect_rpc_string(tvb, detail_tree, hf_gluster_progname,
+							offset, &progname);
+	if (tree)
+		proto_item_append_text(detail_item, "%s", progname);
+
+	/* prognumber (marked as uint64) */
+	offset = dissect_rpc_uint64(tvb, detail_tree, hf_gluster_prognum,
+								offset);
+	/* progversion (marked as uint64) */
+	offset = dissect_rpc_uint64(tvb, detail_tree, hf_gluster_progver,
+								offset);
 
 	return offset;
 }
@@ -84,8 +101,8 @@ gluster_dump_reply(tvbuff_t *tvb, int offset, packet_info *pinfo _U_,
 	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_gfsid, offset);
 	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
 
-	if (tree)
-		proto_tree_add_text(tree, tvb, offset, -1, "FIXME: The data that follows is a xdr_pointer from xdr_gf_prog_detail()");
+	offset = dissect_rpc_list(tvb, pinfo, tree, offset,
+						gluster_dump_reply_detail);
 
 	return offset;
 }
@@ -123,16 +140,16 @@ proto_register_gluster_dump(void)
 				VALS(gluster_dump_proc_vals), 0, NULL, HFILL }
 		},
 		{ &hf_gluster_progname,
-			{ "DUMP Program", "gluster.dump.progname", FT_STRING,
+			{ "Program Name", "gluster.dump.progname", FT_STRING,
 				BASE_NONE, NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_prognum,
-			{ "DUMP Program Number", "gluster.dump.prognum",
-				FT_UINT32, BASE_DEC, NULL, 0, NULL, HFILL }
+			{ "Program Number", "gluster.dump.prognum",
+				FT_UINT64, BASE_DEC, NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_progver,
-			{ "DUMP Program Version", "gluster.dump.progver",
-				FT_UINT32, BASE_DEC, NULL, 0, NULL, HFILL }
+			{ "Program Version", "gluster.dump.progver",
+				FT_UINT64, BASE_DEC, NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_gfsid,
 			{ "GFS ID", "gluster.gfsid", FT_UINT64,
@@ -142,7 +159,8 @@ proto_register_gluster_dump(void)
 
 	/* Setup protocol subtree array */
 	static gint *ett[] = {
-		&ett_gluster_dump
+		&ett_gluster_dump,
+		&ett_gluster_dump_detail
 	};
 
 	proto_register_subtree_array(ett, array_length(ett));
