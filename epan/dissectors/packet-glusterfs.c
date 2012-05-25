@@ -56,6 +56,7 @@ static gint hf_gluster3_3_fop_proc = -1;
 
 /* fields used by multiple programs/procedures */
 static gint hf_gluster_op_errno = -1;
+static gint hf_gluster_gfid = -1;
 static gint hf_gluster_pargfid = -1;
 static gint hf_gluster_oldgfid = -1;
 static gint hf_gluster_newgfid = -1;
@@ -140,6 +141,46 @@ static gint ett_gluster3_1_fop = -1;
 static gint ett_gluster_iatt = -1;
 static gint ett_gluster_entry = -1;
 static gint ett_gluster_flock = -1;
+
+/* function for dissecting and adding a GFID to the tree
+ *
+ * Show as the by Gluster displayed string format
+ * 00000000-0000-0000-0000-000000000001 (4-2-2-2-6 bytes).
+ */
+static int
+gluster_rpc_dissect_gfid(proto_tree *tree, tvbuff_t *tvb, int hfindex, int offset)
+{
+	proto_item *gfid_item;
+
+	if (tree) {
+		header_field_info *hfinfo = proto_registrar_get_nth(hfindex);
+		gfid_item = proto_tree_add_text(tree, tvb, offset, 16, "%s", hfinfo->name);
+		/* 4 bytes */
+		proto_item_append_text(gfid_item, ": %.2x", tvb_get_guint8(tvb, offset++));
+		proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
+		proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
+		proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
+		/* 2 bytes */
+		proto_item_append_text(gfid_item, "-%.2x", tvb_get_guint8(tvb, offset++));
+		proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
+		/* 2 bytes */
+		proto_item_append_text(gfid_item, "-%.2x", tvb_get_guint8(tvb, offset++));
+		proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
+		/* 2 bytes */
+		proto_item_append_text(gfid_item, "-%.2x", tvb_get_guint8(tvb, offset++));
+		proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
+		/* 6 bytes */
+		proto_item_append_text(gfid_item, "-%.2x", tvb_get_guint8(tvb, offset++));
+		proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
+		proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
+		proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
+		proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
+		proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
+	} else
+		offset += 16;
+
+	return offset;
+}
 
 /*
  * from rpc/xdr/src/glusterfs3-xdr.c:xdr_gf_iatt()
@@ -2135,6 +2176,10 @@ proto_register_glusterfs(void)
 		{ &hf_gluster_op_errno,
 			{ "Errno", "gluster.op_errno", FT_INT32, BASE_DEC,
 				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_gfid,
+			{ "GFID", "gluster.gfid", FT_BYTES,
+				BASE_NONE, NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_pargfid,
 			{ "PARGFID (FIXME?)", "gluster.pargfid", FT_BYTES,
