@@ -66,6 +66,46 @@ static gint ett_gluster_mgmt = -1;
 static gint ett_gluster_dict = -1;
 static gint ett_gluster_dict_items = -1;
 
+/* function for dissecting and adding a GFID to the tree
+ *
+ * Show as the by Gluster displayed string format
+ * 00000000-0000-0000-0000-000000000001 (4-2-2-2-6 bytes).
+ */
+int
+gluster_rpc_dissect_gfid(proto_tree *tree, tvbuff_t *tvb, int hfindex, int offset)
+{
+	proto_item *gfid_item;
+
+	if (tree) {
+		header_field_info *hfinfo = proto_registrar_get_nth(hfindex);
+		gfid_item = proto_tree_add_text(tree, tvb, offset, 16, "%s", hfinfo->name);
+		/* 4 bytes */
+		proto_item_append_text(gfid_item, ": %.2x", tvb_get_guint8(tvb, offset++));
+		proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
+		proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
+		proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
+		/* 2 bytes */
+		proto_item_append_text(gfid_item, "-%.2x", tvb_get_guint8(tvb, offset++));
+		proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
+		/* 2 bytes */
+		proto_item_append_text(gfid_item, "-%.2x", tvb_get_guint8(tvb, offset++));
+		proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
+		/* 2 bytes */
+		proto_item_append_text(gfid_item, "-%.2x", tvb_get_guint8(tvb, offset++));
+		proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
+		/* 6 bytes */
+		proto_item_append_text(gfid_item, "-%.2x", tvb_get_guint8(tvb, offset++));
+		proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
+		proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
+		proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
+		proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
+		proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
+	} else
+		offset += 16;
+
+	return offset;
+}
+
 /* function for dissecting and adding a gluster dict_t to the tree */
 int
 gluster_rpc_dissect_dict(proto_tree *tree, tvbuff_t *tvb, int hfindex, int offset)
