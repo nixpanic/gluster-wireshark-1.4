@@ -53,7 +53,6 @@ static gint proto_gluster_mgmt = -1;
 static gint hf_gluster_mgmt_proc = -1;
 
 /* fields used by multiple programs/procedures */
-gint hf_gluster_gfid = -1;
 gint hf_gluster_op = -1;
 gint hf_gluster_op_ret = -1;
 gint hf_gluster_dict = -1;
@@ -171,10 +170,6 @@ proto_register_gluster(void)
 				NULL, HFILL }
 		},
 		/* fields used by procedures */
-		{ &hf_gluster_gfid,
-			{ "GFID", "gluster.gfid", FT_BYTES,
-				BASE_NONE, NULL, 0, NULL, HFILL }
-		},
 		{ &hf_gluster_op,
 			{ "Operation (FIXME?)", "gluster.op", FT_INT32, BASE_DEC,
 				NULL, 0, NULL, HFILL }

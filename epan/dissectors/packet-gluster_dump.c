@@ -81,8 +81,7 @@ static int
 gluster_dump_reply(tvbuff_t *tvb, int offset, packet_info *pinfo _U_,
 							proto_tree *tree)
 {
-	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_gfid, offset, 8,
-								FALSE, NULL);
+	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_gfsid, offset);
 	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
 
 	if (tree)
