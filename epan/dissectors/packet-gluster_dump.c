@@ -163,11 +163,10 @@ proto_register_gluster_dump(void)
 		&ett_gluster_dump_detail
 	};
 
-	proto_register_subtree_array(ett, array_length(ett));
-	proto_register_field_array(proto_gluster, hf, array_length(hf));
-
 	proto_gluster_dump = proto_register_protocol("Gluster Dump",
 					"Gluster Dump", "gluster-dump");
+	proto_register_subtree_array(ett, array_length(ett));
+	proto_register_field_array(proto_gluster_dump, hf, array_length(hf));
 }
 
 void
