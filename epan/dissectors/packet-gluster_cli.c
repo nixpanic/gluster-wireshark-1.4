@@ -87,6 +87,7 @@ gluster_cli_2_common_reply(tvbuff_t *tvb, int offset,
 	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_op_errstr, offset,
 								&errstr);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
 
 	return offset;
 }
