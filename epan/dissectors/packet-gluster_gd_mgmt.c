@@ -288,7 +288,7 @@ static int
 glusterd_brick_2_common_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
 {
 	gchar *name = NULL;
-	
+
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_name, offset, &name);
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op, offset);
 	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
@@ -389,37 +389,37 @@ static const vsff gd_mgmt_2_proc[] = {
 
 static const value_string gd_mgmt_brick_2_proc[] = {
 	{ GLUSTERD_2_BRICK_NULL,"GLUSTERD_2_BRICK_NULL", NULL , NULL },    /* 0 */
-	{ 
-		GLUSTERD_2_BRICK_TERMINATE, "GLUSTERD_2_BRICK_TERMINATE", 
-		glusterd_brick_2_common_call,glusterd_brick_2_common_reply
+	{
+		GLUSTERD_2_BRICK_TERMINATE, "GLUSTERD_2_BRICK_TERMINATE",
+		glusterd_brick_2_common_call, glusterd_brick_2_common_reply
 	},
-        { 
-		GLUSTERD_2_BRICK_XLATOR_INFO, "GLUSTERD_2_BRICK_XLATOR_INFO", 
- 		glusterd_brick_2_common_call,glusterd_brick_2_common_reply
+        {
+		GLUSTERD_2_BRICK_XLATOR_INFO, "GLUSTERD_2_BRICK_XLATOR_INFO",
+ 		glusterd_brick_2_common_call, glusterd_brick_2_common_reply
 	},
-        { 
+        {
 		GLUSTERD_2_BRICK_XLATOR_OP, "GLUSTERD_2_BRICK_XLATOR_OP" ,
-		glusterd_brick_2_common_call,glusterd_brick_2_common_reply
+		glusterd_brick_2_common_call, glusterd_brick_2_common_reply
 	},
-        { 
-		GLUSTERD_2_BRICK_STATUS, "GLUSTERD_2_BRICK_STATUS", 
-		glusterd_brick_2_common_call,glusterd_brick_2_common_reply
+        {
+		GLUSTERD_2_BRICK_STATUS, "GLUSTERD_2_BRICK_STATUS",
+		glusterd_brick_2_common_call, glusterd_brick_2_common_reply
 	},
-        { 
+        {
 		GLUSTERD_2_BRICK_OP, "GLUSTERD_2_BRICK_OP",
-		glusterd_brick_2_common_call,glusterd_brick_2_common_reply
+		glusterd_brick_2_common_call, glusterd_brick_2_common_reply
 	},
-        { 
-		GLUSTERD_2_BRICK_XLATOR_DEFRAG, "GLUSTERD_2_BRICK_XLATOR_DEFRAG", 
-		glusterd_brick_2_common_call,glusterd_brick_2_common_reply
+        {
+		GLUSTERD_2_BRICK_XLATOR_DEFRAG, "GLUSTERD_2_BRICK_XLATOR_DEFRAG",
+		glusterd_brick_2_common_call, glusterd_brick_2_common_reply
 	},
-        { 
-		GLUSTERD_2_NODE_PROFILE, "GLUSTERD_2_NODE_PROFILE", 
-		glusterd_brick_2_common_call,glusterd_brick_2_common_reply
+        {
+		GLUSTERD_2_NODE_PROFILE, "GLUSTERD_2_NODE_PROFILE",
+		glusterd_brick_2_common_call, glusterd_brick_2_common_reply
 	},
-        { 
-		GLUSTERD_2_NODE_STATUS, "GLUSTERD_2_NODE_PROFILE", 
-		glusterd_brick_2_common_call,glusterd_brick_2_common_reply
+        {
+		GLUSTERD_2_NODE_STATUS, "GLUSTERD_2_NODE_PROFILE",
+		glusterd_brick_2_common_call, glusterd_brick_2_common_reply
 	},
         { GLUSTERD_2_BRICK_MAXVALUE, "GLUSTERD_2_BRICK_MAXVALUE",NULL,NULL },
         { 0, NULL }
