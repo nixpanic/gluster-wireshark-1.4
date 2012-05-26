@@ -280,75 +280,75 @@ static const vsff gluster_cli_2_proc[] = {
 	},
         {
 		GLUSTER_CLI_2_LIST_FRIENDS, "GLUSTER_CLI_LIST_FRIENDS",
-		gluster_cli_2_common_call,gluster_cli_2_common_reply
+		gluster_cli_2_common_call, gluster_cli_2_common_reply
 	},
 	{
 		GLUSTER_CLI_2_CREATE_VOLUME, "GLUSTER_CLI_CREATE_VOLUME" ,
-		gluster_cli_2_common_call,gluster_cli_2_common_reply
+		gluster_cli_2_common_call, gluster_cli_2_common_reply
 	},
 	{
        		GLUSTER_CLI_2_GET_VOLUME, "GLUSTER_CLI_GET_VOLUME",
-		gluster_cli_2_common_call,gluster_cli_2_common_reply
+		gluster_cli_2_common_call, gluster_cli_2_common_reply
 	},
 	{
 		GLUSTER_CLI_2_GET_NEXT_VOLUME, "GLUSTER_CLI_GET_NEXT_VOLUME",
-		gluster_cli_2_common_call,gluster_cli_2_common_reply
+		gluster_cli_2_common_call, gluster_cli_2_common_reply
 	},
 	{
 		GLUSTER_CLI_2_DELETE_VOLUME, "GLUSTER_CLI_DELETE_VOLUME",
-		gluster_cli_2_common_call,gluster_cli_2_common_reply
+		gluster_cli_2_common_call, gluster_cli_2_common_reply
 	},
 	{
 		GLUSTER_CLI_2_START_VOLUME, "GLUSTER_CLI_START_VOLUME",
-		gluster_cli_2_common_call,gluster_cli_2_common_reply
+		gluster_cli_2_common_call, gluster_cli_2_common_reply
 	},
 	{
 		GLUSTER_CLI_2_STOP_VOLUME, "GLUSTER_CLI_STOP_VOLUME",
-		gluster_cli_2_common_call,gluster_cli_2_common_reply
+		gluster_cli_2_common_call, gluster_cli_2_common_reply
 	},
 	{
 		GLUSTER_CLI_2_RENAME_VOLUME, "GLUSTER_CLI_RENAME_VOLUME",
-		gluster_cli_2_common_call,gluster_cli_2_common_reply
+		gluster_cli_2_common_call, gluster_cli_2_common_reply
 	},
 	{
 		GLUSTER_CLI_2_DEFRAG_VOLUME, "GLUSTER_CLI_DEFRAG_VOLUME" ,
-		gluster_cli_2_common_call,gluster_cli_2_common_reply
+		gluster_cli_2_common_call, gluster_cli_2_common_reply
 	},
 	{
 		GLUSTER_CLI_2_SET_VOLUME, "GLUSTER_CLI_SET_VOLUME",
-		gluster_cli_2_common_call,gluster_cli_2_common_reply
+		gluster_cli_2_common_call, gluster_cli_2_common_reply
 	},
 	{
 		GLUSTER_CLI_2_ADD_BRICK, "GLUSTER_CLI_ADD_BRICK",
-		gluster_cli_2_common_call,gluster_cli_2_common_reply
+		gluster_cli_2_common_call, gluster_cli_2_common_reply
 	},
 	{
 		GLUSTER_CLI_2_REMOVE_BRICK, "GLUSTER_CLI_REMOVE_BRICK",
-		gluster_cli_2_common_call,gluster_cli_2_common_reply
+		gluster_cli_2_common_call, gluster_cli_2_common_reply
 	},
 	{
 		GLUSTER_CLI_2_REPLACE_BRICK, "GLUSTER_CLI_REPLACE_BRICK",
-		gluster_cli_2_common_call,gluster_cli_2_common_reply
+		gluster_cli_2_common_call, gluster_cli_2_common_reply
 	},
 	{
 		GLUSTER_CLI_2_LOG_ROTATE, "GLUSTER_CLI_LOG_ROTATE",
-		gluster_cli_2_common_call,gluster_cli_2_common_reply
+		gluster_cli_2_common_call, gluster_cli_2_common_reply
 	},
 	{
 		GLUSTER_CLI_2_GETSPEC, "GLUSTER_CLI_GETSPEC",
-		gluster_cli_2_common_call,gluster_cli_2_common_reply
+		gluster_cli_2_common_call, gluster_cli_2_common_reply
 	},
 	{
 		GLUSTER_CLI_2_PMAP_PORTBYBRICK, "GLUSTER_CLI_PMAP_PORTBYBRICK",
-		gluster_cli_2_common_call,gluster_cli_2_common_reply
+		gluster_cli_2_common_call, gluster_cli_2_common_reply
 	},
 	{
 		GLUSTER_CLI_2_SYNC_VOLUME, "GLUSTER_CLI_SYNC_VOLUME",
-		gluster_cli_2_common_call,gluster_cli_2_common_reply
+		gluster_cli_2_common_call, gluster_cli_2_common_reply
 	},
 	{
 		GLUSTER_CLI_2_RESET_VOLUME, "GLUSTER_CLI_RESET_VOLUME",
-		gluster_cli_2_common_call,gluster_cli_2_common_reply
+		gluster_cli_2_common_call, gluster_cli_2_common_reply
 	},
 	{
 		GLUSTER_CLI_2_FSM_LOG, "GLUSTER_CLI_FSM_LOG",
@@ -356,19 +356,19 @@ static const vsff gluster_cli_2_proc[] = {
 	},
 	{
 		GLUSTER_CLI_2_GSYNC_SET, "GLUSTER_CLI_GSYNC_SET",
-		gluster_cli_2_common_call,gluster_cli_2_common_reply
+		gluster_cli_2_common_call, gluster_cli_2_common_reply
 	},
 	{
 		GLUSTER_CLI_2_PROFILE_VOLUME, "GLUSTER_CLI_PROFILE_VOLUME",
-		gluster_cli_2_common_call,gluster_cli_2_common_reply
+		gluster_cli_2_common_call, gluster_cli_2_common_reply
 	},
 	{
 		GLUSTER_CLI_2_QUOTA, "GLUSTER_CLI_QUOTA",
-		gluster_cli_2_common_call,gluster_cli_2_common_reply
+		gluster_cli_2_common_call, gluster_cli_2_common_reply
 	},
 	{
 		GLUSTER_CLI_2_TOP_VOLUME, "GLUSTER_CLI_TOP_VOLUME",
-		gluster_cli_2_common_call,gluster_cli_2_common_reply
+		gluster_cli_2_common_call, gluster_cli_2_common_reply
 	},
 	{
 		GLUSTER_CLI_2_GETWD, "GLUSTER_CLI_GETWD",
@@ -376,11 +376,11 @@ static const vsff gluster_cli_2_proc[] = {
 	},
 	{
 		GLUSTER_CLI_2_STATUS_VOLUME, "GLUSTER_CLI_STATUS_VOLUME",
-		gluster_cli_2_common_call,gluster_cli_2_common_reply
+		gluster_cli_2_common_call, gluster_cli_2_common_reply
 	},
 	{
 		GLUSTER_CLI_2_STATUS_ALL, "GLUSTER_CLI_STATUS_ALL",
-		gluster_cli_2_common_call,gluster_cli_2_common_reply
+		gluster_cli_2_common_call, gluster_cli_2_common_reply
 	},
 	{
 		GLUSTER_CLI_2_MOUNT, "GLUSTER_CLI_MOUNT",
@@ -396,19 +396,19 @@ static const vsff gluster_cli_2_proc[] = {
 	},
 	{
 		GLUSTER_CLI_2_STATEDUMP_VOLUME, "GLUSTER_CLI_STATEDUMP_VOLUME",
-		gluster_cli_2_common_call,gluster_cli_2_common_reply
+		gluster_cli_2_common_call, gluster_cli_2_common_reply
 	},
 	{
 		GLUSTER_CLI_2_LIST_VOLUME, "GLUSTER_CLI_LIST_VOLUME",
-		gluster_cli_2_common_call,gluster_cli_2_common_reply
+		gluster_cli_2_common_call, gluster_cli_2_common_reply
 	},
 	{
 		GLUSTER_CLI_2_CLRLOCKS_VOLUME, " GLUSTER_CLI_CLRLOCKS_VOLUME",
-		gluster_cli_2_common_call,gluster_cli_2_common_reply
+		gluster_cli_2_common_call, gluster_cli_2_common_reply
 	},
 	{
 		GLUSTER_CLI_2_MAXVALUE, "GLUSTER_CLI_MAXVALUE",
-		gluster_cli_2_common_call,gluster_cli_2_common_reply
+		gluster_cli_2_common_call, gluster_cli_2_common_reply
 	},
 	{ 0, NULL , NULL, NULL}
 };
