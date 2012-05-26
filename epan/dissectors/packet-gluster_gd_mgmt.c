@@ -68,17 +68,16 @@ static gint hf_gluster_name = -1;
 /* Initialize the subtree pointers */
 static gint ett_gd_mgmt = -1;
 static gint ett_gd_brick = -1;
+
 static int
 gluster_gd_mgmt_probe_reply(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
 {
 	gchar *hostname = NULL;
-	gchar *errstr = NULL;
 
 	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_uuid, offset, 16 * 4, FALSE, NULL);
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_hostname, offset, &hostname);
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_port, offset);
 	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
-	offset = dissect_rpc_string(tvb, tree, hf_gluster_op_errstr, offset, &errstr);
 
 	return offset;
 }
