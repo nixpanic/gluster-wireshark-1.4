@@ -158,6 +158,10 @@ glusterfs_rpc_dissect_gfid(proto_tree *tree, tvbuff_t *tvb, int hfindex, int off
 
 	if (tree) {
 		header_field_info *hfinfo = proto_registrar_get_nth(hfindex);
+
+		gfid_item = proto_tree_add_item(tree, hfindex, tvb, offset, 16, ENC_NA);
+		PROTO_ITEM_SET_HIDDEN(gfid_item);
+
 		gfid_item = proto_tree_add_text(tree, tvb, offset, 16, "%s", hfinfo->name);
 		/* 4 bytes */
 		proto_item_append_text(gfid_item, ": %.2x", tvb_get_guint8(tvb, offset++));
