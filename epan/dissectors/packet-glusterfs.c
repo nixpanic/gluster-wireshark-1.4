@@ -101,6 +101,21 @@ static gint hf_glusterfs_flags_ndelay = -1;
 static gint hf_glusterfs_flags_sync = -1;
 static gint hf_glusterfs_flags_trunc = -1;
 
+/* access modes  */
+static gint hf_glusterfs_mode = -1;
+static gint hf_glusterfs_mode_suid = -1;
+static gint hf_glusterfs_mode_sgid = -1;
+static gint hf_glusterfs_mode_svtx = -1;
+static gint hf_glusterfs_mode_rusr = -1;
+static gint hf_glusterfs_mode_wusr = -1;
+static gint hf_glusterfs_mode_xusr = -1;
+static gint hf_glusterfs_mode_rgrp = -1;
+static gint hf_glusterfs_mode_wgrp = -1;
+static gint hf_glusterfs_mode_xgrp = -1;
+static gint hf_glusterfs_mode_roth = -1;
+static gint hf_glusterfs_mode_woth = -1;
+static gint hf_glusterfs_mode_xoth = -1;
+
 /* dir-entry */
 static gint hf_glusterfs_entry_ino = -1;
 static gint hf_glusterfs_entry_off = -1;
@@ -111,7 +126,7 @@ static gint hf_glusterfs_entry_path = -1;
 /* gf_iatt */
 static gint hf_glusterfs_ia_ino = -1;
 static gint hf_glusterfs_ia_dev = -1;
-static gint hf_glusterfs_mode = -1;
+static gint hf_glusterfs_ia_mode = -1;
 static gint hf_glusterfs_ia_nlink = -1;
 static gint hf_glusterfs_ia_uid = -1;
 static gint hf_glusterfs_ia_gid = -1;
@@ -162,6 +177,7 @@ static gint hf_glusterfs_entrylk_namelen = -1;
 /* Initialize the subtree pointers */
 static gint ett_glusterfs = -1;
 static gint ett_glusterfs_flags = -1;
+static gint ett_glusterfs_mode = -1;
 static gint ett_glusterfs_iatt = -1;
 static gint ett_glusterfs_entry = -1;
 static gint ett_glusterfs_flock = -1;
@@ -220,6 +236,32 @@ glusterfs_rpc_dissect_gfid(proto_tree *tree, tvbuff_t *tvb, int hfindex, int off
 	return offset;
 }
 
+static int
+glusterfs_rpc_dissect_mode(proto_tree *tree, tvbuff_t *tvb, int hfindex, int offset)
+{
+	static const int *mode_bits[] = {
+		&hf_glusterfs_mode_suid,
+		&hf_glusterfs_mode_sgid,
+		&hf_glusterfs_mode_svtx,
+		&hf_glusterfs_mode_rusr,
+		&hf_glusterfs_mode_wusr,
+		&hf_glusterfs_mode_xusr,
+		&hf_glusterfs_mode_rgrp,
+		&hf_glusterfs_mode_wgrp,
+		&hf_glusterfs_mode_xgrp,
+		&hf_glusterfs_mode_roth,
+		&hf_glusterfs_mode_woth,
+		&hf_glusterfs_mode_xoth,
+		NULL
+	};
+
+	if (tree)
+		proto_tree_add_bitmask(tree, tvb, offset, hfindex, ett_glusterfs_mode, mode_bits, FALSE);
+
+	offset += 4;
+	return offset;
+}
+
 /*
  * from rpc/xdr/src/glusterfs3-xdr.c:xdr_gf_iatt()
  * FIXME: this may be inclomplete, different code-paths may require different
@@ -231,7 +273,7 @@ glusterfs_rpc_dissect_gf_iatt(proto_tree *tree, tvbuff_t *tvb, int offset)
 	offset = glusterfs_rpc_dissect_gfid(tree, tvb, hf_glusterfs_gfid, offset);
 	offset = dissect_rpc_uint64(tvb, tree, hf_glusterfs_ia_ino, offset);
 	offset = dissect_rpc_uint64(tvb, tree, hf_glusterfs_ia_dev, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_glusterfs_mode, offset);
+	offset = glusterfs_rpc_dissect_mode(tree, tvb, hf_glusterfs_ia_mode, offset);
 	offset = dissect_rpc_uint32(tvb, tree, hf_glusterfs_ia_nlink, offset);
 	offset = dissect_rpc_uint32(tvb, tree, hf_glusterfs_ia_uid, offset);
 	offset = dissect_rpc_uint32(tvb, tree, hf_glusterfs_ia_gid, offset);
@@ -312,7 +354,7 @@ glusterfs_rpc_dissect_flags(proto_tree *tree, tvbuff_t *tvb, int offset)
 		rdonly_hf = proto_registrar_get_nth(hf_glusterfs_flags_rdonly);
 		/* show a static value of zero's, proto_tree_add_boolean() removes them */
 		proto_item_set_text(rdonly_item, "0000 0000 0000 0000 0000 0000 0000 0000 = %s: %s",
-			rdonly_hf->name, rdonly ? tfs_yes_no.true_string : tfs_yes_no.false_string);
+			rdonly_hf->name, rdonly ? tfs_set_notset.true_string : tfs_set_notset.false_string);
 		PROTO_ITEM_SET_GENERATED(rdonly_item);
 		if (rdonly)
 			proto_item_append_text(flag_tree, ", %s", rdonly_hf->name);
@@ -598,7 +640,7 @@ glusterfs_gfs3_op_create_call(tvbuff_t *tvb, int offset,
 
 	offset = glusterfs_rpc_dissect_gfid(tree, tvb, hf_glusterfs_pargfid, offset);
 	offset = glusterfs_rpc_dissect_flags(tree, tvb, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_glusterfs_mode, offset);
+	offset = glusterfs_rpc_dissect_mode(tree, tvb, hf_glusterfs_mode, offset);
 	offset = dissect_rpc_string(tvb, tree, hf_glusterfs_path, offset, &path);
 	offset = dissect_rpc_string(tvb, tree, hf_glusterfs_bname, offset, &bname);
 	offset = gluster_rpc_dissect_dict(tree, tvb, hf_glusterfs_dict, offset);
@@ -841,8 +883,8 @@ glusterfs_gfs3_3_op_mknod_call(tvbuff_t *tvb, int offset,
 
 	offset = glusterfs_rpc_dissect_gfid(tree, tvb, hf_glusterfs_pargfid, offset);
 	offset = dissect_rpc_uint64(tvb, tree, hf_glusterfs_offset, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_glusterfs_mode, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_glusterfs_umask, offset);
+	offset = glusterfs_rpc_dissect_mode(tree, tvb, hf_glusterfs_mode, offset);
+	offset = glusterfs_rpc_dissect_mode(tree, tvb, hf_glusterfs_umask, offset);
 	offset = dissect_rpc_string(tvb, tree, hf_glusterfs_bname, offset, &bname);
 	offset = gluster_rpc_dissect_dict(tree, tvb, hf_glusterfs_dict, offset);
 
@@ -882,8 +924,8 @@ glusterfs_gfs3_3_op_mkdir_call(tvbuff_t *tvb, int offset,
 	gchar *bname = NULL;
 
 	offset = glusterfs_rpc_dissect_gfid(tree, tvb, hf_glusterfs_pargfid, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_glusterfs_mode, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_glusterfs_umask, offset);
+	offset = glusterfs_rpc_dissect_mode(tree, tvb, hf_glusterfs_mode, offset);
+	offset = glusterfs_rpc_dissect_mode(tree, tvb, hf_glusterfs_umask, offset);
 	offset = dissect_rpc_string(tvb, tree, hf_glusterfs_bname, offset, &bname);
 	offset = gluster_rpc_dissect_dict(tree, tvb, hf_glusterfs_dict, offset);
 
@@ -1007,7 +1049,7 @@ glusterfs_gfs3_3_op_symlink_call(tvbuff_t *tvb, int offset,
 
 	offset = glusterfs_rpc_dissect_gfid(tree, tvb, hf_glusterfs_pargfid, offset);
 	offset = dissect_rpc_string(tvb, tree, hf_glusterfs_bname, offset, &bname);
-	offset = dissect_rpc_uint32(tvb, tree, hf_glusterfs_umask, offset);
+	offset = glusterfs_rpc_dissect_mode(tree, tvb, hf_glusterfs_umask, offset);
 
 	offset = dissect_rpc_string(tvb, tree, hf_glusterfs_linkname, offset, &linkname);
 	offset = gluster_rpc_dissect_dict(tree, tvb, hf_glusterfs_dict, offset);
@@ -1440,8 +1482,8 @@ glusterfs_gfs3_3_op_create_call(tvbuff_t *tvb, int offset,
 
 	offset = glusterfs_rpc_dissect_gfid(tree, tvb, hf_glusterfs_pargfid, offset);
 	offset = glusterfs_rpc_dissect_flags(tree, tvb, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_glusterfs_mode, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_glusterfs_umask, offset);
+	offset = glusterfs_rpc_dissect_mode(tree, tvb, hf_glusterfs_mode, offset);
+	offset = glusterfs_rpc_dissect_mode(tree, tvb, hf_glusterfs_umask, offset);
 	offset = dissect_rpc_string(tvb, tree, hf_glusterfs_bname, offset, &bname);
 	offset = gluster_rpc_dissect_dict(tree, tvb, hf_glusterfs_dict, offset);
 
@@ -2324,79 +2366,132 @@ proto_register_glusterfs(void)
 		},
 		{ &hf_glusterfs_flags_rdonly,
 			{ "O_RDONLY", "glusterfs.flags.rdonly", FT_BOOLEAN, 32,
-				TFS(&tfs_yes_no), 00000000, NULL, HFILL }
+				TFS(&tfs_set_notset), 00000000, NULL, HFILL }
 		},
 		{ &hf_glusterfs_flags_wronly,
 			{ "O_WRONLY", "glusterfs.flags.wronly", FT_BOOLEAN, 32,
-				TFS(&tfs_yes_no), 00000001, NULL, HFILL }
+				TFS(&tfs_set_notset), 00000001, NULL, HFILL }
 		},
 		{ &hf_glusterfs_flags_rdwr,
 			{ "O_RDWR", "glusterfs.flags.rdwr", FT_BOOLEAN, 32,
-				TFS(&tfs_yes_no), 00000002, NULL, HFILL }
+				TFS(&tfs_set_notset), 00000002, NULL, HFILL }
 		},
 		{ &hf_glusterfs_flags_accmode,
 			{ "O_ACCMODE", "glusterfs.flags.accmode", FT_BOOLEAN, 32,
-				TFS(&tfs_yes_no), 00000003, NULL, HFILL }
+				TFS(&tfs_set_notset), 00000003, NULL, HFILL }
 		},
 		{ &hf_glusterfs_flags_append,
 			{ "O_APPEND", "glusterfs.flags.append", FT_BOOLEAN, 32,
-				TFS(&tfs_yes_no), 00002000, NULL, HFILL }
+				TFS(&tfs_set_notset), 00002000, NULL, HFILL }
 		},
 		{ &hf_glusterfs_flags_async,
 			{ "O_ASYNC", "glusterfs.flags.async", FT_BOOLEAN, 32,
-				TFS(&tfs_yes_no), 00020000, NULL, HFILL }
+				TFS(&tfs_set_notset), 00020000, NULL, HFILL }
 		},
 		{ &hf_glusterfs_flags_cloexec,
 			{ "O_CLOEXEC", "glusterfs.flags.cloexec", FT_BOOLEAN, 32,
-				TFS(&tfs_yes_no), 02000000, NULL, HFILL }
+				TFS(&tfs_set_notset), 02000000, NULL, HFILL }
 		},
 		{ &hf_glusterfs_flags_creat,
 			{ "O_CREAT", "glusterfs.flags.creat", FT_BOOLEAN, 32,
-				TFS(&tfs_yes_no), 00000100, NULL, HFILL }
+				TFS(&tfs_set_notset), 00000100, NULL, HFILL }
 		},
 		{ &hf_glusterfs_flags_direct,
 			{ "O_DIRECT", "glusterfs.flags.direct", FT_BOOLEAN, 32,
-				TFS(&tfs_yes_no), 00040000, NULL, HFILL }
+				TFS(&tfs_set_notset), 00040000, NULL, HFILL }
 		},
 		{ &hf_glusterfs_flags_directory,
 			{ "O_DIRECTORY", "glusterfs.flags.directory", FT_BOOLEAN, 32,
-				TFS(&tfs_yes_no), 00200000, NULL, HFILL }
+				TFS(&tfs_set_notset), 00200000, NULL, HFILL }
 		},
 		{ &hf_glusterfs_flags_excl,
 			{ "O_EXCL", "glusterfs.flags.excl", FT_BOOLEAN, 32,
-				TFS(&tfs_yes_no), 00000200, NULL, HFILL }
+				TFS(&tfs_set_notset), 00000200, NULL, HFILL }
 		},
 		{ &hf_glusterfs_flags_largefile,
 			{ "O_LARGEFILE", "glusterfs.flags.largefile", FT_BOOLEAN, 32,
-				TFS(&tfs_yes_no), 00100000, NULL, HFILL }
+				TFS(&tfs_set_notset), 00100000, NULL, HFILL }
 		},
 		{ &hf_glusterfs_flags_noatime,
 			{ "O_NOATIME", "glusterfs.flags.noatime", FT_BOOLEAN, 32,
-				TFS(&tfs_yes_no), 01000000, NULL, HFILL }
+				TFS(&tfs_set_notset), 01000000, NULL, HFILL }
 		},
 		{ &hf_glusterfs_flags_noctty,
 			{ "O_NOCTTY", "glusterfs.flags.noctty", FT_BOOLEAN, 32,
-				TFS(&tfs_yes_no), 00000400, NULL, HFILL }
+				TFS(&tfs_set_notset), 00000400, NULL, HFILL }
 		},
 		{ &hf_glusterfs_flags_nofollow,
 			{ "O_NOFOLLOW", "glusterfs.flags.nofollow", FT_BOOLEAN, 32,
-				TFS(&tfs_yes_no), 00400000, NULL, HFILL }
+				TFS(&tfs_set_notset), 00400000, NULL, HFILL }
 		},
 		{ &hf_glusterfs_flags_nonblock,
 			{ "O_NONBLOCK", "glusterfs.flags.nonblock", FT_BOOLEAN, 32,
-				TFS(&tfs_yes_no), 00004000, NULL, HFILL }
+				TFS(&tfs_set_notset), 00004000, NULL, HFILL }
 		},
 		{ &hf_glusterfs_flags_ndelay,
 			{ "O_NDELAY", "glusterfs.flags.ndelay", FT_BOOLEAN, 32,
-				TFS(&tfs_yes_no), 00004000, NULL, HFILL }
+				TFS(&tfs_set_notset), 00004000, NULL, HFILL }
 		},
 		{ &hf_glusterfs_flags_sync,
 			{ "O_SYNC", "glusterfs.flags.sync", FT_BOOLEAN, 32,
-				TFS(&tfs_yes_no), 00010000, NULL, HFILL }
+				TFS(&tfs_set_notset), 00010000, NULL, HFILL }
 		},
 		{ &hf_glusterfs_flags_trunc,
 			{ "O_TRUNC", "glusterfs.flags.trunc", FT_BOOLEAN, 32,
-				TFS(&tfs_yes_no), 00001000, NULL, HFILL }
+				TFS(&tfs_set_notset), 00001000, NULL, HFILL }
+		},
+		/* access modes */
+		{ &hf_glusterfs_mode,
+			{ "Mode", "glusterfs.mode", FT_UINT32, BASE_OCT,
+				NULL, 0, "Access Permissions", HFILL }
+		},
+		{ &hf_glusterfs_mode_suid,
+			{ "S_ISUID", "glusterfs.mode.s_isuid", FT_BOOLEAN, 32,
+				TFS(&tfs_set_notset), (04000), "set-user-ID", HFILL }
+		},
+		{ &hf_glusterfs_mode_sgid,
+			{ "S_ISGID", "glusterfs.mode.s_isgid", FT_BOOLEAN, 32,
+				TFS(&tfs_set_notset), (02000), "set-group-ID", HFILL }
+		},
+		{ &hf_glusterfs_mode_svtx,
+			{ "S_ISVTX", "glusterfs.mode.s_isvtx", FT_BOOLEAN, 32,
+				TFS(&tfs_set_notset), (01000), "sticky bit", HFILL }
+		},
+		{ &hf_glusterfs_mode_rusr,
+			{ "S_IRUSR", "glusterfs.mode.s_irusr", FT_BOOLEAN, 32,
+				TFS(&tfs_set_notset), (00400), "read by owner", HFILL }
+		},
+		{ &hf_glusterfs_mode_wusr,
+			{ "S_IWUSR", "glusterfs.mode.s_iwusr", FT_BOOLEAN, 32,
+				TFS(&tfs_set_notset), (00200), "write by owner", HFILL }
+		},
+		{ &hf_glusterfs_mode_xusr,
+			{ "S_IXUSR", "glusterfs.mode.s_ixusr", FT_BOOLEAN, 32,
+				TFS(&tfs_set_notset), (00100), "execute/search by owner", HFILL }
+		},
+		{ &hf_glusterfs_mode_rgrp,
+			{ "S_IRGRP", "glusterfs.mode.s_irgrp", FT_BOOLEAN, 32,
+				TFS(&tfs_set_notset), (00040), "read by group", HFILL }
+		},
+		{ &hf_glusterfs_mode_wgrp,
+			{ "S_IWGRP", "glusterfs.mode.s_iwgrp", FT_BOOLEAN, 32,
+				TFS(&tfs_set_notset), (00020), "write by group", HFILL }
+		},
+		{ &hf_glusterfs_mode_xgrp,
+			{ "S_IXGRP", "glusterfs.mode.s_ixgrp", FT_BOOLEAN, 32,
+				TFS(&tfs_set_notset), (00010), "execute/search by group", HFILL }
+		},
+		{ &hf_glusterfs_mode_roth,
+			{ "S_IROTH", "glusterfs.mode.s_iroth", FT_BOOLEAN, 32,
+				TFS(&tfs_set_notset), (00004), "read by others", HFILL }
+		},
+		{ &hf_glusterfs_mode_woth,
+			{ "S_IWOTH", "glusterfs.mode.s_iwoth", FT_BOOLEAN, 32,
+				TFS(&tfs_set_notset), (00002), "write by others", HFILL }
+		},
+		{ &hf_glusterfs_mode_xoth,
+			{ "S_IXOTH", "glusterfs.mode.s_ixoth", FT_BOOLEAN, 32,
+				TFS(&tfs_set_notset), (00001), "execute/search by others", HFILL }
 		},
 		/* the dir-entry structure */
 		{ &hf_glusterfs_entry_ino,
@@ -2428,8 +2523,8 @@ proto_register_glusterfs(void)
 			{ "ia_dev", "glusterfs.ia_dev", FT_UINT64, BASE_HEX,
 				NULL, 0, NULL, HFILL }
 		},
-		{ &hf_glusterfs_mode,
-			{ "mode", "glusterfs.mode", FT_UINT32, BASE_OCT,
+		{ &hf_glusterfs_ia_mode,
+			{ "ia_dev", "glusterfs.ia_mode", FT_UINT32, BASE_OCT,
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_glusterfs_ia_nlink,
@@ -2591,6 +2686,7 @@ proto_register_glusterfs(void)
 	static gint *ett[] = {
 		&ett_glusterfs,
 		&ett_glusterfs_flags,
+		&ett_glusterfs_mode,
 		&ett_glusterfs_entry,
 		&ett_glusterfs_iatt,
 		&ett_glusterfs_flock,
