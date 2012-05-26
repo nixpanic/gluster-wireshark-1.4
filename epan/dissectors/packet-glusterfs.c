@@ -2060,11 +2060,11 @@ static const vsff glusterfs3_3_fop_proc[] = {
 	},
 	{
 		GFS3_OP_INODELK, "INODELK",
-		glusterfs_gfs3_3_op_inodelk_call,glusterfs_gfs3_3_op_common_reply
+		glusterfs_gfs3_3_op_inodelk_call, glusterfs_gfs3_3_op_common_reply
 	},
 	{
 		GFS3_OP_FINODELK, "FINODELK",
-		glusterfs_gfs3_3_op_finodelk_call,glusterfs_gfs3_3_op_common_reply
+		glusterfs_gfs3_3_op_finodelk_call, glusterfs_gfs3_3_op_common_reply
 	},
 	{
 		GFS3_OP_ENTRYLK, "ENTRYLK",

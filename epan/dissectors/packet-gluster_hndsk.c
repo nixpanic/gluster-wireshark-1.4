@@ -182,7 +182,7 @@ static const vsff gluster_hndsk_2_proc[] = {
 	},
 	{
 		GF_HNDSK_GETSPEC, "GETSPEC",
-		gluster_hndsk_2_getspec_call,gluster_hndsk_2_getspec_reply
+		gluster_hndsk_2_getspec_call, gluster_hndsk_2_getspec_reply
 	},
 	{ GF_HNDSK_PING, "PING", NULL, gluster_dissect_common_reply },
 	{
