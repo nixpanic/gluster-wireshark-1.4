@@ -134,11 +134,10 @@ proto_register_gluster_pmap(void)
 		&ett_gluster_pmap
 	};
 
-	proto_register_subtree_array(ett, array_length(ett));
-	proto_register_field_array(proto_gluster, hf, array_length(hf));
-
 	proto_gluster_pmap = proto_register_protocol("Gluster Portmap",
 					"Gluster Portmap", "gluster-pmap");
+	proto_register_subtree_array(ett, array_length(ett));
+	proto_register_field_array(proto_gluster_pmap, hf, array_length(hf));
 }
 
 void
