@@ -46,6 +46,7 @@
 #include "packet-gluster.h"
 
 /* Initialize the protocol and registered fields */
+static gint proto_glusterd = -1;
 static gint proto_gd_mgmt = -1;
 static gint proto_gd_brick = -1;
 /* programs and procedures */
@@ -54,13 +55,14 @@ static gint hf_gd_mgmt_2_proc = -1;
 static gint hf_gd_mgmt_brick_2_proc = -1;
 
 /* fields used by multiple programs/procedures */
+static gint hf_gluster_dict = -1;
+static gint hf_gluster_op = -1;
 static gint hf_gluster_op_errstr = -1;
 static gint hf_gluster_uuid = -1;
 static gint hf_gluster_hostname = -1;
 static gint hf_gluster_port = -1;
 static gint hf_gluster_vols = -1;
 static gint hf_gluster_buf = -1;
-static gint hf_gluster_op_errno = -1;
 static gint hf_gluster_name = -1;
 
 /* Initialize the subtree pointers */
@@ -205,8 +207,7 @@ static int
 glusterd_mgmt_2_cluster_lock_reply(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
 {
 	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_uuid, offset, 16 * 4, FALSE, NULL);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
 
 	return offset;
 }
@@ -226,8 +227,7 @@ glusterd_mgmt_2_stage_op_reply(tvbuff_t *tvb, int offset, packet_info *pinfo _U_
 	gchar *errstr = NULL;
 
 	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_uuid, offset, 16 * 4, FALSE, NULL);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_op_errstr, offset, &errstr);
 	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
 
@@ -250,8 +250,7 @@ glusterd_mgmt_2_commit_op_reply(tvbuff_t *tvb, int offset, packet_info *pinfo _U
 	gchar *errstr = NULL;
 
 	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_uuid, offset, 16 * 4, FALSE, NULL);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
 	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_buf, offset);
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_op_errstr, offset, &errstr);
 
@@ -275,8 +274,7 @@ glusterd_brick_2_common_reply(tvbuff_t *tvb, int offset, packet_info *pinfo _U_,
 {
 	gchar *errstr = NULL;
 
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_op_errstr, offset, &errstr);
 	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
 
@@ -287,15 +285,13 @@ static int
 glusterd_brick_2_common_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
 {
 	gchar *name = NULL;
-	
+
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_name, offset, &name);
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op, offset);
 	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
 
 	return offset;
 }
-
-
 
 /*
  * GD_MGMT_PROGRAM
@@ -386,42 +382,42 @@ static const vsff gd_mgmt_2_proc[] = {
 	{ 0, NULL, NULL, NULL}
 };
 
-static const value_string gd_mgmt_brick_2_proc[] = {
-	{ GLUSTERD_2_BRICK_NULL,"GLUSTERD_2_BRICK_NULL", NULL , NULL },    /* 0 */
-	{ 
-		GLUSTERD_2_BRICK_TERMINATE, "GLUSTERD_2_BRICK_TERMINATE", 
-		glusterd_brick_2_common_call,glusterd_brick_2_common_reply
+static const vsff gd_mgmt_brick_2_proc[] = {
+	{ GLUSTERD_2_BRICK_NULL, "GLUSTERD_2_BRICK_NULL", NULL , NULL },    /* 0 */
+	{
+		GLUSTERD_2_BRICK_TERMINATE, "GLUSTERD_2_BRICK_TERMINATE",
+		glusterd_brick_2_common_call, glusterd_brick_2_common_reply
 	},
-        { 
-		GLUSTERD_2_BRICK_XLATOR_INFO, "GLUSTERD_2_BRICK_XLATOR_INFO", 
- 		glusterd_brick_2_common_call,glusterd_brick_2_common_reply
+        {
+		GLUSTERD_2_BRICK_XLATOR_INFO, "GLUSTERD_2_BRICK_XLATOR_INFO",
+ 		glusterd_brick_2_common_call, glusterd_brick_2_common_reply
 	},
-        { 
+        {
 		GLUSTERD_2_BRICK_XLATOR_OP, "GLUSTERD_2_BRICK_XLATOR_OP" ,
-		glusterd_brick_2_common_call,glusterd_brick_2_common_reply
+		glusterd_brick_2_common_call, glusterd_brick_2_common_reply
 	},
-        { 
-		GLUSTERD_2_BRICK_STATUS, "GLUSTERD_2_BRICK_STATUS", 
-		glusterd_brick_2_common_call,glusterd_brick_2_common_reply
+        {
+		GLUSTERD_2_BRICK_STATUS, "GLUSTERD_2_BRICK_STATUS",
+		glusterd_brick_2_common_call, glusterd_brick_2_common_reply
 	},
-        { 
+        {
 		GLUSTERD_2_BRICK_OP, "GLUSTERD_2_BRICK_OP",
-		glusterd_brick_2_common_call,glusterd_brick_2_common_reply
+		glusterd_brick_2_common_call, glusterd_brick_2_common_reply
 	},
-        { 
-		GLUSTERD_2_BRICK_XLATOR_DEFRAG, "GLUSTERD_2_BRICK_XLATOR_DEFRAG", 
-		glusterd_brick_2_common_call,glusterd_brick_2_common_reply
+        {
+		GLUSTERD_2_BRICK_XLATOR_DEFRAG, "GLUSTERD_2_BRICK_XLATOR_DEFRAG",
+		glusterd_brick_2_common_call, glusterd_brick_2_common_reply
 	},
-        { 
-		GLUSTERD_2_NODE_PROFILE, "GLUSTERD_2_NODE_PROFILE", 
-		glusterd_brick_2_common_call,glusterd_brick_2_common_reply
+        {
+		GLUSTERD_2_NODE_PROFILE, "GLUSTERD_2_NODE_PROFILE",
+		glusterd_brick_2_common_call, glusterd_brick_2_common_reply
 	},
-        { 
-		GLUSTERD_2_NODE_STATUS, "GLUSTERD_2_NODE_PROFILE", 
-		glusterd_brick_2_common_call,glusterd_brick_2_common_reply
+        {
+		GLUSTERD_2_NODE_STATUS, "GLUSTERD_2_NODE_PROFILE",
+		glusterd_brick_2_common_call, glusterd_brick_2_common_reply
 	},
-        { GLUSTERD_2_BRICK_MAXVALUE, "GLUSTERD_2_BRICK_MAXVALUE",NULL,NULL },
-        { 0, NULL }
+        { GLUSTERD_2_BRICK_MAXVALUE, "GLUSTERD_2_BRICK_MAXVALUE", NULL, NULL },
+        { 0, NULL, NULL, NULL }
 };
 
 static const value_string gd_mgmt_proc_vals[] = {
@@ -509,6 +505,14 @@ proto_register_gluster_gd_mgmt(void)
                                 0, NULL, HFILL }
                 },
 
+		{ &hf_gluster_dict,
+			{ "Dict", "gluster.dict", FT_STRING, BASE_NONE,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_op,
+			{ "Operation", "gluster.op", FT_UINT32, BASE_DEC,
+				NULL, 0, NULL, HFILL }
+		},
 		{ &hf_gluster_op_errstr,
 			{ "Error String", "gluster.op_errstr", FT_STRING,
 				BASE_NONE, NULL, 0, NULL, HFILL }
@@ -533,10 +537,6 @@ proto_register_gluster_gd_mgmt(void)
 			{ "Buffer", "gluster.buffer", FT_STRING, BASE_NONE,
 				NULL, 0, NULL, HFILL }
 		},
-		{ &hf_gluster_op_errno,
-			{ "Errno", "gluster.op_errno", FT_INT32, BASE_DEC,
-				NULL, 0, NULL, HFILL }
-		},
 		{ &hf_gluster_name,
 			{ "Name", "gluster.name", FT_STRING, BASE_NONE,
 				NULL, 0, NULL, HFILL }
@@ -550,8 +550,10 @@ proto_register_gluster_gd_mgmt(void)
 	};
 
 	/* Register the protocol name and description */
+	proto_glusterd = proto_register_protocol("Gluster Daemon", "GlusterD",
+								"glusterd");
 	proto_register_subtree_array(ett, array_length(ett));
-	proto_register_field_array(proto_gluster, hf, array_length(hf));
+	proto_register_field_array(proto_glusterd, hf, array_length(hf));
 
 	proto_gd_mgmt = proto_register_protocol("Gluster Daemon Management",
 					"GlusterD Management", "gd-mgmt");
@@ -563,9 +565,10 @@ void
 proto_reg_handoff_gluster_gd_mgmt(void)
 {
 	rpc_init_prog(proto_gd_mgmt, GD_MGMT_PROGRAM, ett_gd_mgmt);
-	rpc_init_prog(proto_gd_brick, GD_BRICK_PROGRAM, ett_gd_brick);
 	rpc_init_proc_table(GD_MGMT_PROGRAM, 1, gd_mgmt_proc, hf_gd_mgmt_proc);
 	rpc_init_proc_table(GD_MGMT_PROGRAM, 2, gd_mgmt_2_proc, hf_gd_mgmt_2_proc);
-	rpc_init_proc_table(GD_BRICK_PROGRAM, 2,gd_mgmt_brick_2_proc,hf_gd_mgmt_brick_2_proc );
+
+	rpc_init_prog(proto_gd_brick, GD_BRICK_PROGRAM, ett_gd_brick);
+	rpc_init_proc_table(GD_BRICK_PROGRAM, 2, gd_mgmt_brick_2_proc, hf_gd_mgmt_brick_2_proc);
 }
 
