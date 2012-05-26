@@ -46,6 +46,7 @@
 #include "packet-gluster.h"
 
 /* Initialize the protocol and registered fields */
+static gint proto_glusterd = -1;
 static gint proto_gd_mgmt = -1;
 static gint proto_gd_brick = -1;
 /* programs and procedures */
@@ -555,8 +556,10 @@ proto_register_gluster_gd_mgmt(void)
 	};
 
 	/* Register the protocol name and description */
+	proto_glusterd = proto_register_protocol("Gluster Daemon", "GlusterD",
+								"glusterd");
 	proto_register_subtree_array(ett, array_length(ett));
-	proto_register_field_array(proto_gluster, hf, array_length(hf));
+	proto_register_field_array(proto_glusterd, hf, array_length(hf));
 
 	proto_gd_mgmt = proto_register_protocol("Gluster Daemon Management",
 					"GlusterD Management", "gd-mgmt");
@@ -568,9 +571,10 @@ void
 proto_reg_handoff_gluster_gd_mgmt(void)
 {
 	rpc_init_prog(proto_gd_mgmt, GD_MGMT_PROGRAM, ett_gd_mgmt);
-	rpc_init_prog(proto_gd_brick, GD_BRICK_PROGRAM, ett_gd_brick);
 	rpc_init_proc_table(GD_MGMT_PROGRAM, 1, gd_mgmt_proc, hf_gd_mgmt_proc);
 	rpc_init_proc_table(GD_MGMT_PROGRAM, 2, gd_mgmt_2_proc, hf_gd_mgmt_2_proc);
-	rpc_init_proc_table(GD_BRICK_PROGRAM, 2,gd_mgmt_brick_2_proc,hf_gd_mgmt_brick_2_proc );
+
+	rpc_init_prog(proto_gd_brick, GD_BRICK_PROGRAM, ett_gd_brick);
+	rpc_init_proc_table(GD_BRICK_PROGRAM, 2, gd_mgmt_brick_2_proc, hf_gd_mgmt_brick_2_proc);
 }
 
