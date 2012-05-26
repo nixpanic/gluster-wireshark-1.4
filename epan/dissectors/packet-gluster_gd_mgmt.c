@@ -72,11 +72,13 @@ static int
 gluster_gd_mgmt_probe_reply(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
 {
 	gchar *hostname = NULL;
+	gchar *errstr = NULL;
 
 	offset = dissect_rpc_bytes(tvb, tree, hf_gluster_uuid, offset, 16 * 4, FALSE, NULL);
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_hostname, offset, &hostname);
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_port, offset);
 	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_op_errstr, offset, &errstr);
 
 	return offset;
 }
@@ -514,7 +516,7 @@ proto_register_gluster_gd_mgmt(void)
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_op_errstr,
-			{ "Error String", "gluster.op_errstr", FT_STRING,
+			{ "Error", "gluster.op_errstr", FT_STRING,
 				BASE_NONE, NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_uuid,
