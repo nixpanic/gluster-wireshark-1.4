@@ -174,6 +174,34 @@ static gint ett_gluster_dict_items = -1;
  * 00000000-0000-0000-0000-000000000001 (4-2-2-2-6 bytes).
  */
 static int
+glusterfs_item_append_gfid(proto_item *gfid_item, tvbuff_t *tvb, int offset)
+{
+	/* 4 bytes */
+	proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
+	proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
+	proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
+	proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
+	/* 2 bytes */
+	proto_item_append_text(gfid_item, "-%.2x", tvb_get_guint8(tvb, offset++));
+	proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
+	/* 2 bytes */
+	proto_item_append_text(gfid_item, "-%.2x", tvb_get_guint8(tvb, offset++));
+	proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
+	/* 2 bytes */
+	proto_item_append_text(gfid_item, "-%.2x", tvb_get_guint8(tvb, offset++));
+	proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
+	/* 6 bytes */
+	proto_item_append_text(gfid_item, "-%.2x", tvb_get_guint8(tvb, offset++));
+	proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
+	proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
+	proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
+	proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
+	proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
+
+	return offset;
+}
+
+static int
 glusterfs_rpc_dissect_gfid(proto_tree *tree, tvbuff_t *tvb, int hfindex, int offset)
 {
 	proto_item *gfid_item;
@@ -184,28 +212,8 @@ glusterfs_rpc_dissect_gfid(proto_tree *tree, tvbuff_t *tvb, int hfindex, int off
 		gfid_item = proto_tree_add_item(tree, hfindex, tvb, offset, 16, ENC_NA);
 		PROTO_ITEM_SET_HIDDEN(gfid_item);
 
-		gfid_item = proto_tree_add_text(tree, tvb, offset, 16, "%s", hfinfo->name);
-		/* 4 bytes */
-		proto_item_append_text(gfid_item, ": %.2x", tvb_get_guint8(tvb, offset++));
-		proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
-		proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
-		proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
-		/* 2 bytes */
-		proto_item_append_text(gfid_item, "-%.2x", tvb_get_guint8(tvb, offset++));
-		proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
-		/* 2 bytes */
-		proto_item_append_text(gfid_item, "-%.2x", tvb_get_guint8(tvb, offset++));
-		proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
-		/* 2 bytes */
-		proto_item_append_text(gfid_item, "-%.2x", tvb_get_guint8(tvb, offset++));
-		proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
-		/* 6 bytes */
-		proto_item_append_text(gfid_item, "-%.2x", tvb_get_guint8(tvb, offset++));
-		proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
-		proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
-		proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
-		proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
-		proto_item_append_text(gfid_item, "%.2x", tvb_get_guint8(tvb, offset++));
+		gfid_item = proto_tree_add_text(tree, tvb, offset, 16, "%s: ", hfinfo->name);
+		offset = glusterfs_item_append_gfid(gfid_item, tvb, offset);
 	} else
 		offset += 16;
 
@@ -387,13 +395,19 @@ gluster_rpc_dissect_dict(proto_tree *tree, tvbuff_t *tvb, int hfindex, int offse
 		if (tree)
 			dict_item = proto_tree_add_text(subtree, tvb, offset, -1, "%s: ", key);
 		offset += key_len;
-		g_free(key);
 
-		/* read the value, '\0' terminated */
+		/* read the value, possibly '\0' terminated */
 		value = tvb_get_string(tvb, offset, value_len);
-		if (tree)
-			proto_item_append_text(dict_item, "%s", value);
+		if (tree) {
+			/* keys named "gfid-req" contain a GFID in hex */
+			if (value_len == 16 && !strncmp("gfid-req", key, 8))
+				glusterfs_item_append_gfid(dict_item, tvb, offset);
+			else
+				proto_item_append_text(dict_item, "%s", value);
+		}
 		offset += value_len;
+
+		g_free(key);
 		g_free(value);
 	}
 
