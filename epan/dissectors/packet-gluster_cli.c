@@ -84,8 +84,7 @@ gluster_cli_2_common_reply(tvbuff_t *tvb, int offset,
 {
 	gchar* errstr= NULL;
 
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_op_errstr, offset, &errstr);
 
 	return offset;
@@ -98,8 +97,7 @@ gluster_cli_2_probe_reply(tvbuff_t *tvb, int offset,
 
 	gchar* hostname = NULL;
 
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
 	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_port, offset);
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_hostname, offset, &hostname);
 
@@ -125,8 +123,7 @@ gluster_cli_2_deprobe_reply(tvbuff_t *tvb, int offset,
 
 	gchar* hostname = NULL;
 
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_hostname, offset, &hostname);
 
 	return offset;
@@ -163,8 +160,7 @@ gluster_cli_2_getwd_reply(tvbuff_t *tvb, int offset,
 {
 	gchar* wd = NULL;
 
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_wd, offset, &wd);
 
 	return offset;
@@ -197,8 +193,7 @@ gluster_cli_2_mount_reply(tvbuff_t *tvb, int offset,
 {
 	gchar* path = NULL;
 
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
+	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_path, offset, &path);
 
 	return offset;
@@ -212,16 +207,6 @@ gluster_cli_2_umount_call(tvbuff_t *tvb, int offset,
 
 	offset = dissect_rpc_uint32(tvb, tree,hf_gluster_lazy, offset);
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_path, offset, &path);
-
-	return offset;
-}
-
-static int
-gluster_cli_2_umount_reply(tvbuff_t *tvb, int offset,
-                                packet_info *pinfo _U_, proto_tree *tree)
-{
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_ret, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op_errno, offset);
 
 	return offset;
 }
@@ -283,7 +268,7 @@ static const vsff gluster_cli_proc[] = {
 static const vsff gluster_cli_2_proc[] = {
 	{
 		GLUSTER_CLI_2_NULL, "GLUSTER_CLI_NULL",
-		gluster_cli_2_common_call,gluster_cli_2_common_reply
+		gluster_cli_2_common_call, gluster_cli_2_common_reply
 	},
 	{
 		GLUSTER_CLI_2_PROBE, "GLUSTER_CLI_PROBE",
@@ -403,7 +388,7 @@ static const vsff gluster_cli_2_proc[] = {
 	},
 	{
 		GLUSTER_CLI_2_UMOUNT, "GLUSTER_CLI_UMOUNT",
-		gluster_cli_2_umount_call, gluster_cli_2_umount_reply
+		gluster_cli_2_umount_call, gluster_dissect_common_reply
 	},
 	{
 		GLUSTER_CLI_2_HEAL_VOLUME, "GLUSTER_CLI_HEAL_VOLUME",
