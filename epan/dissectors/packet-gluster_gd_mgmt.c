@@ -387,8 +387,8 @@ static const vsff gd_mgmt_2_proc[] = {
 	{ 0, NULL, NULL, NULL}
 };
 
-static const value_string gd_mgmt_brick_2_proc[] = {
-	{ GLUSTERD_2_BRICK_NULL,"GLUSTERD_2_BRICK_NULL", NULL , NULL },    /* 0 */
+static const vsff gd_mgmt_brick_2_proc[] = {
+	{ GLUSTERD_2_BRICK_NULL, "GLUSTERD_2_BRICK_NULL", NULL , NULL },    /* 0 */
 	{
 		GLUSTERD_2_BRICK_TERMINATE, "GLUSTERD_2_BRICK_TERMINATE",
 		glusterd_brick_2_common_call, glusterd_brick_2_common_reply
@@ -421,8 +421,8 @@ static const value_string gd_mgmt_brick_2_proc[] = {
 		GLUSTERD_2_NODE_STATUS, "GLUSTERD_2_NODE_PROFILE",
 		glusterd_brick_2_common_call, glusterd_brick_2_common_reply
 	},
-        { GLUSTERD_2_BRICK_MAXVALUE, "GLUSTERD_2_BRICK_MAXVALUE",NULL,NULL },
-        { 0, NULL }
+        { GLUSTERD_2_BRICK_MAXVALUE, "GLUSTERD_2_BRICK_MAXVALUE", NULL, NULL },
+        { 0, NULL, NULL, NULL }
 };
 
 static const value_string gd_mgmt_proc_vals[] = {
