@@ -54,8 +54,6 @@ static gint hf_glusterfs_proc = -1;
 /* fields used by multiple programs/procedures */
 static gint hf_gluster_op_ret = -1;
 static gint hf_gluster_op_errno = -1;
-static gint hf_gluster_dict_key = -1;
-static gint hf_gluster_dict_value = -1;
 
 /* GlusterFS specific */
 static gint hf_glusterfs_gfid = -1;
@@ -2275,14 +2273,6 @@ proto_register_glusterfs(void)
 		},
 		{ &hf_gluster_op_errno,
 			{ "Errno", "gluster.op_errno", FT_INT32, BASE_DEC,
-				NULL, 0, NULL, HFILL }
-		},
-		{ &hf_gluster_dict_key,
-			{ "Key", "gluster.dict.key", FT_STRING, BASE_NONE,
-				NULL, 0, NULL, HFILL }
-		},
-		{ &hf_gluster_dict_value,
-			{ "Value", "gluster.dict.value", FT_STRING, BASE_NONE,
 				NULL, 0, NULL, HFILL }
 		},
 		/* GlusterFS specific */

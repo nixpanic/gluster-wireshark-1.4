@@ -49,7 +49,6 @@
 static gint proto_gluster_cli = -1;
 
 /* programs and procedures */
-static gint hf_gluster_op_errno = -1;
 static gint hf_gluster_cli_proc = -1;
 static gint hf_gluster_cli_2_proc = -1;
 static gint hf_gluster_dict = -1;
@@ -59,7 +58,6 @@ static gint hf_gluster_label = -1;
 static gint hf_gluster_unused = -1;
 static gint hf_gluster_wd= -1;
 static gint hf_gluster_op_errstr= -1;
-static gint hf_gluster_name= -1;
 static gint hf_gluster_hostname = -1;
 static gint hf_gluster_port = -1;
 static gint hf_gluster_flags = -1;
@@ -515,10 +513,6 @@ proto_register_gluster_cli(void)
 			{ "Dict", "gluster.dict", FT_STRING, BASE_NONE,
 				NULL, 0, NULL, HFILL }
 		},
-		{ &hf_gluster_op_errno,
-			{ "Errno", "gluster.op_errno", FT_INT32, BASE_DEC,
-				NULL, 0, NULL, HFILL }
-		},
 		{ &hf_gluster_path,
 			{ "Path", "gluster.path", FT_STRING, BASE_NONE,
 				NULL, 0, NULL, HFILL }
@@ -541,10 +535,6 @@ proto_register_gluster_cli(void)
 		},
 		{ &hf_gluster_op_errstr,
 			{ "Error", "gluster.op_errstr", FT_STRING, BASE_NONE,
-				NULL, 0, NULL, HFILL }
-		},
-		{ &hf_gluster_name,
-			{ "Name", "gluster.name", FT_STRING, BASE_NONE,
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_hostname,
