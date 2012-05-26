@@ -52,6 +52,7 @@ static gint proto_gluster_cli = -1;
 static gint hf_gluster_op_errno = -1;
 static gint hf_gluster_cli_proc = -1;
 static gint hf_gluster_cli_2_proc = -1;
+static gint hf_gluster_dict = -1;
 static gint hf_gluster_path = -1;
 static gint hf_gluster_lazy = -1;
 static gint hf_gluster_label = -1;
@@ -521,6 +522,10 @@ proto_register_gluster_cli(void)
 		{ &hf_gluster_cli_2_proc,
 			{ "Gluster CLI", "gluster.cli", FT_UINT32, BASE_DEC,
 				VALS(gluster_cli_2_proc_vals), 0, NULL, HFILL }
+		},
+		{ &hf_gluster_dict,
+			{ "Dict", "gluster.dict", FT_STRING, BASE_NONE,
+				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_op_errno,
 			{ "Errno", "gluster.op_errno", FT_INT32, BASE_DEC,

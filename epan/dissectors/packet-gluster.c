@@ -55,7 +55,6 @@ static gint hf_gluster_mgmt_proc = -1;
 /* fields used by multiple programs/procedures */
 gint hf_gluster_op = -1;
 gint hf_gluster_op_ret = -1;
-gint hf_gluster_dict = -1;
 static gint hf_gluster_dict_key = -1;
 static gint hf_gluster_dict_value = -1;
 
@@ -76,7 +75,6 @@ gluster_rpc_dissect_dict(proto_tree *tree, tvbuff_t *tvb, int hfindex, int offse
 	proto_tree *subtree;
 
 	proto_item *dict_item;
-	proto_tree *dict_tree;
 
 	/* create a subtree for all the items in the dict */
 	if (hfindex >= 0) {
@@ -179,10 +177,6 @@ proto_register_gluster(void)
 				NULL, 0, NULL, HFILL }
 		},
 		/* fields used by gluster_rpc_dissect_dict() */
-		{ &hf_gluster_dict,
-			{ "Dict", "gluster.dict", FT_STRING, BASE_NONE,
-				NULL, 0, NULL, HFILL }
-		},
 		{ &hf_gluster_dict_key,
 			{ "Key", "gluster.dict.key", FT_STRING, BASE_NONE,
 				NULL, 0, NULL, HFILL }

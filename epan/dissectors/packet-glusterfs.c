@@ -62,6 +62,7 @@ static gint hf_gluster_oldgfid = -1;
 static gint hf_gluster_newgfid = -1;
 static gint hf_gluster_path = -1;
 static gint hf_gluster_bname = -1;
+static gint hf_gluster_dict = -1;
 static gint hf_gluster_fd = -1;
 static gint hf_gluster_offset = -1;
 static gint hf_gluster_size = -1;
@@ -2199,6 +2200,10 @@ proto_register_glusterfs(void)
 		},
 		{ &hf_gluster_bname,
 			{ "Basename", "gluster.bname", FT_STRING, BASE_NONE,
+				NULL, 0, NULL, HFILL }
+		},
+		{ &hf_gluster_dict,
+			{ "Dict", "gluster.dict", FT_STRING, BASE_NONE,
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_fd,

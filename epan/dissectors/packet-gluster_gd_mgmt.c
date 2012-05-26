@@ -54,6 +54,7 @@ static gint hf_gd_mgmt_2_proc = -1;
 static gint hf_gd_mgmt_brick_2_proc = -1;
 
 /* fields used by multiple programs/procedures */
+static gint hf_gluster_dict = -1;
 static gint hf_gluster_op_errstr = -1;
 static gint hf_gluster_uuid = -1;
 static gint hf_gluster_hostname = -1;
@@ -509,6 +510,10 @@ proto_register_gluster_gd_mgmt(void)
                                 0, NULL, HFILL }
                 },
 
+		{ &hf_gluster_dict,
+			{ "Dict", "gluster.dict", FT_STRING, BASE_NONE,
+				NULL, 0, NULL, HFILL }
+		},
 		{ &hf_gluster_op_errstr,
 			{ "Error String", "gluster.op_errstr", FT_STRING,
 				BASE_NONE, NULL, 0, NULL, HFILL }

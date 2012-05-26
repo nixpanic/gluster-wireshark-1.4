@@ -52,6 +52,7 @@ static gint proto_gluster_hndsk = -1;
 /* programs and procedures */
 static gint hf_gluster_cbk_proc = -1;
 static gint hf_gluster_hndsk_proc = -1;
+static gint hf_gluster_dict = -1;
 static gint hf_gluster_spec = -1;	/* FETCHSPEC Reply */
 static gint hf_gluster_key = -1;	/* FETCHSPEC Call */
 static gint hf_gluster_hndsk_event_op = -1;       /* EVENT NOTIFY call */
@@ -279,6 +280,10 @@ proto_register_gluster_hndsk(void)
 				NULL, HFILL }
 		},
 		/* fields used by GlusterFS Callback */
+		{ &hf_gluster_dict,
+			{ "Dict", "gluster.dict", FT_STRING, BASE_NONE,
+				NULL, 0, NULL, HFILL }
+		},
 		{ &hf_gluster_spec,
 			/* FIXME: rename spec to something clearer */
 			{ "Spec", "gluster.fetchspec", FT_STRING, BASE_NONE,

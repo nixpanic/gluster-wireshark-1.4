@@ -382,7 +382,6 @@ enum gluster_lk_types {
 gint proto_gluster;
 gint hf_gluster_op;
 gint hf_gluster_op_ret;
-gint hf_gluster_dict;
 
 extern int
 gluster_rpc_dissect_dict(proto_tree *tree, tvbuff_t *tvb,
