@@ -537,6 +537,34 @@ static const value_string gd_mgmt_brick_2_proc_vals[] = {
 	{ 0, NULL }
 };
 
+static const value_string glusterd_op_vals[] = {
+	{ GD_OP_NONE, "NONE" },
+	{ GD_OP_CREATE_VOLUME, "CREATE_VOLUME" },
+	{ GD_OP_START_BRICK, "START_BRICK" },
+	{ GD_OP_STOP_BRICK, "STOP_BRICK" },
+	{ GD_OP_DELETE_VOLUME, "DELETE_VOLUME" },
+	{ GD_OP_START_VOLUME, "START_VOLUME" },
+	{ GD_OP_STOP_VOLUME, "STOP_VOLUME" },
+	{ GD_OP_DEFRAG_VOLUME, "DEFRAG_VOLUME" },
+	{ GD_OP_ADD_BRICK, "ADD_BRICK" },
+	{ GD_OP_REMOVE_BRICK, "REMOVE_BRICK" },
+	{ GD_OP_REPLACE_BRICK, "REPLACE_BRICK" },
+	{ GD_OP_SET_VOLUME, "SET_VOLUME" },
+	{ GD_OP_RESET_VOLUME, "RESET_VOLUME" },
+	{ GD_OP_SYNC_VOLUME, "SYNC_VOLUME" },
+	{ GD_OP_LOG_ROTATE, "LOG_ROTATE" },
+	{ GD_OP_GSYNC_SET, "GSYNC_SET" },
+	{ GD_OP_PROFILE_VOLUME, "PROFILE_VOLUME" },
+	{ GD_OP_QUOTA, "QUOTA" },
+	{ GD_OP_STATUS_VOLUME, "STATUS_VOLUME" },
+	{ GD_OP_REBALANCE, "REBALANCE" },
+	{ GD_OP_HEAL_VOLUME, "HEAL_VOLUME" },
+	{ GD_OP_STATEDUMP_VOLUME, "STATEDUMP_VOLUME" },
+	{ GD_OP_LIST_VOLUME, "LIST_VOLUME" },
+	{ GD_OP_CLEARLOCKS_VOLUME, "CLEARLOCKS_VOLUME" },
+	{ GD_OP_DEFRAG_BRICK_VOLUME, "DEFRAG_BRICK_VOLUME" },
+	{ 0, NULL }
+};
 void
 proto_register_gluster_gd_mgmt(void)
 {
@@ -565,7 +593,7 @@ proto_register_gluster_gd_mgmt(void)
 		},
 		{ &hf_gluster_op,
 			{ "Operation", "gluster.op", FT_UINT32, BASE_DEC,
-				NULL, 0, NULL, HFILL }
+				VALS(glusterd_op_vals), 0, NULL, HFILL }
 		},
 		{ &hf_gluster_op_errstr,
 			{ "Error", "gluster.op_errstr", FT_STRING,

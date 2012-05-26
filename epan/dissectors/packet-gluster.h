@@ -378,6 +378,36 @@ enum gluster_lk_types {
 	GF_LK_EOL
 };
 
+/* based on enum glusterd_op_ from xlators/mgmt/glusterd/src/glusterd.h */
+enum glusterd_ops {
+	GD_OP_NONE = 0,
+	GD_OP_CREATE_VOLUME,
+	GD_OP_START_BRICK,
+	GD_OP_STOP_BRICK,
+	GD_OP_DELETE_VOLUME,
+	GD_OP_START_VOLUME,
+	GD_OP_STOP_VOLUME,
+	GD_OP_DEFRAG_VOLUME,
+	GD_OP_ADD_BRICK,
+	GD_OP_REMOVE_BRICK,
+	GD_OP_REPLACE_BRICK,
+	GD_OP_SET_VOLUME,
+	GD_OP_RESET_VOLUME,
+	GD_OP_SYNC_VOLUME,
+	GD_OP_LOG_ROTATE,
+	GD_OP_GSYNC_SET,
+	GD_OP_PROFILE_VOLUME,
+	GD_OP_QUOTA,
+	GD_OP_STATUS_VOLUME,
+	GD_OP_REBALANCE,
+	GD_OP_HEAL_VOLUME,
+	GD_OP_STATEDUMP_VOLUME,
+	GD_OP_LIST_VOLUME,
+	GD_OP_CLEARLOCKS_VOLUME,
+	GD_OP_DEFRAG_BRICK_VOLUME,
+	GD_OP_MAX
+};
+
 extern int
 gluster_rpc_dissect_dict(proto_tree *tree, tvbuff_t *tvb,
 						int hfindex, int offset);
