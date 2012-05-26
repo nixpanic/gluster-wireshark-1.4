@@ -280,6 +280,7 @@ glusterd_mgmt_2_stage_op_reply(tvbuff_t *tvb, int offset, packet_info *pinfo _U_
 	gchar *errstr = NULL;
 
 	offset = gluster_gd_mgmt_dissect_uuid(tvb, tree, hf_gluster_uuid, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op, offset);
 	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
 	offset = dissect_rpc_string(tvb, tree, hf_gluster_op_errstr, offset, &errstr);
 	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
