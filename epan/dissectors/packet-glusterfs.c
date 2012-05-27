@@ -2514,7 +2514,7 @@ proto_register_glusterfs(void)
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_glusterfs_ia_mode,
-			{ "ia_dev", "glusterfs.ia_mode", FT_UINT32, BASE_OCT,
+			{ "ia_mode", "glusterfs.ia_mode", FT_UINT32, BASE_OCT,
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_glusterfs_ia_nlink,
