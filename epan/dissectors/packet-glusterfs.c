@@ -976,6 +976,8 @@ glusterfs_gfs3_3_op_unlink_reply(tvbuff_t *tvb, int offset,
 	/* FIXME: describe this better - gf_iatt (xdrs, &objp->postparent */
 	iatt_item = proto_tree_add_text(tree, tvb, offset, -1, "PostParent IATT");
 	iatt_tree = proto_item_add_subtree(iatt_item, ett_glusterfs_iatt);
+	offset = glusterfs_rpc_dissect_gf_iatt(iatt_tree, tvb, offset);
+
 	offset = gluster_rpc_dissect_dict(tree, tvb, hf_glusterfs_dict, offset);
 
 	return offset;
