@@ -393,7 +393,7 @@ glusterfs_rpc_dissect_statfs(proto_tree *tree, tvbuff_t *tvb, int offset)
 int
 gluster_rpc_dissect_dict(proto_tree *tree, tvbuff_t *tvb, int hfindex, int offset)
 {
-	gchar *key, *value;
+	gchar *key, *value, *name;
 	gint items, i, len, roundup, value_len, key_len;
 
 	proto_item *subtree_item;
@@ -404,10 +404,11 @@ gluster_rpc_dissect_dict(proto_tree *tree, tvbuff_t *tvb, int hfindex, int offse
 	/* create a subtree for all the items in the dict */
 	if (hfindex >= 0) {
 		header_field_info *hfinfo = proto_registrar_get_nth(hfindex);
-		subtree_item = proto_tree_add_text(tree, tvb, offset, -1, "%s", hfinfo->name);
-	} else {
-		subtree_item = proto_tree_add_text(tree, tvb, offset, -1, "<NAMELESS DICT STRUCTURE>");
-	}
+		name = (gchar*) hfinfo->name;
+	} else
+		name = "<NAMELESS DICT STRUCTURE>";
+
+	subtree_item = proto_tree_add_text(tree, tvb, offset, -1, "%s", name);
 
 	subtree = proto_item_add_subtree(subtree_item, ett_gluster_dict);
 
@@ -417,10 +418,16 @@ gluster_rpc_dissect_dict(proto_tree *tree, tvbuff_t *tvb, int hfindex, int offse
 	offset += 4;
 
 	if (len == 0)
+		items = 0;
+	else
+		items = tvb_get_ntohl(tvb, offset);
+
+	proto_item_append_text(subtree_item, ", contains %d item%s", items, items == 1 ? "" : "s");
+	proto_tree_add_text(subtree, tvb, offset, 4, "Items: %d", items);
+
+	if (len == 0)
 		return offset;
 
-	items = tvb_get_ntohl(tvb, offset);
-	proto_tree_add_text(subtree, tvb, offset, 4, "[Items: %d]", items);
 	offset += 4;
 
 	for (i = 0; i < items; i++) {

@@ -409,8 +409,8 @@ enum glusterd_ops {
 };
 
 extern int
-gluster_rpc_dissect_dict(proto_tree *tree, tvbuff_t *tvb,
-						int hfindex, int offset);
+gluster_rpc_dissect_dict(proto_tree *tree, tvbuff_t *tvb, int hfindex,
+								int offset);
 
 extern int
 gluster_dissect_common_reply(tvbuff_t *tvb, int offset,
