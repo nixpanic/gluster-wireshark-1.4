@@ -2283,8 +2283,9 @@ proto_register_glusterfs(void)
 				BASE_NONE, NULL, 0, NULL, HFILL }
 		},
 		{ &hf_glusterfs_pargfid,
-			{ "PARGFID (FIXME?)", "glusterfs.pargfid", FT_BYTES,
-				BASE_NONE, NULL, 0, NULL, HFILL }
+			{ "Parent GFID", "glusterfs.pargfid", FT_BYTES,
+				BASE_NONE, NULL, 0,
+				"GFID of the parent directory", HFILL }
 		},
 		{ &hf_glusterfs_oldgfid,
 			{ "Old GFID", "glusterfs.oldgfid", FT_BYTES,
