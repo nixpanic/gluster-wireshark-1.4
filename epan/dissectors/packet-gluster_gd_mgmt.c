@@ -572,17 +572,17 @@ proto_register_gluster_gd_mgmt(void)
 	static hf_register_info hf[] = {
 		/* programs */
 		{ &hf_gd_mgmt_proc,
-			{ "Gluster Daemon Management", "glusterd.mgmt",
+			{ "Gluster Daemon Management", "glusterd.mgmt.proc",
 				FT_UINT32, BASE_DEC, VALS(gd_mgmt_proc_vals),
 				0, NULL, HFILL }
 		},
 		{ &hf_gd_mgmt_2_proc,
-			{ "Gluster Daemon Management", "glusterd.mgmt",
+			{ "Gluster Daemon Management", "glusterd.mgmt.proc",
 				FT_UINT32, BASE_DEC, VALS(gd_mgmt_2_proc_vals),
 				0, NULL, HFILL }
 		},
 		{ &hf_gd_mgmt_brick_2_proc,
-                        { "Gluster Daemon Management", "glusterd.mgmt",
+                        { "Gluster Daemon Brick Operations", "glusterd.brick.proc",
                                 FT_UINT32, BASE_DEC, VALS(gd_mgmt_brick_2_proc_vals),
                                 0, NULL, HFILL }
                 },
@@ -639,7 +639,7 @@ proto_register_gluster_gd_mgmt(void)
 
 	proto_gd_mgmt = proto_register_protocol("Gluster Daemon Management",
 					"GlusterD Management", "gd-mgmt");
-	proto_gd_brick = proto_register_protocol("Gluster Daemon Brick",
+	proto_gd_brick = proto_register_protocol("Gluster Daemon Brick Operations",
 					"GlusterD Brick", "gd-brick");
 }
 

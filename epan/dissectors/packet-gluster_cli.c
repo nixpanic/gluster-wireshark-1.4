@@ -502,11 +502,11 @@ proto_register_gluster_cli(void)
 	static hf_register_info hf[] = {
 		/* programs */
 		{ &hf_gluster_cli_proc,
-			{ "Gluster CLI", "gluster.cli", FT_UINT32, BASE_DEC,
+			{ "Gluster CLI", "gluster.cli.proc", FT_UINT32, BASE_DEC,
 				VALS(gluster_cli_proc_vals), 0, NULL, HFILL }
 		},
 		{ &hf_gluster_cli_2_proc,
-			{ "Gluster CLI", "gluster.cli", FT_UINT32, BASE_DEC,
+			{ "Gluster CLI", "gluster.cli.proc", FT_UINT32, BASE_DEC,
 				VALS(gluster_cli_2_proc_vals), 0, NULL, HFILL }
 		},
 		{ &hf_gluster_dict,

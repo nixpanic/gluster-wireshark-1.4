@@ -2265,7 +2265,7 @@ proto_register_glusterfs(void)
 	static hf_register_info hf[] = {
 		/* programs */
 		{ &hf_glusterfs_proc,
-			{ "GlusterFS", "glusterfs", FT_UINT32, 	BASE_DEC,
+			{ "GlusterFS", "glusterfs.proc", FT_UINT32, BASE_DEC,
 				VALS(glusterfs3_1_fop_proc_vals), 0, NULL, HFILL }
 		},
 		/* fields used by multiple programs/procedures */

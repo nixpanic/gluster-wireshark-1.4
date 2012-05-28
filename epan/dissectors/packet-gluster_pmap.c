@@ -111,7 +111,7 @@ proto_register_gluster_pmap(void)
 	static hf_register_info hf[] = {
 		/* programs */
 		{ &hf_gluster_pmap_proc,
-			{ "Gluster Portmap", "gluster.pmap", FT_UINT32,
+			{ "Gluster Portmap", "gluster.pmap.proc", FT_UINT32,
 				BASE_DEC, VALS(gluster_pmap_proc_vals), 0,
 				NULL, HFILL }
 		},

@@ -212,7 +212,7 @@ proto_register_gluster_hndsk(void)
 {
 	static hf_register_info hf[] = {
 		{ &hf_gluster_hndsk_proc,
-			{ "GlusterFS Handshake", "gluster.hndsk", FT_UINT32,
+			{ "GlusterFS Handshake", "gluster.hndsk.proc", FT_UINT32,
 				BASE_DEC, VALS(gluster_hndsk_proc_vals), 0,
 				NULL, HFILL }
 		},
@@ -295,7 +295,7 @@ proto_register_gluster_cbk(void)
 	static hf_register_info hf[] = {
 		/* programs */
 		{ &hf_gluster_cbk_proc,
-			{ "GlusterFS Callback", "gluster.cbk", FT_UINT32,
+			{ "GlusterFS Callback", "gluster.cbk.proc", FT_UINT32,
 				BASE_DEC, VALS(gluster_cbk_proc_vals), 0, NULL,
 				HFILL }
 		}

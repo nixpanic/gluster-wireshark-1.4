@@ -136,7 +136,7 @@ proto_register_gluster_dump(void)
 	static hf_register_info hf[] = {
 		/* programs */
 		{ &hf_gluster_dump_proc,
-			{ "Gluster DUMP", "gluster.dump", FT_UINT32, BASE_DEC,
+			{ "Gluster DUMP", "gluster.dump.proc", FT_UINT32, BASE_DEC,
 				VALS(gluster_dump_proc_vals), 0, NULL, HFILL }
 		},
 		{ &hf_gluster_progname,
