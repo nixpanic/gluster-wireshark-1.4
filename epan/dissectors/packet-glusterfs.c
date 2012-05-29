@@ -236,6 +236,22 @@ glusterfs_rpc_dissect_gfid(proto_tree *tree, tvbuff_t *tvb, int hfindex, int off
 }
 
 static int
+glusterfs_rpc_dissect_bytes(tvbuff_t *tvb, proto_tree *tree, int hfindex, int offset)
+{
+	gchar *bytes;
+	guint len = tvb_get_ntohl(tvb, offset);
+	offset += 4;
+
+	bytes = tvb_bytes_to_str(tvb, offset, len);
+	if (tree)
+		proto_tree_add_bytes_format_value(tree, hfindex, tvb, offset, len,
+					bytes, "0x%s", strlen(bytes) ? bytes : "0");
+	offset += len;
+
+	return offset;
+}
+
+static int
 glusterfs_rpc_dissect_mode(proto_tree *tree, tvbuff_t *tvb, int hfindex, int offset)
 {
 	static const int *mode_bits[] = {
@@ -311,7 +327,7 @@ glusterfs_rpc_dissect_gf_2_flock(proto_tree *tree, tvbuff_t *tvb, int offset)
 	offset = dissect_rpc_uint64(tvb, tree, hf_glusterfs_flock_start, offset);
 	offset = dissect_rpc_uint64(tvb, tree, hf_glusterfs_flock_len, offset);
 	offset = dissect_rpc_uint32(tvb, tree, hf_glusterfs_flock_pid, offset);
-	offset = dissect_rpc_data(tvb, tree, hf_glusterfs_2_flock_owner, offset);
+	offset = glusterfs_rpc_dissect_bytes(tvb, tree, hf_glusterfs_2_flock_owner, offset);
 
 	return offset;
 }
@@ -2603,7 +2619,7 @@ proto_register_glusterfs(void)
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_glusterfs_flock_owner,
-			{ "ia_flock_owner", "glusterfs.flock.owner", FT_UINT64, BASE_DEC,
+			{ "ia_flock_owner", "glusterfs.flock.owner", FT_UINT64, BASE_HEX,
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_glusterfs_2_flock_owner,
