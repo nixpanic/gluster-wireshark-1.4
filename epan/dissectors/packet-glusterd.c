@@ -1,6 +1,8 @@
 /* packet-gluster_gd_mgmt.c
  * Routines for Gluster Daemon Management dissection
  * Copyright 2012, Niels de Vos <ndevos@redhat.com>
+ * With contributions from:
+ *    Shreedhara LG <shreedharlg@gmail.com>
  *
  * $Id$
  *
@@ -49,10 +51,13 @@
 static gint proto_glusterd = -1;
 static gint proto_gd_mgmt = -1;
 static gint proto_gd_brick = -1;
+static gint proto_gd_friend = -1;
+
 /* programs and procedures */
 static gint hf_gd_mgmt_proc = -1;
 static gint hf_gd_mgmt_2_proc = -1;
 static gint hf_gd_mgmt_brick_2_proc = -1;
+static gint hf_glusterd_friend_proc = -1;
 
 /* fields used by multiple programs/procedures */
 static gint hf_gluster_dict = -1;
@@ -68,7 +73,7 @@ static gint hf_gluster_name = -1;
 /* Initialize the subtree pointers */
 static gint ett_gd_mgmt = -1;
 static gint ett_gd_brick = -1;
-
+static gint ett_gd_friend = -1;
 /* the UUID is the same as a GlusterFS GFID, except its encoded per byte */
 static int
 gluster_gd_mgmt_dissect_uuid(tvbuff_t *tvb, proto_tree *tree, int hfindex, int offset)
@@ -474,6 +479,16 @@ static const vsff gd_mgmt_brick_2_proc[] = {
         { 0, NULL, NULL, NULL }
 };
 
+static const vsff glusterd_friend_proc[] = {
+	{ GLUSTERD_FRIEND_NULL,"NULL" , NULL,NULL },
+	{ GLUSTERD_PROBE_QUERY, "GLUSTERD_PROBE_QUERY" , NULL , NULL },
+	{ GLUSTERD_FRIEND_ADD, "GLUSTERD_FRIEND_ADD" , NULL , NULL },
+	{ GLUSTERD_FRIEND_REMOVE,"GLUSTERD_FRIEND_REMOVE", NULL , NULL },
+	{ GLUSTERD_FRIEND_UPDATE,"GLUSTERD_FRIEND_UPDATE" , NULL , NULL },
+	{ GLUSTERD_FRIEND_MAXVALUE,"GLUSTERD_FRIEND_MAXVALUE", NULL , NULL },
+	{ 0, NULL, NULL, NULL }
+};
+
 static const value_string gd_mgmt_proc_vals[] = {
 	{ GD_MGMT_NULL, "NULL" },
 	{ GD_MGMT_PROBE_QUERY, "GD_MGMT_PROBE_QUERY" },
@@ -565,6 +580,17 @@ static const value_string glusterd_op_vals[] = {
 	{ GD_OP_DEFRAG_BRICK_VOLUME, "DEFRAG_BRICK_VOLUME" },
 	{ 0, NULL }
 };
+
+static const vsff glusterd_friend_proc_vals[] = {
+	{ GLUSTERD_FRIEND_NULL,"NULL"},
+	{ GLUSTERD_PROBE_QUERY, "GLUSTERD_PROBE_QUERY" },
+	{ GLUSTERD_FRIEND_ADD, "GLUSTERD_FRIEND_ADD" },
+	{ GLUSTERD_FRIEND_REMOVE,"GLUSTERD_FRIEND_REMOVE" },
+	{ GLUSTERD_FRIEND_UPDATE,"GLUSTERD_FRIEND_UPDATE" },
+	{ GLUSTERD_FRIEND_MAXVALUE,"GLUSTERD_FRIEND_UMAXVALUE" },
+	{ 0, NULL, NULL, NULL }
+};
+
 void
 proto_register_gluster_gd_mgmt(void)
 {
@@ -586,7 +612,11 @@ proto_register_gluster_gd_mgmt(void)
                                 FT_UINT32, BASE_DEC, VALS(gd_mgmt_brick_2_proc_vals),
                                 0, NULL, HFILL }
                 },
-
+		{ &hf_glusterd_friend_proc ,
+			{ "Gluster Daemon Friend Operations", "glusterd.friend.proc",
+				FT_UINT32, BASE_DEC, VALS(glusterd_friend_proc_vals),
+				0, NULL, HFILL }
+		},
 		{ &hf_gluster_dict,
 			{ "Dict", "gluster.dict", FT_STRING, BASE_NONE,
 				NULL, 0, NULL, HFILL }
@@ -628,7 +658,8 @@ proto_register_gluster_gd_mgmt(void)
 	/* Setup protocol subtree array */
 	static gint *ett[] = {
 		&ett_gd_mgmt,
-		&ett_gd_brick
+		&ett_gd_brick,
+		&ett_gd_friend
 	};
 
 	/* Register the protocol name and description */
@@ -641,6 +672,8 @@ proto_register_gluster_gd_mgmt(void)
 					"GlusterD Management", "gd-mgmt");
 	proto_gd_brick = proto_register_protocol("Gluster Daemon Brick Operations",
 					"GlusterD Brick", "gd-brick");
+	proto_gd_friend = proto_register_protocol("Gluster Daemon Friend Operations",
+					"GlusterD Friend", "gd-friend");
 }
 
 void
@@ -652,5 +685,8 @@ proto_reg_handoff_gluster_gd_mgmt(void)
 
 	rpc_init_prog(proto_gd_brick, GD_BRICK_PROGRAM, ett_gd_brick);
 	rpc_init_proc_table(GD_BRICK_PROGRAM, 2, gd_mgmt_brick_2_proc, hf_gd_mgmt_brick_2_proc);
+	rpc_init_prog(proto_gd_friend,GD_FRIEND_PROGRAM, ett_gd_friend);
+	rpc_init_proc_table(GD_FRIEND_PROGRAM, 2,glusterd_friend_proc, hf_glusterd_friend_proc);
+
 }
 

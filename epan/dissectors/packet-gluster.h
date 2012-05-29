@@ -1,6 +1,8 @@
 /* packet-gluster.h
  * Header for gluster dissection
  * Copyright 2012, Niels de Vos <ndevos@redhat.com>
+ * With contributions from:
+ *    Shreedhara LG <shreedharlg@gmail.com>
  *
  * $Id$
  *
@@ -294,6 +296,16 @@ enum gf_cbk_procnum {
 	GF_CBK_INO_FLUSH,
 	GF_CBK_MAXVALUE,
 
+};
+
+/* GD_FRIEND_PROGRAM  defined in "rpc/rpc-lib/src/protocol-common.h" */
+enum glusterd_friend_procnum {
+	GLUSTERD_FRIEND_NULL,    /* 0 */
+	GLUSTERD_PROBE_QUERY,
+	GLUSTERD_FRIEND_ADD,
+	GLUSTERD_FRIEND_REMOVE,
+	GLUSTERD_FRIEND_UPDATE,
+	GLUSTERD_FRIEND_MAXVALUE,
 };
 
 enum gf_fop_procnum {
