@@ -547,16 +547,6 @@ gluster_dissect_common_reply(tvbuff_t *tvb, int offset,
 	return offset;
 }
 
-/*
- *  372	  if (!xdr_int (xdrs, &objp->op_ret))
- *   373		  return FALSE;
- *    374	  if (!xdr_int (xdrs, &objp->op_errno))
- *     375		  return FALSE;
- *      376	  if (!xdr_gf_iatt (xdrs, &objp->preparent))
- *	377		  return FALSE;
- *	378	  if (!xdr_gf_iatt (xdrs, &objp->postparent))
- *
- */
 static int
 glusterfs_gfs3_op_unlink_reply(tvbuff_t *tvb, int offset,
 				packet_info *pinfo _U_, proto_tree *tree)
@@ -577,15 +567,6 @@ glusterfs_gfs3_op_unlink_reply(tvbuff_t *tvb, int offset,
 	return offset;
 }
 
-/*
- *  359	  if (!xdr_opaque (xdrs, objp->pargfid, 16))
- *   360		  return FALSE;
- *    361	  if (!xdr_string (xdrs, &objp->path, ~0))
- *     362		  return FALSE;
- *      363	  if (!xdr_string (xdrs, &objp->bname, ~0))
- *	364		  return FALSE;
- *
- */
 static int
 glusterfs_gfs3_op_unlink_call(tvbuff_t *tvb, int offset,
 				packet_info *pinfo _U_, proto_tree *tree)
