@@ -1,4 +1,4 @@
-/* packet-gluster_gd_mgmt.c
+/* packet-gluster_glusterd.c
  * Routines for Gluster Daemon Management dissection
  * Copyright 2012, Niels de Vos <ndevos@redhat.com>
  *
