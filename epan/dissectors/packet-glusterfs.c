@@ -133,11 +133,8 @@ static gint hf_glusterfs_ia_size = -1;
 static gint hf_glusterfs_ia_blksize = -1;
 static gint hf_glusterfs_ia_blocks = -1;
 static gint hf_glusterfs_ia_atime = -1;
-static gint hf_glusterfs_ia_atime_nsec = -1;
 static gint hf_glusterfs_ia_mtime = -1;
-static gint hf_glusterfs_ia_mtime_nsec = -1;
 static gint hf_glusterfs_ia_ctime = -1;
-static gint hf_glusterfs_ia_ctime_nsec = -1;
 
 /* gf_flock */
 static gint hf_glusterfs_flock_type = -1;
@@ -269,6 +266,8 @@ glusterfs_rpc_dissect_mode(proto_tree *tree, tvbuff_t *tvb, int hfindex, int off
 static int
 glusterfs_rpc_dissect_gf_iatt(proto_tree *tree, tvbuff_t *tvb, int offset)
 {
+	nstime_t timestamp;
+
 	offset = glusterfs_rpc_dissect_gfid(tree, tvb, hf_glusterfs_gfid, offset);
 	offset = dissect_rpc_uint64(tvb, tree, hf_glusterfs_ia_ino, offset);
 	offset = dissect_rpc_uint64(tvb, tree, hf_glusterfs_ia_dev, offset);
@@ -280,12 +279,24 @@ glusterfs_rpc_dissect_gf_iatt(proto_tree *tree, tvbuff_t *tvb, int offset)
 	offset = dissect_rpc_uint64(tvb, tree, hf_glusterfs_ia_size, offset);
 	offset = dissect_rpc_uint32(tvb, tree, hf_glusterfs_ia_blksize, offset);
 	offset = dissect_rpc_uint64(tvb, tree, hf_glusterfs_ia_blocks, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_glusterfs_ia_atime, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_glusterfs_ia_atime_nsec, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_glusterfs_ia_mtime, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_glusterfs_ia_mtime_nsec, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_glusterfs_ia_ctime, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_glusterfs_ia_ctime_nsec, offset);
+
+	timestamp.secs = tvb_get_ntohl(tvb, offset);
+	timestamp.nsecs = tvb_get_ntohl(tvb, offset + 4);
+	if (tree)
+		proto_tree_add_time(tree, hf_glusterfs_ia_atime, tvb, offset, 8, &timestamp);
+	offset += 8;
+
+	timestamp.secs = tvb_get_ntohl(tvb, offset);
+	timestamp.nsecs = tvb_get_ntohl(tvb, offset + 4);
+	if (tree)
+		proto_tree_add_time(tree, hf_glusterfs_ia_mtime, tvb, offset, 8, &timestamp);
+	offset += 8;
+
+	timestamp.secs = tvb_get_ntohl(tvb, offset);
+	timestamp.nsecs = tvb_get_ntohl(tvb, offset + 4);
+	if (tree)
+		proto_tree_add_time(tree, hf_glusterfs_ia_ctime, tvb, offset, 8, &timestamp);
+	offset += 8;
 
 	return offset;
 }
@@ -2530,68 +2541,59 @@ proto_register_glusterfs(void)
 		},
 		/* the IATT structure */
 		{ &hf_glusterfs_ia_ino,
-			{ "ia_ino", "glusterfs.ia_ino", FT_UINT64, BASE_DEC,
+			{ "Inode", "glusterfs.ia_ino", FT_UINT64, BASE_DEC,
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_glusterfs_ia_dev,
-			{ "ia_dev", "glusterfs.ia_dev", FT_UINT64, BASE_HEX,
+			{ "Device", "glusterfs.ia_dev", FT_UINT64, BASE_HEX,
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_glusterfs_ia_mode,
-			{ "ia_mode", "glusterfs.ia_mode", FT_UINT32, BASE_OCT,
+			{ "Mode", "glusterfs.ia_mode", FT_UINT32, BASE_OCT,
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_glusterfs_ia_nlink,
-			{ "ia_nlink", "glusterfs.ia_nlink", FT_INT32, BASE_DEC,
-				NULL, 0, NULL, HFILL }
+			{ "Number of hard links", "glusterfs.ia_nlink",
+				FT_INT32, BASE_DEC, NULL, 0, NULL, HFILL }
 		},
 		{ &hf_glusterfs_ia_uid,
-			{ "ia_uid", "glusterfs.ia_uid", FT_INT32, BASE_DEC,
+			{ "UID", "glusterfs.ia_uid", FT_INT32, BASE_DEC,
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_glusterfs_ia_gid,
-			{ "ia_gid", "glusterfs.ia_gid", FT_INT32, BASE_DEC,
+			{ "GID", "glusterfs.ia_gid", FT_INT32, BASE_DEC,
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_glusterfs_ia_rdev,
-			{ "ia_rdev", "glusterfs.ia_rdev", FT_UINT64, BASE_HEX,
-				NULL, 0, NULL, HFILL }
+			{ "Root device", "glusterfs.ia_rdev", FT_UINT64,
+				BASE_HEX, NULL, 0, NULL, HFILL }
 		},
 		{ &hf_glusterfs_ia_size,
-			{ "ia_size", "glusterfs.ia_size", FT_UINT64, BASE_DEC,
+			{ "Size", "glusterfs.ia_size", FT_UINT64, BASE_DEC,
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_glusterfs_ia_blksize,
-			{ "ia_blksize", "glusterfs.ia_blksize", FT_INT32, BASE_DEC,
-				NULL, 0, NULL, HFILL }
+			{ "Block size", "glusterfs.ia_blksize", FT_INT32,
+				BASE_DEC, NULL, 0, NULL, HFILL }
 		},
 		{ &hf_glusterfs_ia_blocks,
-			{ "ia_blocks", "glusterfs.ia_blocks", FT_UINT64, BASE_DEC,
-				NULL, 0, NULL, HFILL }
+			{ "Blocks", "glusterfs.ia_blocks", FT_UINT64,
+				BASE_DEC, NULL, 0, NULL, HFILL }
 		},
 		{ &hf_glusterfs_ia_atime,
-			{ "ia_time", "glusterfs.is_time", FT_INT32, BASE_DEC,
-				NULL, 0, NULL, HFILL }
-		},
-		{ &hf_glusterfs_ia_atime_nsec,
-			{ "ia_atime_nsec", "glusterfs.ia_atime_nsec", FT_INT32, BASE_DEC,
-				NULL, 0, NULL, HFILL }
+			{ "Time of last access", "glusterfs.ia_atime",
+				FT_ABSOLUTE_TIME, ABSOLUTE_TIME_LOCAL, NULL, 0,
+				NULL, HFILL }
 		},
 		{ &hf_glusterfs_ia_mtime,
-			{ "ia_mtime", "glusterfs.is_mtime", FT_INT32, BASE_DEC,
-				NULL, 0, NULL, HFILL }
-		},
-		{ &hf_glusterfs_ia_mtime_nsec,
-			{ "ia_mtime_msec", "glusterfs.is_mtime_nsec", FT_INT32, BASE_DEC,
-				NULL, 0, NULL, HFILL }
+			{ "Time of last modification", "glusterfs.ia_mtime",
+				FT_ABSOLUTE_TIME, ABSOLUTE_TIME_LOCAL, NULL, 0,
+				NULL, HFILL }
 		},
 		{ &hf_glusterfs_ia_ctime,
-			{ "ia_ctime", "glusterfs.ia_ctime", FT_INT32, BASE_DEC,
-				NULL, 0, NULL, HFILL }
-		},
-		{ &hf_glusterfs_ia_ctime_nsec,
-			{ "ia_ctime_nsec", "glusterfs.ia_ctime_nsec", FT_INT32, BASE_DEC,
-				NULL, 0, NULL, HFILL }
+			{ "Time of last status change", "glusterfs.ia_ctime",
+				FT_ABSOLUTE_TIME, ABSOLUTE_TIME_LOCAL, NULL, 0,
+				NULL, HFILL }
 		},
 
 		/* gf_flock */
