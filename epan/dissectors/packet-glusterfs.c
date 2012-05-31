@@ -272,8 +272,6 @@ glusterfs_rpc_dissect_mode(proto_tree *tree, tvbuff_t *tvb, int hfindex, int off
 
 /*
  * from rpc/xdr/src/glusterfs3-xdr.c:xdr_gf_iatt()
- * FIXME: this may be inclomplete, different code-paths may require different
- * encoding/decoding.
  */
 static int
 glusterfs_rpc_dissect_gf_iatt(proto_tree *tree, tvbuff_t *tvb, int offset)
