@@ -154,7 +154,19 @@ static gint hf_glusterfs_files = -1;
 static gint hf_glusterfs_ffree = -1;
 static gint hf_glusterfs_favail = -1;
 static gint hf_glusterfs_id = -1;
-static gint hf_glusterfs_flag = -1;
+static gint hf_glusterfs_mnt_flags = -1;
+static gint hf_glusterfs_mnt_flag_rdonly = -1;
+static gint hf_glusterfs_mnt_flag_nosuid = -1;
+static gint hf_glusterfs_mnt_flag_nodev = -1;
+static gint hf_glusterfs_mnt_flag_noexec = -1;
+static gint hf_glusterfs_mnt_flag_synchronous = -1;
+static gint hf_glusterfs_mnt_flag_mandlock = -1;
+static gint hf_glusterfs_mnt_flag_write = -1;
+static gint hf_glusterfs_mnt_flag_append = -1;
+static gint hf_glusterfs_mnt_flag_immutable = -1;
+static gint hf_glusterfs_mnt_flag_noatime = -1;
+static gint hf_glusterfs_mnt_flag_nodiratime = -1;
+static gint hf_glusterfs_mnt_flag_relatime = -1;
 static gint hf_glusterfs_namemax = -1;
 
 static gint hf_glusterfs_setattr_valid = -1;
@@ -172,6 +184,7 @@ static gint hf_glusterfs_entrylk_namelen = -1;
 /* Initialize the subtree pointers */
 static gint ett_glusterfs = -1;
 static gint ett_glusterfs_flags = -1;
+static gint ett_glusterfs_mnt_flags = -1;
 static gint ett_glusterfs_mode = -1;
 static gint ett_glusterfs_iatt = -1;
 static gint ett_glusterfs_entry = -1;
@@ -397,6 +410,22 @@ glusterfs_rpc_dissect_flags(proto_tree *tree, tvbuff_t *tvb, int offset)
 static int
 glusterfs_rpc_dissect_statfs(proto_tree *tree, tvbuff_t *tvb, int offset)
 {
+	static const int *flag_bits[] = {
+		&hf_glusterfs_mnt_flag_rdonly,
+		&hf_glusterfs_mnt_flag_nosuid,
+		&hf_glusterfs_mnt_flag_nodev,
+		&hf_glusterfs_mnt_flag_noexec,
+		&hf_glusterfs_mnt_flag_synchronous,
+		&hf_glusterfs_mnt_flag_mandlock,
+		&hf_glusterfs_mnt_flag_write,
+		&hf_glusterfs_mnt_flag_append,
+		&hf_glusterfs_mnt_flag_immutable,
+		&hf_glusterfs_mnt_flag_noatime,
+		&hf_glusterfs_mnt_flag_nodiratime,
+		&hf_glusterfs_mnt_flag_relatime,
+		NULL
+	};
+
 	offset = dissect_rpc_uint64(tvb, tree, hf_glusterfs_bsize, offset);
 	offset = dissect_rpc_uint64(tvb, tree, hf_glusterfs_frsize, offset);
 	offset = dissect_rpc_uint64(tvb, tree, hf_glusterfs_blocks, offset);
@@ -406,8 +435,15 @@ glusterfs_rpc_dissect_statfs(proto_tree *tree, tvbuff_t *tvb, int offset)
 	offset = dissect_rpc_uint64(tvb, tree, hf_glusterfs_ffree, offset);
 	offset = dissect_rpc_uint64(tvb, tree, hf_glusterfs_favail, offset);
 	offset = dissect_rpc_uint64(tvb, tree, hf_glusterfs_id, offset);
-	/* FIXME: hf_glusterfs_flag are flags, see 'man 2 statvfs' */
-	offset = dissect_rpc_uint64(tvb, tree, hf_glusterfs_flag, offset);
+
+	/* hf_glusterfs_mnt_flags should be FT_UINT64, but that does not work
+	 * with bitmasks, only the lower 32 bits are used anyway. */
+	if (tree)
+		proto_tree_add_bitmask(tree, tvb, offset + 4,
+			hf_glusterfs_mnt_flags, ett_glusterfs_mnt_flags,
+			flag_bits, FALSE);
+	offset += 8;
+
 	offset = dissect_rpc_uint64(tvb, tree, hf_glusterfs_namemax, offset);
 
 	return offset;
@@ -2621,50 +2657,116 @@ proto_register_glusterfs(void)
 				NULL, 0, NULL, HFILL }
 		},
 
-		/* FIXME: these statfs fields need a better name*/
+		/* statvfs descriptions from 'man 2 statvfs' on Linix */
 		{ &hf_glusterfs_bsize,
-			{ "bsize", "glusterfs.statfs.bsize", FT_UINT64, BASE_DEC,
-				NULL, 0, NULL, HFILL }
+			{ "File system block size", "glusterfs.statfs.bsize",
+				FT_UINT64, BASE_DEC, NULL, 0, NULL, HFILL }
 		},
 		{ &hf_glusterfs_frsize,
-			{ "frsize", "glusterfs.statfs.frsize", FT_UINT64, BASE_DEC,
-				NULL, 0, NULL, HFILL }
+			{ "Fragment size", "glusterfs.statfs.frsize",
+				FT_UINT64, BASE_DEC, NULL, 0, NULL, HFILL }
 		},
 		{ &hf_glusterfs_blocks,
-			{ "blocks", "glusterfs.statfs.blocks", FT_UINT64, BASE_DEC,
+			{ "Size of fs in f_frsize units",
+				"glusterfs.statfs.blocks", FT_UINT64, BASE_DEC,
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_glusterfs_bfree,
-			{ "bfree", "glusterfs.statfs.bfree", FT_UINT64, BASE_DEC,
-				NULL, 0, NULL, HFILL }
+			{ "# free blocks", "glusterfs.statfs.bfree", FT_UINT64,
+				BASE_DEC, NULL, 0, NULL, HFILL }
 		},
 		{ &hf_glusterfs_bavail,
-			{ "bavail", "glusterfs.statfs.bavail", FT_UINT64, BASE_DEC,
+			{ "# free blocks for non-root",
+				"glusterfs.statfs.bavail", FT_UINT64, BASE_DEC,
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_glusterfs_files,
-			{ "files", "glusterfs.statfs.files", FT_UINT64, BASE_DEC,
-				NULL, 0, NULL, HFILL }
+			{ "# inodes", "glusterfs.statfs.files", FT_UINT64,
+				BASE_DEC, NULL, 0, NULL, HFILL }
 		},
 		{ &hf_glusterfs_ffree,
-			{ "ffree", "glusterfs.statfs.ffree", FT_UINT64, BASE_DEC,
-				NULL, 0, NULL, HFILL }
+			{ "# free inodes", "glusterfs.statfs.ffree", FT_UINT64,
+				BASE_DEC, NULL, 0, NULL, HFILL }
 		},
 		{ &hf_glusterfs_favail,
-			{ "favail", "glusterfs.statfs.favail", FT_UINT64, BASE_DEC,
+			{ "# free inodes for non-root",
+				"glusterfs.statfs.favail", FT_UINT64, BASE_DEC,
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_glusterfs_id,
-			{ "fsid", "glusterfs.statfs.fsid", FT_UINT64, BASE_HEX,
-				NULL, 0, NULL, HFILL }
+			{ "File system ID", "glusterfs.statfs.fsid", FT_UINT64,
+				BASE_HEX, NULL, 0, NULL, HFILL }
 		},
-		{ &hf_glusterfs_flag,
-			{ "flag", "glusterfs.statfs.flag", FT_UINT64, BASE_HEX,
-				NULL, 0, NULL, HFILL }
+		{ &hf_glusterfs_mnt_flags,
+			{ "Mount flags", "glusterfs.statfs.flags", FT_UINT32,
+				BASE_HEX, NULL, 0, NULL, HFILL }
+		},
+		/* ST_* flags from /usr/include/bits/statvfs.h */
+		{ &hf_glusterfs_mnt_flag_rdonly,
+			{ "ST_RDONLY", "glusterfs.statfs.flag.rdonly",
+				FT_BOOLEAN, 32, TFS(&tfs_set_notset), 1, NULL,
+				HFILL }
+		},
+		{ &hf_glusterfs_mnt_flag_nosuid,
+			{ "ST_NOSUID", "glusterfs.statfs.flag.nosuid",
+				FT_BOOLEAN, 32, TFS(&tfs_set_notset), 2, NULL,
+				HFILL }
+		},
+		{ &hf_glusterfs_mnt_flag_nodev,
+			{ "ST_NODEV", "glusterfs.statfs.flag.nodev",
+				FT_BOOLEAN, 32, TFS(&tfs_set_notset), 4, NULL,
+				HFILL }
+		},
+		{ &hf_glusterfs_mnt_flag_noexec,
+			{ "ST_EXEC", "glusterfs.statfs.flag.noexec",
+				FT_BOOLEAN, 32, TFS(&tfs_set_notset), 8, NULL,
+				HFILL }
+		},
+		{ &hf_glusterfs_mnt_flag_synchronous,
+			{ "ST_SYNCHRONOUS",
+				"glusterfs.statfs.flag.synchronous",
+				FT_BOOLEAN, 32, TFS(&tfs_set_notset), 16, NULL,
+				HFILL }
+		},
+		{ &hf_glusterfs_mnt_flag_mandlock,
+			{ "ST_MANDLOCK", "glusterfs.statfs.flag.mandlock",
+				FT_BOOLEAN, 32, TFS(&tfs_set_notset), 64, NULL,
+				HFILL }
+		},
+		{ &hf_glusterfs_mnt_flag_write,
+			{ "ST_WRITE", "glusterfs.statfs.flag.write",
+				FT_BOOLEAN, 32, TFS(&tfs_set_notset), 128,
+				NULL, HFILL }
+		},
+		{ &hf_glusterfs_mnt_flag_append,
+			{ "ST_APPEND", "glusterfs.statfs.flag.append",
+				FT_BOOLEAN, 32, TFS(&tfs_set_notset), 256,
+				NULL, HFILL }
+		},
+		{ &hf_glusterfs_mnt_flag_immutable,
+			{ "ST_IMMUTABLE", "glusterfs.statfs.flag.immutable",
+				FT_BOOLEAN, 32, TFS(&tfs_set_notset), 512,
+				NULL, HFILL }
+		},
+		{ &hf_glusterfs_mnt_flag_noatime,
+			{ "ST_NOATIME", "glusterfs.statfs.flag.noatime",
+				FT_BOOLEAN, 32, TFS(&tfs_set_notset), 1024,
+				NULL, HFILL }
+		},
+		{ &hf_glusterfs_mnt_flag_nodiratime,
+			{ "ST_NODIRATIME", "glusterfs.statfs.flag.nodiratime",
+				FT_BOOLEAN, 32, TFS(&tfs_set_notset), 2048,
+				NULL, HFILL }
+		},
+		{ &hf_glusterfs_mnt_flag_relatime,
+			{ "ST_RELATIME", "glusterfs.statfs.flag.relatime",
+				FT_BOOLEAN, 32, TFS(&tfs_set_notset), 4096,
+				NULL, HFILL }
 		},
 		{ &hf_glusterfs_namemax,
-			{ "namemax", "glusterfs.statfs.namemax", FT_UINT64, BASE_DEC,
-				NULL, 0, NULL, HFILL }
+			{ "Maximum filename length",
+				"glusterfs.statfs.namemax", FT_UINT64,
+				BASE_DEC, NULL, 0, NULL, HFILL }
 		},
 		{ &hf_glusterfs_setattr_valid,
 			{ "valid", "glusterfs.setattr.valid", FT_UINT32, BASE_HEX,
@@ -2701,6 +2803,7 @@ proto_register_glusterfs(void)
 	static gint *ett[] = {
 		&ett_glusterfs,
 		&ett_glusterfs_flags,
+		&ett_glusterfs_mnt_flags,
 		&ett_glusterfs_mode,
 		&ett_glusterfs_entry,
 		&ett_glusterfs_iatt,
