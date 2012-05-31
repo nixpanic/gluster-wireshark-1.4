@@ -143,7 +143,6 @@ static gint hf_glusterfs_flock_start = -1;
 static gint hf_glusterfs_flock_len = -1;
 static gint hf_glusterfs_flock_pid = -1;
 static gint hf_glusterfs_flock_owner = -1;
-static gint hf_glusterfs_2_flock_owner = -1;
 
 /* statfs */
 static gint hf_glusterfs_bsize = -1;
@@ -311,7 +310,7 @@ glusterfs_rpc_dissect_gf_flock(proto_tree *tree, tvbuff_t *tvb, int offset)
 	offset = dissect_rpc_uint32(tvb, tree, hf_glusterfs_flock_pid, offset);
 
 	if (tree)
-		proto_tree_add_item(tree, hf_glusterfs_2_flock_owner, tvb,
+		proto_tree_add_item(tree, hf_glusterfs_flock_owner, tvb,
 							offset, 8, ENC_NA);
 	offset += 8;
 
@@ -333,7 +332,7 @@ glusterfs_rpc_dissect_gf_2_flock(proto_tree *tree, tvbuff_t *tvb, int offset)
 	offset += 4;
 
 	if (tree)
-		proto_tree_add_item(tree, hf_glusterfs_2_flock_owner, tvb,
+		proto_tree_add_item(tree, hf_glusterfs_flock_owner, tvb,
 							offset, len, ENC_NA);
 	offset += len;
 
@@ -2618,10 +2617,6 @@ proto_register_glusterfs(void)
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_glusterfs_flock_owner,
-			{ "ia_flock_owner", "glusterfs.flock.owner", FT_BYTES, BASE_NONE,
-				NULL, 0, NULL, HFILL }
-		},
-		{ &hf_glusterfs_2_flock_owner,
 			{ "ia_flock_owner", "glusterfs.flock.owner", FT_BYTES, BASE_NONE,
 				NULL, 0, NULL, HFILL }
 		},
