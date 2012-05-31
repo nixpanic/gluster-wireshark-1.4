@@ -378,6 +378,12 @@ enum gluster_lk_types {
 	GF_LK_EOL
 };
 
+enum gluster_lk_whence {
+	SEEK_SET = 0,
+	SEEK_CUR,
+	SEEK_END
+};
+
 /* based on enum glusterd_op_ from xlators/mgmt/glusterd/src/glusterd.h */
 enum glusterd_ops {
 	GD_OP_NONE = 0,
