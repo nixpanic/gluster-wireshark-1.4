@@ -99,6 +99,7 @@ static gint hf_glusterfs_flags_nonblock = -1;
 static gint hf_glusterfs_flags_ndelay = -1;
 static gint hf_glusterfs_flags_sync = -1;
 static gint hf_glusterfs_flags_trunc = -1;
+static gint hf_glusterfs_flags_unused = -1;
 
 /* access modes  */
 static gint hf_glusterfs_mode = -1;
@@ -210,7 +211,8 @@ glusterfs_rpc_dissect_gfid(proto_tree *tree, tvbuff_t *tvb, int hfindex, int off
 }
 
 static int
-glusterfs_rpc_dissect_mode(proto_tree *tree, tvbuff_t *tvb, int hfindex, int offset)
+glusterfs_rpc_dissect_mode(proto_tree *tree, tvbuff_t *tvb, int hfindex,
+								int offset)
 {
 	static const int *mode_bits[] = {
 		&hf_glusterfs_mode_suid,
@@ -229,7 +231,8 @@ glusterfs_rpc_dissect_mode(proto_tree *tree, tvbuff_t *tvb, int hfindex, int off
 	};
 
 	if (tree)
-		proto_tree_add_bitmask(tree, tvb, offset, hfindex, ett_glusterfs_mode, mode_bits, FALSE);
+		proto_tree_add_bitmask(tree, tvb, offset, hfindex,
+			ett_glusterfs_mode, mode_bits, ENC_LITTLE_ENDIAN);
 
 	offset += 4;
 	return offset;
@@ -371,11 +374,12 @@ glusterfs_rpc_dissect_flags(proto_tree *tree, tvbuff_t *tvb, int offset)
 		&hf_glusterfs_flags_nofollow,
 		&hf_glusterfs_flags_noatime,
 		&hf_glusterfs_flags_cloexec,
+		&hf_glusterfs_flags_unused,
 		NULL
 	};
 
 	if (tree) {
-		flag_tree = proto_tree_add_bitmask(tree, tvb, offset, hf_glusterfs_flags, ett_glusterfs_flags, flag_bits, FALSE);
+		flag_tree = proto_tree_add_bitmask(tree, tvb, offset, hf_glusterfs_flags, ett_glusterfs_flags, flag_bits, ENC_LITTLE_ENDIAN);
 
 		/* rdonly is TRUE only when no flags are set */
 		rdonly = (tvb_get_ntohl(tvb, offset) == 0);
@@ -435,7 +439,7 @@ glusterfs_rpc_dissect_statfs(proto_tree *tree, tvbuff_t *tvb, int offset)
 	if (tree)
 		proto_tree_add_bitmask(tree, tvb, offset + 4,
 			hf_glusterfs_mnt_flags, ett_glusterfs_mnt_flags,
-			flag_bits, FALSE);
+			flag_bits, ENC_LITTLE_ENDIAN);
 	offset += 8;
 
 	offset = dissect_rpc_uint64(tvb, tree, hf_glusterfs_namemax, offset);
@@ -1998,7 +2002,8 @@ proto_register_glusterfs(void)
 			{ "GlusterFS", "glusterfs.proc", FT_UINT32, BASE_DEC,
 				VALS(glusterfs3_1_fop_proc_vals), 0, NULL, HFILL }
 		},
-		/* fields used by multiple programs/procedures */
+		/* fields used by multiple programs/procedures and other
+		 * Gluster dissectors with gluster_dissect_common_reply() */
 		{ &hf_gluster_op_ret,
 			{ "Return value", "gluster.op_ret", FT_INT32, BASE_DEC,
 				NULL, 0, NULL, HFILL }
@@ -2162,6 +2167,10 @@ proto_register_glusterfs(void)
 		{ &hf_glusterfs_flags_trunc,
 			{ "O_TRUNC", "glusterfs.flags.trunc", FT_BOOLEAN, 32,
 				TFS(&tfs_set_notset), 00001000, NULL, HFILL }
+		},
+		{ &hf_glusterfs_flags_unused,
+			{ "Unused", "glusterfs.flags.unused", FT_BOOLEAN, 32,
+				TFS(&tfs_set_notset), 037774000074, NULL, HFILL }
 		},
 		/* access modes */
 		{ &hf_glusterfs_mode,
