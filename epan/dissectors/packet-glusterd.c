@@ -60,20 +60,21 @@ static gint hf_gd_mgmt_brick_2_proc = -1;
 static gint hf_glusterd_friend_proc = -1;
 
 /* fields used by multiple programs/procedures */
-static gint hf_gluster_dict = -1;
-static gint hf_gluster_op = -1;
-static gint hf_gluster_op_errstr = -1;
-static gint hf_gluster_uuid = -1;
-static gint hf_gluster_hostname = -1;
-static gint hf_gluster_port = -1;
-static gint hf_gluster_vols = -1;
-static gint hf_gluster_buf = -1;
-static gint hf_gluster_name = -1;
+static gint hf_glusterd_dict = -1;
+static gint hf_glusterd_op = -1;
+static gint hf_glusterd_op_errstr = -1;
+static gint hf_glusterd_uuid = -1;
+static gint hf_glusterd_hostname = -1;
+static gint hf_glusterd_port = -1;
+static gint hf_glusterd_vols = -1;
+static gint hf_glusterd_buf = -1;
+static gint hf_glusterd_name = -1;
 
 /* Initialize the subtree pointers */
 static gint ett_gd_mgmt = -1;
 static gint ett_gd_brick = -1;
 static gint ett_gd_friend = -1;
+
 /* the UUID is the same as a GlusterFS GFID, except its encoded per byte */
 static int
 gluster_gd_mgmt_dissect_uuid(tvbuff_t *tvb, proto_tree *tree, int hfindex, int offset)
@@ -131,9 +132,9 @@ gluster_gd_mgmt_probe_reply(tvbuff_t *tvb, int offset, packet_info *pinfo, proto
 {
 	gchar *hostname = NULL;
 
-	offset = gluster_gd_mgmt_dissect_uuid(tvb, tree, hf_gluster_uuid, offset);
-	offset = dissect_rpc_string(tvb, tree, hf_gluster_hostname, offset, &hostname);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_port, offset);
+	offset = gluster_gd_mgmt_dissect_uuid(tvb, tree, hf_glusterd_uuid, offset);
+	offset = dissect_rpc_string(tvb, tree, hf_glusterd_hostname, offset, &hostname);
+	offset = dissect_rpc_uint32(tvb, tree, hf_glusterd_port, offset);
 	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
 
 	return offset;
@@ -144,9 +145,9 @@ gluster_gd_mgmt_probe_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, pr
 {
 	gchar *hostname = NULL;
 
-	offset = gluster_gd_mgmt_dissect_uuid(tvb, tree, hf_gluster_uuid, offset);
-	offset = dissect_rpc_string(tvb, tree, hf_gluster_hostname, offset, &hostname);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_port, offset);
+	offset = gluster_gd_mgmt_dissect_uuid(tvb, tree, hf_glusterd_uuid, offset);
+	offset = dissect_rpc_string(tvb, tree, hf_glusterd_hostname, offset, &hostname);
+	offset = dissect_rpc_uint32(tvb, tree, hf_glusterd_port, offset);
 
 	return offset;
 }
@@ -156,10 +157,10 @@ gluster_gd_mgmt_friend_add_reply(tvbuff_t *tvb, int offset, packet_info *pinfo, 
 {
 	gchar *hostname = NULL;
 
-	offset = gluster_gd_mgmt_dissect_uuid(tvb, tree, hf_gluster_uuid, offset);
-	offset = dissect_rpc_string(tvb, tree, hf_gluster_hostname, offset, &hostname);
+	offset = gluster_gd_mgmt_dissect_uuid(tvb, tree, hf_glusterd_uuid, offset);
+	offset = dissect_rpc_string(tvb, tree, hf_glusterd_hostname, offset, &hostname);
 	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_port, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_glusterd_port, offset);
 
 	return offset;
 }
@@ -169,10 +170,10 @@ gluster_gd_mgmt_friend_add_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U
 {
 	gchar *hostname = NULL;
 
-	offset = gluster_gd_mgmt_dissect_uuid(tvb, tree, hf_gluster_uuid, offset);
-	offset = dissect_rpc_string(tvb, tree, hf_gluster_hostname, offset, &hostname);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_port, offset);
-	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_vols, offset);
+	offset = gluster_gd_mgmt_dissect_uuid(tvb, tree, hf_glusterd_uuid, offset);
+	offset = dissect_rpc_string(tvb, tree, hf_glusterd_hostname, offset, &hostname);
+	offset = dissect_rpc_uint32(tvb, tree, hf_glusterd_port, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_glusterd_vols, offset);
 
 	return offset;
 }
@@ -181,7 +182,7 @@ gluster_gd_mgmt_friend_add_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U
 static int
 gluster_gd_mgmt_cluster_lock_reply(tvbuff_t *tvb, int offset, packet_info *pinfo, proto_tree *tree)
 {
-	offset = gluster_gd_mgmt_dissect_uuid(tvb, tree, hf_gluster_uuid, offset);
+	offset = gluster_gd_mgmt_dissect_uuid(tvb, tree, hf_glusterd_uuid, offset);
 	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
 
 	return offset;
@@ -191,7 +192,7 @@ gluster_gd_mgmt_cluster_lock_reply(tvbuff_t *tvb, int offset, packet_info *pinfo
 static int
 gluster_gd_mgmt_cluster_lock_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
 {
-	offset = gluster_gd_mgmt_dissect_uuid(tvb, tree, hf_gluster_uuid, offset);
+	offset = gluster_gd_mgmt_dissect_uuid(tvb, tree, hf_glusterd_uuid, offset);
 
 	return offset;
 }
@@ -201,19 +202,19 @@ gluster_gd_mgmt_stage_op_reply(tvbuff_t *tvb, int offset, packet_info *pinfo, pr
 {
 	gchar *errstr = NULL;
 
-	offset = gluster_gd_mgmt_dissect_uuid(tvb, tree, hf_gluster_uuid, offset);
+	offset = gluster_gd_mgmt_dissect_uuid(tvb, tree, hf_glusterd_uuid, offset);
 	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
-	offset = dissect_rpc_string(tvb, tree, hf_gluster_op_errstr, offset, &errstr);
-	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+	offset = dissect_rpc_string(tvb, tree, hf_glusterd_op_errstr, offset, &errstr);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_glusterd_dict, offset);
 	return offset;
 }
 
 static int
 gluster_gd_mgmt_stage_op_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
 {
-	offset = gluster_gd_mgmt_dissect_uuid(tvb, tree, hf_gluster_uuid, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op, offset);
-	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+	offset = gluster_gd_mgmt_dissect_uuid(tvb, tree, hf_glusterd_uuid, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_glusterd_op, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_glusterd_dict, offset);
 
 	return offset;
 }
@@ -223,19 +224,19 @@ gluster_gd_mgmt_commit_op_reply(tvbuff_t *tvb, int offset, packet_info *pinfo, p
 {
 	gchar *errstr = NULL;
 
-	offset = gluster_gd_mgmt_dissect_uuid(tvb, tree, hf_gluster_uuid, offset);
+	offset = gluster_gd_mgmt_dissect_uuid(tvb, tree, hf_glusterd_uuid, offset);
 	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
-	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_buf, offset);
-	offset = dissect_rpc_string(tvb, tree, hf_gluster_op_errstr, offset, &errstr);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_glusterd_buf, offset);
+	offset = dissect_rpc_string(tvb, tree, hf_glusterd_op_errstr, offset, &errstr);
 	return offset;
 }
 
 static int
 gluster_gd_mgmt_commit_op_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
 {
-	offset = gluster_gd_mgmt_dissect_uuid(tvb, tree, hf_gluster_uuid, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op, offset);
-	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_buf, offset);
+	offset = gluster_gd_mgmt_dissect_uuid(tvb, tree, hf_glusterd_uuid, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_glusterd_op, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_glusterd_buf, offset);
 
 	return offset;
 }
@@ -243,8 +244,8 @@ gluster_gd_mgmt_commit_op_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U_
 static int
 gluster_gd_mgmt_friend_update_reply(tvbuff_t *tvb, int offset, packet_info *pinfo, proto_tree *tree)
 {
-	offset = gluster_gd_mgmt_dissect_uuid(tvb, tree, hf_gluster_uuid, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op, offset);
+	offset = gluster_gd_mgmt_dissect_uuid(tvb, tree, hf_glusterd_uuid, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_glusterd_op, offset);
 	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
 
 	return offset;
@@ -253,9 +254,9 @@ gluster_gd_mgmt_friend_update_reply(tvbuff_t *tvb, int offset, packet_info *pinf
 static int
 gluster_gd_mgmt_friend_update_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
 {
-	offset = gluster_gd_mgmt_dissect_uuid(tvb, tree, hf_gluster_uuid, offset);
-	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_vols, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_port, offset);
+	offset = gluster_gd_mgmt_dissect_uuid(tvb, tree, hf_glusterd_uuid, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_glusterd_vols, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_glusterd_port, offset);
 
 	return offset;
 }
@@ -264,7 +265,7 @@ gluster_gd_mgmt_friend_update_call(tvbuff_t *tvb, int offset, packet_info *pinfo
 static int
 glusterd_mgmt_2_cluster_lock_reply(tvbuff_t *tvb, int offset, packet_info *pinfo, proto_tree *tree)
 {
-	offset = gluster_gd_mgmt_dissect_uuid(tvb, tree, hf_gluster_uuid, offset);
+	offset = gluster_gd_mgmt_dissect_uuid(tvb, tree, hf_glusterd_uuid, offset);
 	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
 
 	return offset;
@@ -274,7 +275,7 @@ glusterd_mgmt_2_cluster_lock_reply(tvbuff_t *tvb, int offset, packet_info *pinfo
 static int
 glusterd_mgmt_2_cluster_lock_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
 {
-	offset = gluster_gd_mgmt_dissect_uuid(tvb, tree, hf_gluster_uuid, offset);
+	offset = gluster_gd_mgmt_dissect_uuid(tvb, tree, hf_glusterd_uuid, offset);
 
 	return offset;
 }
@@ -284,11 +285,11 @@ glusterd_mgmt_2_stage_op_reply(tvbuff_t *tvb, int offset, packet_info *pinfo, pr
 {
 	gchar *errstr = NULL;
 
-	offset = gluster_gd_mgmt_dissect_uuid(tvb, tree, hf_gluster_uuid, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op, offset);
+	offset = gluster_gd_mgmt_dissect_uuid(tvb, tree, hf_glusterd_uuid, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_glusterd_op, offset);
 	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
-	offset = dissect_rpc_string(tvb, tree, hf_gluster_op_errstr, offset, &errstr);
-	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+	offset = dissect_rpc_string(tvb, tree, hf_glusterd_op_errstr, offset, &errstr);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_glusterd_dict, offset);
 
 	return offset;
 }
@@ -296,9 +297,9 @@ glusterd_mgmt_2_stage_op_reply(tvbuff_t *tvb, int offset, packet_info *pinfo, pr
 static int
 glusterd_mgmt_2_stage_op_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
 {
-	offset = gluster_gd_mgmt_dissect_uuid(tvb, tree, hf_gluster_uuid, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op, offset);
-	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+	offset = gluster_gd_mgmt_dissect_uuid(tvb, tree, hf_glusterd_uuid, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_glusterd_op, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_glusterd_dict, offset);
 
 	return offset;
 }
@@ -308,10 +309,10 @@ glusterd_mgmt_2_commit_op_reply(tvbuff_t *tvb, int offset, packet_info *pinfo, p
 {
 	gchar *errstr = NULL;
 
-	offset = gluster_gd_mgmt_dissect_uuid(tvb, tree, hf_gluster_uuid, offset);
+	offset = gluster_gd_mgmt_dissect_uuid(tvb, tree, hf_glusterd_uuid, offset);
 	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
-	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_buf, offset);
-	offset = dissect_rpc_string(tvb, tree, hf_gluster_op_errstr, offset, &errstr);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_glusterd_buf, offset);
+	offset = dissect_rpc_string(tvb, tree, hf_glusterd_op_errstr, offset, &errstr);
 
 	return offset;
 }
@@ -319,9 +320,9 @@ glusterd_mgmt_2_commit_op_reply(tvbuff_t *tvb, int offset, packet_info *pinfo, p
 static int
 glusterd_mgmt_2_commit_op_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, proto_tree *tree)
 {
-	offset = gluster_gd_mgmt_dissect_uuid(tvb, tree, hf_gluster_uuid, offset);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op, offset);
-	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_buf, offset);
+	offset = gluster_gd_mgmt_dissect_uuid(tvb, tree, hf_glusterd_uuid, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_glusterd_op, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_glusterd_buf, offset);
 
 	return offset;
 }
@@ -334,8 +335,8 @@ glusterd_brick_2_common_reply(tvbuff_t *tvb, int offset, packet_info *pinfo, pro
 	gchar *errstr = NULL;
 
 	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
-	offset = dissect_rpc_string(tvb, tree, hf_gluster_op_errstr, offset, &errstr);
-	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+	offset = dissect_rpc_string(tvb, tree, hf_glusterd_op_errstr, offset, &errstr);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_glusterd_dict, offset);
 
 	return offset;
 }
@@ -345,9 +346,9 @@ glusterd_brick_2_common_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, 
 {
 	gchar *name = NULL;
 
-	offset = dissect_rpc_string(tvb, tree, hf_gluster_name, offset, &name);
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_op, offset);
-	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_dict, offset);
+	offset = dissect_rpc_string(tvb, tree, hf_glusterd_name, offset, &name);
+	offset = dissect_rpc_uint32(tvb, tree, hf_glusterd_op, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_glusterd_dict, offset);
 
 	return offset;
 }
@@ -358,197 +359,190 @@ glusterd_brick_2_common_call(tvbuff_t *tvb, int offset, packet_info *pinfo _U_, 
  * - xlators/mgmt/glusterd/src/glusterd-rpc-ops.c: "glusterd clnt mgmt"
  */
 static const vsff gd_mgmt_proc[] = {
-	{ GD_MGMT_NULL, "NULL", NULL, NULL},
+	{ GD_MGMT_NULL, "NULL", NULL, NULL },
 	{
-		GD_MGMT_PROBE_QUERY, "GD_MGMT_PROBE_QUERY",
+		GD_MGMT_PROBE_QUERY, "PROBE_QUERY",
 		gluster_gd_mgmt_probe_call, gluster_gd_mgmt_probe_reply
 	},
 	{
-		GD_MGMT_FRIEND_ADD, "GD_MGMT_FRIEND_ADD",
+		GD_MGMT_FRIEND_ADD, "FRIEND_ADD",
 		gluster_gd_mgmt_friend_add_call, gluster_gd_mgmt_friend_add_reply
 	},
 	{
-		GD_MGMT_CLUSTER_LOCK, "GD_MGMT_CLUSTER_LOCK",
+		GD_MGMT_CLUSTER_LOCK, "CLUSTER_LOCK",
 		gluster_gd_mgmt_cluster_lock_call, gluster_gd_mgmt_cluster_lock_reply
 	},
 	{
-		GD_MGMT_CLUSTER_UNLOCK, "GD_MGMT_CLUSTER_UNLOCK",
+		GD_MGMT_CLUSTER_UNLOCK, "CLUSTER_UNLOCK",
 		/* UNLOCK seems to be the same a LOCK, re-use the function */
 		gluster_gd_mgmt_cluster_lock_call, gluster_gd_mgmt_cluster_lock_reply
 	},
 	{
-		GD_MGMT_STAGE_OP, "GD_MGMT_STAGE_OP",
+		GD_MGMT_STAGE_OP, "STAGE_OP",
 		gluster_gd_mgmt_stage_op_call, gluster_gd_mgmt_stage_op_reply
 	},
 	{
-		GD_MGMT_COMMIT_OP, "GD_MGMT_COMMIT_OP",
+		GD_MGMT_COMMIT_OP, "COMMIT_OP",
 		gluster_gd_mgmt_commit_op_call, gluster_gd_mgmt_commit_op_reply
 	},
-	{ GD_MGMT_FRIEND_REMOVE, "GD_MGMT_FRIEND_REMOVE", NULL, NULL},
+	{ GD_MGMT_FRIEND_REMOVE, "FRIEND_REMOVE", NULL, NULL},
 	{
-		GD_MGMT_FRIEND_UPDATE, "GD_MGMT_FRIEND_UPDATE",
+		GD_MGMT_FRIEND_UPDATE, "FRIEND_UPDATE",
 		gluster_gd_mgmt_friend_update_call, gluster_gd_mgmt_friend_update_reply
 	},
-	{ GD_MGMT_CLI_PROBE, "GD_MGMT_CLI_PROBE", NULL, NULL},
-	{ GD_MGMT_CLI_DEPROBE, "GD_MGMT_CLI_DEPROBE", NULL, NULL},
-	{ GD_MGMT_CLI_LIST_FRIENDS, "GD_MGMT_CLI_LIST_FRIENDS", NULL, NULL},
-	{ GD_MGMT_CLI_CREATE_VOLUME, "GD_MGMT_CLI_CREATE_VOLUME", NULL, NULL},
-	{ GD_MGMT_CLI_GET_VOLUME, "GD_MGMT_CLI_GET_VOLUME", NULL, NULL},
-	{ GD_MGMT_CLI_DELETE_VOLUME, "GD_MGMT_CLI_DELETE_VOLUME", NULL, NULL},
-	{ GD_MGMT_CLI_START_VOLUME, "GD_MGMT_CLI_START_VOLUME", NULL, NULL},
-	{ GD_MGMT_CLI_STOP_VOLUME, "GD_MGMT_CLI_STOP_VOLUME", NULL, NULL},
-	{ GD_MGMT_CLI_RENAME_VOLUME, "GD_MGMT_CLI_RENAME_VOLUME", NULL, NULL},
-	{ GD_MGMT_CLI_DEFRAG_VOLUME, "GD_MGMT_CLI_DEFRAG_VOLUME", NULL, NULL},
-	{ GD_MGMT_CLI_SET_VOLUME, "GD_MGMT_CLI_DEFRAG_VOLUME", NULL, NULL},
-	{ GD_MGMT_CLI_ADD_BRICK, "GD_MGMT_CLI_ADD_BRICK", NULL, NULL},
-	{ GD_MGMT_CLI_REMOVE_BRICK, "GD_MGMT_CLI_REMOVE_BRICK", NULL, NULL},
-	{ GD_MGMT_CLI_REPLACE_BRICK, "GD_MGMT_CLI_REPLACE_BRICK", NULL, NULL},
-	{ GD_MGMT_CLI_LOG_FILENAME, "GD_MGMT_CLI_LOG_FILENAME", NULL, NULL},
-	{ GD_MGMT_CLI_LOG_LOCATE, "GD_MGMT_CLI_LOG_LOCATE", NULL, NULL},
-	{ GD_MGMT_CLI_LOG_ROTATE, "GD_MGMT_CLI_LOG_ROTATE", NULL, NULL},
-	{ GD_MGMT_CLI_SYNC_VOLUME, "GD_MGMT_CLI_SYNC_VOLUME", NULL, NULL},
-	{ GD_MGMT_CLI_RESET_VOLUME, "GD_MGMT_CLI_RESET_VOLUME", NULL, NULL},
-	{ GD_MGMT_CLI_FSM_LOG, "GD_MGMT_CLI_FSM_LOG", NULL, NULL},
-	{ GD_MGMT_CLI_GSYNC_SET, "GD_MGMT_CLI_GSYNC_SET", NULL, NULL},
-	{ GD_MGMT_CLI_PROFILE_VOLUME, "GD_MGMT_CLI_PROFILE_VOLUME", NULL, NULL},
+	{ GD_MGMT_CLI_PROBE, "CLI_PROBE", NULL, NULL},
+	{ GD_MGMT_CLI_DEPROBE, "CLI_DEPROBE", NULL, NULL},
+	{ GD_MGMT_CLI_LIST_FRIENDS, "CLI_LIST_FRIENDS", NULL, NULL},
+	{ GD_MGMT_CLI_CREATE_VOLUME, "CLI_CREATE_VOLUME", NULL, NULL},
+	{ GD_MGMT_CLI_GET_VOLUME, "CLI_GET_VOLUME", NULL, NULL},
+	{ GD_MGMT_CLI_DELETE_VOLUME, "CLI_DELETE_VOLUME", NULL, NULL},
+	{ GD_MGMT_CLI_START_VOLUME, "CLI_START_VOLUME", NULL, NULL},
+	{ GD_MGMT_CLI_STOP_VOLUME, "CLI_STOP_VOLUME", NULL, NULL},
+	{ GD_MGMT_CLI_RENAME_VOLUME, "CLI_RENAME_VOLUME", NULL, NULL},
+	{ GD_MGMT_CLI_DEFRAG_VOLUME, "CLI_DEFRAG_VOLUME", NULL, NULL},
+	{ GD_MGMT_CLI_SET_VOLUME, "CLI_DEFRAG_VOLUME", NULL, NULL},
+	{ GD_MGMT_CLI_ADD_BRICK, "CLI_ADD_BRICK", NULL, NULL},
+	{ GD_MGMT_CLI_REMOVE_BRICK, "CLI_REMOVE_BRICK", NULL, NULL},
+	{ GD_MGMT_CLI_REPLACE_BRICK, "CLI_REPLACE_BRICK", NULL, NULL},
+	{ GD_MGMT_CLI_LOG_FILENAME, "CLI_LOG_FILENAME", NULL, NULL},
+	{ GD_MGMT_CLI_LOG_LOCATE, "CLI_LOG_LOCATE", NULL, NULL},
+	{ GD_MGMT_CLI_LOG_ROTATE, "CLI_LOG_ROTATE", NULL, NULL},
+	{ GD_MGMT_CLI_SYNC_VOLUME, "CLI_SYNC_VOLUME", NULL, NULL},
+	{ GD_MGMT_CLI_RESET_VOLUME, "CLI_RESET_VOLUME", NULL, NULL},
+	{ GD_MGMT_CLI_FSM_LOG, "CLI_FSM_LOG", NULL, NULL},
+	{ GD_MGMT_CLI_GSYNC_SET, "CLI_GSYNC_SET", NULL, NULL},
+	{ GD_MGMT_CLI_PROFILE_VOLUME, "CLI_PROFILE_VOLUME", NULL, NULL},
 	{ GD_MGMT_BRICK_OP, "BRICK_OP", NULL, NULL},
-	{ GD_MGMT_CLI_LOG_LEVEL, "GD_MGMT_CLI_LOG_LEVEL", NULL, NULL},
-	{ GD_MGMT_CLI_STATUS_VOLUME, "GD_MGMT_CLI_STATUS_VOLUME", NULL, NULL},
-	{ GD_MGMT_MAXVALUE, "GD_MGMT_MAXVALUE", NULL, NULL},
+	{ GD_MGMT_CLI_LOG_LEVEL, "CLI_LOG_LEVEL", NULL, NULL},
+	{ GD_MGMT_CLI_STATUS_VOLUME, "CLI_STATUS_VOLUME", NULL, NULL},
 	{ 0, NULL, NULL, NULL}
 };
 
 static const vsff gd_mgmt_2_proc[] = {
 	{ GLUSTERD_MGMT_2_NULL, "NULL", NULL, NULL},
 	{
-		GLUSTERD_MGMT_2_CLUSTER_LOCK, "GD_MGMT_CLUSTER_LOCK",
+		GLUSTERD_MGMT_2_CLUSTER_LOCK, "CLUSTER_LOCK",
 		glusterd_mgmt_2_cluster_lock_call, glusterd_mgmt_2_cluster_lock_reply
 	},
 	{
-		GLUSTERD_MGMT_2_CLUSTER_UNLOCK, "GD_MGMT_CLUSTER_UNLOCK",
+		GLUSTERD_MGMT_2_CLUSTER_UNLOCK, "CLUSTER_UNLOCK",
 		/* UNLOCK seems to be the same a LOCK, re-use the function */
 		glusterd_mgmt_2_cluster_lock_call, glusterd_mgmt_2_cluster_lock_reply
 	},
 	{
-		GLUSTERD_MGMT_2_STAGE_OP, "GD_MGMT_STAGE_OP",
+		GLUSTERD_MGMT_2_STAGE_OP, "STAGE_OP",
 		glusterd_mgmt_2_stage_op_call, glusterd_mgmt_2_stage_op_reply
 	},
 	{
-		GLUSTERD_MGMT_2_COMMIT_OP, "GD_MGMT_COMMIT_OP",
+		GLUSTERD_MGMT_2_COMMIT_OP, "COMMIT_OP",
 		glusterd_mgmt_2_commit_op_call, glusterd_mgmt_2_commit_op_reply
 	},
-	{ GLUSTERD_MGMT_2_MAXVALUE, "GD_MGMT_MAXVALUE", NULL, NULL},
 	{ 0, NULL, NULL, NULL}
 };
 
 static const vsff gd_mgmt_brick_2_proc[] = {
-	{ GLUSTERD_2_BRICK_NULL, "GLUSTERD_2_BRICK_NULL", NULL , NULL },    /* 0 */
+	{ GLUSTERD_2_BRICK_NULL, "NULL", NULL , NULL },    /* 0 */
 	{
-		GLUSTERD_2_BRICK_TERMINATE, "GLUSTERD_2_BRICK_TERMINATE",
+		GLUSTERD_2_BRICK_TERMINATE, "TERMINATE",
 		glusterd_brick_2_common_call, glusterd_brick_2_common_reply
 	},
-        {
-		GLUSTERD_2_BRICK_XLATOR_INFO, "GLUSTERD_2_BRICK_XLATOR_INFO",
+	{
+		GLUSTERD_2_BRICK_XLATOR_INFO, "XLATOR_INFO",
  		glusterd_brick_2_common_call, glusterd_brick_2_common_reply
 	},
-        {
-		GLUSTERD_2_BRICK_XLATOR_OP, "GLUSTERD_2_BRICK_XLATOR_OP" ,
+	{
+		GLUSTERD_2_BRICK_XLATOR_OP, "XLATOR_OP" ,
 		glusterd_brick_2_common_call, glusterd_brick_2_common_reply
 	},
-        {
-		GLUSTERD_2_BRICK_STATUS, "GLUSTERD_2_BRICK_STATUS",
+	{
+		GLUSTERD_2_BRICK_STATUS, "STATUS",
 		glusterd_brick_2_common_call, glusterd_brick_2_common_reply
 	},
-        {
-		GLUSTERD_2_BRICK_OP, "GLUSTERD_2_BRICK_OP",
+	{
+		GLUSTERD_2_BRICK_OP, "OP",
 		glusterd_brick_2_common_call, glusterd_brick_2_common_reply
 	},
-        {
-		GLUSTERD_2_BRICK_XLATOR_DEFRAG, "GLUSTERD_2_BRICK_XLATOR_DEFRAG",
+	{
+		GLUSTERD_2_BRICK_XLATOR_DEFRAG, "XLATOR_DEFRAG",
 		glusterd_brick_2_common_call, glusterd_brick_2_common_reply
 	},
-        {
-		GLUSTERD_2_NODE_PROFILE, "GLUSTERD_2_NODE_PROFILE",
+	{
+		GLUSTERD_2_NODE_PROFILE, "NODE_PROFILE",
 		glusterd_brick_2_common_call, glusterd_brick_2_common_reply
 	},
-        {
-		GLUSTERD_2_NODE_STATUS, "GLUSTERD_2_NODE_PROFILE",
+	{
+		GLUSTERD_2_NODE_STATUS, "NODE_STATUS",
 		glusterd_brick_2_common_call, glusterd_brick_2_common_reply
 	},
-        { GLUSTERD_2_BRICK_MAXVALUE, "GLUSTERD_2_BRICK_MAXVALUE", NULL, NULL },
-        { 0, NULL, NULL, NULL }
+	{ 0, NULL, NULL, NULL }
 };
 
 static const vsff glusterd_friend_proc[] = {
 	{ GLUSTERD_FRIEND_NULL,"NULL" , NULL,NULL },
-	{ GLUSTERD_PROBE_QUERY, "GLUSTERD_PROBE_QUERY" , NULL , NULL },
-	{ GLUSTERD_FRIEND_ADD, "GLUSTERD_FRIEND_ADD" , NULL , NULL },
-	{ GLUSTERD_FRIEND_REMOVE,"GLUSTERD_FRIEND_REMOVE", NULL , NULL },
-	{ GLUSTERD_FRIEND_UPDATE,"GLUSTERD_FRIEND_UPDATE" , NULL , NULL },
-	{ GLUSTERD_FRIEND_MAXVALUE,"GLUSTERD_FRIEND_MAXVALUE", NULL , NULL },
+	{ GLUSTERD_PROBE_QUERY, "PROBE_QUERY" , NULL , NULL },
+	{ GLUSTERD_FRIEND_ADD, "ADD" , NULL , NULL },
+	{ GLUSTERD_FRIEND_REMOVE,"REMOVE", NULL , NULL },
+	{ GLUSTERD_FRIEND_UPDATE,"UPDATE" , NULL , NULL },
 	{ 0, NULL, NULL, NULL }
 };
 
 static const value_string gd_mgmt_proc_vals[] = {
 	{ GD_MGMT_NULL, "NULL" },
-	{ GD_MGMT_PROBE_QUERY, "GD_MGMT_PROBE_QUERY" },
-	{ GD_MGMT_FRIEND_ADD, "GD_MGMT_FRIEND_ADD" },
-	{ GD_MGMT_CLUSTER_LOCK, "GD_MGMT_CLUSTER_LOCK" },
-	{ GD_MGMT_CLUSTER_UNLOCK, "GD_MGMT_CLUSTER_UNLOCK" },
-	{ GD_MGMT_STAGE_OP, "GD_MGMT_STAGE_OP" },
-	{ GD_MGMT_COMMIT_OP, "GD_MGMT_COMMIT_OP" },
-	{ GD_MGMT_FRIEND_REMOVE, "GD_MGMT_FRIEND_REMOVE" },
-	{ GD_MGMT_FRIEND_UPDATE, "GD_MGMT_FRIEND_UPDATE" },
-	{ GD_MGMT_CLI_PROBE, "GD_MGMT_CLI_PROBE" },
-	{ GD_MGMT_CLI_DEPROBE, "GD_MGMT_CLI_DEPROBE" },
-	{ GD_MGMT_CLI_LIST_FRIENDS, "GD_MGMT_CLI_LIST_FRIENDS" },
-	{ GD_MGMT_CLI_CREATE_VOLUME, "GD_MGMT_CLI_CREATE_VOLUME" },
-	{ GD_MGMT_CLI_GET_VOLUME, "GD_MGMT_CLI_GET_VOLUME" },
-	{ GD_MGMT_CLI_DELETE_VOLUME, "GD_MGMT_CLI_DELETE_VOLUME" },
-	{ GD_MGMT_CLI_START_VOLUME, "GD_MGMT_CLI_START_VOLUME" },
-	{ GD_MGMT_CLI_STOP_VOLUME, "GD_MGMT_CLI_STOP_VOLUME" },
-	{ GD_MGMT_CLI_RENAME_VOLUME, "GD_MGMT_CLI_RENAME_VOLUME" },
-	{ GD_MGMT_CLI_DEFRAG_VOLUME, "GD_MGMT_CLI_DEFRAG_VOLUME" },
-	{ GD_MGMT_CLI_SET_VOLUME, "GD_MGMT_CLI_DEFRAG_VOLUME" },
-	{ GD_MGMT_CLI_ADD_BRICK, "GD_MGMT_CLI_ADD_BRICK" },
-	{ GD_MGMT_CLI_REMOVE_BRICK, "GD_MGMT_CLI_REMOVE_BRICK" },
-	{ GD_MGMT_CLI_REPLACE_BRICK, "GD_MGMT_CLI_REPLACE_BRICK" },
-	{ GD_MGMT_CLI_LOG_FILENAME, "GD_MGMT_CLI_LOG_FILENAME" },
-	{ GD_MGMT_CLI_LOG_LOCATE, "GD_MGMT_CLI_LOG_LOCATE" },
-	{ GD_MGMT_CLI_LOG_ROTATE, "GD_MGMT_CLI_LOG_ROTATE" },
-	{ GD_MGMT_CLI_SYNC_VOLUME, "GD_MGMT_CLI_SYNC_VOLUME" },
-	{ GD_MGMT_CLI_RESET_VOLUME, "GD_MGMT_CLI_RESET_VOLUME" },
-	{ GD_MGMT_CLI_FSM_LOG, "GD_MGMT_CLI_FSM_LOG" },
-	{ GD_MGMT_CLI_GSYNC_SET, "GD_MGMT_CLI_GSYNC_SET" },
-	{ GD_MGMT_CLI_PROFILE_VOLUME, "GD_MGMT_CLI_PROFILE_VOLUME" },
+	{ GD_MGMT_PROBE_QUERY, "PROBE_QUERY" },
+	{ GD_MGMT_FRIEND_ADD, "FRIEND_ADD" },
+	{ GD_MGMT_CLUSTER_LOCK, "CLUSTER_LOCK" },
+	{ GD_MGMT_CLUSTER_UNLOCK, "CLUSTER_UNLOCK" },
+	{ GD_MGMT_STAGE_OP, "STAGE_OP" },
+	{ GD_MGMT_COMMIT_OP, "COMMIT_OP" },
+	{ GD_MGMT_FRIEND_REMOVE, "FRIEND_REMOVE" },
+	{ GD_MGMT_FRIEND_UPDATE, "FRIEND_UPDATE" },
+	{ GD_MGMT_CLI_PROBE, "CLI_PROBE" },
+	{ GD_MGMT_CLI_DEPROBE, "CLI_DEPROBE" },
+	{ GD_MGMT_CLI_LIST_FRIENDS, "CLI_LIST_FRIENDS" },
+	{ GD_MGMT_CLI_CREATE_VOLUME, "CLI_CREATE_VOLUME" },
+	{ GD_MGMT_CLI_GET_VOLUME, "CLI_GET_VOLUME" },
+	{ GD_MGMT_CLI_DELETE_VOLUME, "CLI_DELETE_VOLUME" },
+	{ GD_MGMT_CLI_START_VOLUME, "CLI_START_VOLUME" },
+	{ GD_MGMT_CLI_STOP_VOLUME, "CLI_STOP_VOLUME" },
+	{ GD_MGMT_CLI_RENAME_VOLUME, "CLI_RENAME_VOLUME" },
+	{ GD_MGMT_CLI_DEFRAG_VOLUME, "CLI_DEFRAG_VOLUME" },
+	{ GD_MGMT_CLI_SET_VOLUME, "CLI_DEFRAG_VOLUME" },
+	{ GD_MGMT_CLI_ADD_BRICK, "CLI_ADD_BRICK" },
+	{ GD_MGMT_CLI_REMOVE_BRICK, "CLI_REMOVE_BRICK" },
+	{ GD_MGMT_CLI_REPLACE_BRICK, "CLI_REPLACE_BRICK" },
+	{ GD_MGMT_CLI_LOG_FILENAME, "CLI_LOG_FILENAME" },
+	{ GD_MGMT_CLI_LOG_LOCATE, "CLI_LOG_LOCATE" },
+	{ GD_MGMT_CLI_LOG_ROTATE, "CLI_LOG_ROTATE" },
+	{ GD_MGMT_CLI_SYNC_VOLUME, "CLI_SYNC_VOLUME" },
+	{ GD_MGMT_CLI_RESET_VOLUME, "CLI_RESET_VOLUME" },
+	{ GD_MGMT_CLI_FSM_LOG, "CLI_FSM_LOG" },
+	{ GD_MGMT_CLI_GSYNC_SET, "CLI_GSYNC_SET" },
+	{ GD_MGMT_CLI_PROFILE_VOLUME, "CLI_PROFILE_VOLUME" },
 	{ GD_MGMT_BRICK_OP, "BRICK_OP" },
-	{ GD_MGMT_CLI_LOG_LEVEL, "GD_MGMT_CLI_LOG_LEVEL" },
-	{ GD_MGMT_CLI_STATUS_VOLUME, "GD_MGMT_CLI_STATUS_VOLUME" },
-	{ GD_MGMT_MAXVALUE, "GD_MGMT_MAXVALUE" },
+	{ GD_MGMT_CLI_LOG_LEVEL, "CLI_LOG_LEVEL" },
+	{ GD_MGMT_CLI_STATUS_VOLUME, "CLI_STATUS_VOLUME" },
 	{ 0, NULL }
 };
 
 static const value_string gd_mgmt_2_proc_vals[] = {
-	{ GLUSTERD_MGMT_2_NULL , "GLUSTERD_MGMT_NULL" },
-	{ GLUSTERD_MGMT_2_CLUSTER_LOCK, "GLUSTERD_MGMT_CLUSTER_LOCK" },
-	{ GLUSTERD_MGMT_2_CLUSTER_UNLOCK, "GLUSTERD_MGMT_CLUSTER_UNLOCK" },
-	{ GLUSTERD_MGMT_2_STAGE_OP, "GLUSTERD_MGMT_STAGE_OP"},
+	{ GLUSTERD_MGMT_2_NULL , "NULL" },
+	{ GLUSTERD_MGMT_2_CLUSTER_LOCK, "CLUSTER_LOCK" },
+	{ GLUSTERD_MGMT_2_CLUSTER_UNLOCK, "CLUSTER_UNLOCK" },
+	{ GLUSTERD_MGMT_2_STAGE_OP, "STAGE_OP"},
 	{ GLUSTERD_MGMT_2_COMMIT_OP, " GLUSTERD_MGMT_COMMIT_OP"},
-	{ GLUSTERD_MGMT_2_MAXVALUE, "GLUSTERD_MGMT_MAXVALUE" },
 	{ 0, NULL }
 };
 
 static const value_string gd_mgmt_brick_2_proc_vals[] = {
-	{ GLUSTERD_2_BRICK_NULL,"GLUSTERD_2_BRICK_NULL" },    /* 0 */
-	{ GLUSTERD_2_BRICK_TERMINATE, "GLUSTERD_2_BRICK_TERMINATE" },
-	{ GLUSTERD_2_BRICK_XLATOR_INFO, "GLUSTERD_2_BRICK_XLATOR_INFO" },
-	{ GLUSTERD_2_BRICK_XLATOR_OP, "GLUSTERD_2_BRICK_XLATOR_OP" },
-	{ GLUSTERD_2_BRICK_STATUS, "GLUSTERD_2_BRICK_STATUS" },
-	{ GLUSTERD_2_BRICK_OP, "GLUSTERD_2_BRICK_OP" },
-	{ GLUSTERD_2_BRICK_XLATOR_DEFRAG, "GLUSTERD_2_BRICK_XLATOR_DEFRAG" },
+	{ GLUSTERD_2_BRICK_NULL,"NULL" },    /* 0 */
+	{ GLUSTERD_2_BRICK_TERMINATE, "TERMINATE" },
+	{ GLUSTERD_2_BRICK_XLATOR_INFO, "XLATOR_INFO" },
+	{ GLUSTERD_2_BRICK_XLATOR_OP, "XLATOR_OP" },
+	{ GLUSTERD_2_BRICK_STATUS, "STATUS" },
+	{ GLUSTERD_2_BRICK_OP, "OP" },
+	{ GLUSTERD_2_BRICK_XLATOR_DEFRAG, "XLATOR_DEFRAG" },
 	{ GLUSTERD_2_NODE_PROFILE, "GLUSTERD_2_NODE_PROFILE" },
 	{ GLUSTERD_2_NODE_STATUS, "GLUSTERD_2_NODE_PROFILE" },
-	{ GLUSTERD_2_BRICK_MAXVALUE, "GLUSTERD_2_BRICK_MAXVALUE" },
 	{ 0, NULL }
 };
 
@@ -583,11 +577,10 @@ static const value_string glusterd_op_vals[] = {
 
 static const value_string glusterd_friend_proc_vals[] = {
 	{ GLUSTERD_FRIEND_NULL, "NULL" },
-	{ GLUSTERD_PROBE_QUERY, "GLUSTERD_PROBE_QUERY" },
-	{ GLUSTERD_FRIEND_ADD, "GLUSTERD_FRIEND_ADD" },
-	{ GLUSTERD_FRIEND_REMOVE, "GLUSTERD_FRIEND_REMOVE" },
-	{ GLUSTERD_FRIEND_UPDATE, "GLUSTERD_FRIEND_UPDATE" },
-	{ GLUSTERD_FRIEND_MAXVALUE, "GLUSTERD_FRIEND_UMAXVALUE" },
+	{ GLUSTERD_PROBE_QUERY, "PROBE_QUERY" },
+	{ GLUSTERD_FRIEND_ADD, "ADD" },
+	{ GLUSTERD_FRIEND_REMOVE, "REMOVE" },
+	{ GLUSTERD_FRIEND_UPDATE, "UPDATE" },
 	{ 0, NULL }
 };
 
@@ -608,49 +601,49 @@ proto_register_gluster_gd_mgmt(void)
 				0, NULL, HFILL }
 		},
 		{ &hf_gd_mgmt_brick_2_proc,
-                        { "Gluster Daemon Brick Operations", "glusterd.brick.proc",
-                                FT_UINT32, BASE_DEC, VALS(gd_mgmt_brick_2_proc_vals),
-                                0, NULL, HFILL }
-                },
+			{ "Gluster Daemon Brick Operations", "glusterd.brick.proc",
+				FT_UINT32, BASE_DEC, VALS(gd_mgmt_brick_2_proc_vals),
+				0, NULL, HFILL }
+		},
 		{ &hf_glusterd_friend_proc ,
 			{ "Gluster Daemon Friend Operations", "glusterd.friend.proc",
 				FT_UINT32, BASE_DEC, VALS(glusterd_friend_proc_vals),
 				0, NULL, HFILL }
 		},
-		{ &hf_gluster_dict,
-			{ "Dict", "gluster.dict", FT_STRING, BASE_NONE,
+		{ &hf_glusterd_dict,
+			{ "Dict", "glusterd.dict", FT_STRING, BASE_NONE,
 				NULL, 0, NULL, HFILL }
 		},
-		{ &hf_gluster_op,
-			{ "Operation", "gluster.op", FT_UINT32, BASE_DEC,
+		{ &hf_glusterd_op,
+			{ "Operation", "glusterd.op", FT_UINT32, BASE_DEC,
 				VALS(glusterd_op_vals), 0, NULL, HFILL }
 		},
-		{ &hf_gluster_op_errstr,
-			{ "Error", "gluster.op_errstr", FT_STRING,
+		{ &hf_glusterd_op_errstr,
+			{ "Error", "glusterd.op_errstr", FT_STRING,
 				BASE_NONE, NULL, 0, NULL, HFILL }
 		},
-		{ &hf_gluster_uuid,
-			{ "UUID", "gluster.uuid", FT_BYTES,
+		{ &hf_glusterd_uuid,
+			{ "UUID", "glusterd.uuid", FT_BYTES,
 				BASE_NONE, NULL, 0, NULL, HFILL }
 		},
-		{ &hf_gluster_hostname,
-			{ "Hostname", "gluster.hostname", FT_STRING, BASE_NONE,
+		{ &hf_glusterd_hostname,
+			{ "Hostname", "glusterd.hostname", FT_STRING, BASE_NONE,
 				NULL, 0, NULL, HFILL }
 		},
-		{ &hf_gluster_port,
-			{ "Port", "gluster.port", FT_INT32, BASE_DEC,
+		{ &hf_glusterd_port,
+			{ "Port", "glusterd.port", FT_INT32, BASE_DEC,
 				NULL, 0, NULL, HFILL }
 		},
-		{ &hf_gluster_vols,
-			{ "Volumes", "gluster.vols", FT_STRING, BASE_NONE,
+		{ &hf_glusterd_vols,
+			{ "Volumes", "glusterd.vols", FT_STRING, BASE_NONE,
 				NULL, 0, NULL, HFILL }
 		},
-		{ &hf_gluster_buf,
-			{ "Buffer", "gluster.buffer", FT_STRING, BASE_NONE,
+		{ &hf_glusterd_buf,
+			{ "Buffer", "glusterd.buffer", FT_STRING, BASE_NONE,
 				NULL, 0, NULL, HFILL }
 		},
-		{ &hf_gluster_name,
-			{ "Name", "gluster.name", FT_STRING, BASE_NONE,
+		{ &hf_glusterd_name,
+			{ "Name", "glusterd.name", FT_STRING, BASE_NONE,
 				NULL, 0, NULL, HFILL }
 		}
 	};
