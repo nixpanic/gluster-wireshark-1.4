@@ -66,8 +66,8 @@ static gint ett_gluster_hndsk = -1;
 
 /* procedures for GLUSTER_HNDSK_PROGRAM */
 static int
-gluster_hndsk_setvolume_reply(tvbuff_t *tvb, int offset,
-				packet_info *pinfo _U_, proto_tree *tree)
+gluster_hndsk_setvolume_reply(tvbuff_t *tvb, int offset, packet_info *pinfo,
+							proto_tree *tree)
 {
 	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
 	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_hndsk_dict, offset);
@@ -83,8 +83,8 @@ gluster_hndsk_setvolume_call(tvbuff_t *tvb, int offset,
 }
 
 static int
-gluster_hndsk_2_setvolume_reply(tvbuff_t *tvb, int offset,
-				packet_info *pinfo _U_, proto_tree *tree)
+gluster_hndsk_2_setvolume_reply(tvbuff_t *tvb, int offset, packet_info *pinfo,
+							proto_tree *tree)
 {
 	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
 	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_hndsk_dict, offset);
@@ -100,8 +100,8 @@ gluster_hndsk_2_setvolume_call(tvbuff_t *tvb, int offset,
 }
 
 static int
-gluster_hndsk_2_getspec_reply(tvbuff_t *tvb, int offset,
-				packet_info *pinfo _U_, proto_tree *tree)
+gluster_hndsk_2_getspec_reply(tvbuff_t *tvb, int offset, packet_info *pinfo,
+							proto_tree *tree)
 {
 	gchar* spec = NULL;
 	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
@@ -125,8 +125,8 @@ gluster_hndsk_2_getspec_call(tvbuff_t *tvb, int offset,
 }
 
 static int
-gluster_hndsk_2_set_lk_ver_reply(tvbuff_t *tvb, int offset,
-				packet_info *pinfo _U_, proto_tree *tree)
+gluster_hndsk_2_set_lk_ver_reply(tvbuff_t *tvb, int offset, packet_info *pinfo,
+							proto_tree *tree)
 {
 	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
 	offset = dissect_rpc_uint32(tvb, tree,hf_gluster_hndsk_lk_ver, offset);
@@ -156,7 +156,7 @@ gluster_hndsk_2_event_notify_call(tvbuff_t *tvb, int offset,
 
 static int
 gluster_hndsk_2_event_notify_reply(tvbuff_t *tvb, int offset,
-                                packet_info *pinfo _U_, proto_tree *tree)
+					packet_info *pinfo, proto_tree *tree)
 {
 	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
 	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_hndsk_dict, offset);

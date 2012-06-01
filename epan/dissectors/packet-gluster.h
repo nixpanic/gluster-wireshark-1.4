@@ -420,6 +420,6 @@ gluster_rpc_dissect_dict(proto_tree *tree, tvbuff_t *tvb, int hfindex,
 
 extern int
 gluster_dissect_common_reply(tvbuff_t *tvb, int offset,
-				packet_info *pinfo _U_, proto_tree *tree);
+				packet_info *pinfo, proto_tree *tree);
 
 #endif /* __PACKET_GLUSTER_H__ */

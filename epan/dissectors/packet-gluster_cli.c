@@ -77,8 +77,8 @@ gluster_cli_2_common_call(tvbuff_t *tvb, int offset,
 }
 
 static int
-gluster_cli_2_common_reply(tvbuff_t *tvb, int offset,
-				packet_info *pinfo _U_, proto_tree *tree)
+gluster_cli_2_common_reply(tvbuff_t *tvb, int offset, packet_info *pinfo,
+							proto_tree *tree)
 {
 	gchar* errstr= NULL;
 
@@ -91,8 +91,8 @@ gluster_cli_2_common_reply(tvbuff_t *tvb, int offset,
 }
 
 static int
-gluster_cli_2_probe_reply(tvbuff_t *tvb, int offset,
-				packet_info *pinfo _U_, proto_tree *tree)
+gluster_cli_2_probe_reply(tvbuff_t *tvb, int offset, packet_info *pinfo,
+							proto_tree *tree)
 {
 	gchar* hostname = NULL;
 	gchar* errstr = NULL;
@@ -120,8 +120,8 @@ gluster_cli_2_probe_call(tvbuff_t *tvb, int offset,
 }
 
 static int
-gluster_cli_2_deprobe_reply(tvbuff_t *tvb, int offset,
-				packet_info *pinfo _U_, proto_tree *tree)
+gluster_cli_2_deprobe_reply(tvbuff_t *tvb, int offset, packet_info *pinfo,
+							proto_tree *tree)
 {
 	gchar* hostname = NULL;
 
@@ -156,8 +156,8 @@ gluster_cli_2_fsm_log_call(tvbuff_t *tvb, int offset,
 }
 
 static int
-gluster_cli_2_getwd_reply(tvbuff_t *tvb, int offset,
-				packet_info *pinfo _U_, proto_tree *tree)
+gluster_cli_2_getwd_reply(tvbuff_t *tvb, int offset, packet_info *pinfo,
+							proto_tree *tree)
 {
 	gchar* wd = NULL;
 
@@ -189,8 +189,8 @@ gluster_cli_2_mount_call(tvbuff_t *tvb, int offset,
 }
 
 static int
-gluster_cli_2_mount_reply(tvbuff_t *tvb, int offset,
-				packet_info *pinfo _U_, proto_tree *tree)
+gluster_cli_2_mount_reply(tvbuff_t *tvb, int offset, packet_info *pinfo,
+							proto_tree *tree)
 {
 	gchar* path = NULL;
 

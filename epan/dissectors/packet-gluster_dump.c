@@ -95,7 +95,7 @@ gluster_dump_reply_detail(tvbuff_t *tvb, int offset, packet_info *pinfo _U_,
 }
 
 static int
-gluster_dump_reply(tvbuff_t *tvb, int offset, packet_info *pinfo _U_,
+gluster_dump_reply(tvbuff_t *tvb, int offset, packet_info *pinfo,
 							proto_tree *tree)
 {
 	offset = dissect_rpc_uint64(tvb, tree, hf_gluster_gfsid, offset);
