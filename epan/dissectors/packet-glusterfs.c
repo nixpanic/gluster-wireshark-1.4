@@ -1988,9 +1988,9 @@ static const value_string glusterfs_lk_type_names[] = {
 };
 
 static const value_string glusterfs_lk_whence[] = {
-	{ SEEK_SET, "SEEK_SET" },
-	{ SEEK_CUR, "SEEK_CUR" },
-	{ SEEK_END, "SEEK_END" },
+	{ GF_LK_SEEK_SET, "SEEK_SET" },
+	{ GF_LK_SEEK_CUR, "SEEK_CUR" },
+	{ GF_LK_SEEK_END, "SEEK_END" },
 	{ 0, NULL }
 };
 

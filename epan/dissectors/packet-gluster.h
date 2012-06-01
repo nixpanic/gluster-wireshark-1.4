@@ -379,9 +379,9 @@ enum gluster_lk_types {
 };
 
 enum gluster_lk_whence {
-	SEEK_SET = 0,
-	SEEK_CUR,
-	SEEK_END
+	GF_LK_SEEK_SET = 0,
+	GF_LK_SEEK_CUR,
+	GF_LK_SEEK_END
 };
 
 /* based on enum glusterd_op_ from xlators/mgmt/glusterd/src/glusterd.h */
