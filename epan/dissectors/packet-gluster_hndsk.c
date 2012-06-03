@@ -53,10 +53,10 @@ static gint proto_gluster_hndsk = -1;
 static gint hf_gluster_cbk_proc = -1;
 static gint hf_gluster_hndsk_proc = -1;
 static gint hf_gluster_hndsk_dict = -1;
-static gint hf_gluster_hndsk_spec = -1;	/* GETSPEC Reply */
-static gint hf_gluster_hndsk_key = -1;	/* GETSPEC Call */
-static gint hf_gluster_hndsk_event_op = -1;       /* EVENT NOTIFY call */
-static gint hf_gluster_hndsk_uid = -1;              /* LOCK VERSION*/
+static gint hf_gluster_hndsk_spec = -1;		/* GETSPEC Reply */
+static gint hf_gluster_hndsk_key = -1;		/* GETSPEC Call */
+static gint hf_gluster_hndsk_event_op = -1;	/* EVENT NOTIFY call */
+static gint hf_gluster_hndsk_uid = -1;		/* LOCK VERSION*/
 static gint hf_gluster_hndsk_lk_ver= -1;
 static gint hf_gluster_hndsk_flags = -1;
 
@@ -70,7 +70,8 @@ gluster_hndsk_setvolume_reply(tvbuff_t *tvb, int offset, packet_info *pinfo,
 							proto_tree *tree)
 {
 	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
-	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_hndsk_dict, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_hndsk_dict,
+								offset);
 	return offset;
 }
 
@@ -78,7 +79,8 @@ static int
 gluster_hndsk_setvolume_call(tvbuff_t *tvb, int offset,
 				packet_info *pinfo _U_, proto_tree *tree)
 {
-	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_hndsk_dict, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_hndsk_dict,
+								offset);
 	return offset;
 }
 
@@ -87,15 +89,17 @@ gluster_hndsk_2_setvolume_reply(tvbuff_t *tvb, int offset, packet_info *pinfo,
 							proto_tree *tree)
 {
 	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
-	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_hndsk_dict, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_hndsk_dict,
+								offset);
 	return offset;
 }
 
 static int
 gluster_hndsk_2_setvolume_call(tvbuff_t *tvb, int offset,
-                                packet_info *pinfo _U_, proto_tree *tree)
+	                        packet_info *pinfo _U_, proto_tree *tree)
 {
-	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_hndsk_dict, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_hndsk_dict,
+								offset);
 	return offset;
 }
 
@@ -105,22 +109,27 @@ gluster_hndsk_2_getspec_reply(tvbuff_t *tvb, int offset, packet_info *pinfo,
 {
 	gchar* spec = NULL;
 	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
-	offset = dissect_rpc_string(tvb, tree, hf_gluster_hndsk_spec, offset, &spec);
-	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_hndsk_dict, offset);
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_hndsk_spec, offset,
+									&spec);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_hndsk_dict,
+								offset);
 	return offset;
 }
 
 static int
 gluster_hndsk_2_getspec_call(tvbuff_t *tvb, int offset,
-                                packet_info *pinfo _U_, proto_tree *tree)
+	                        packet_info *pinfo _U_, proto_tree *tree)
 {
-	guint flags;
 	gchar *key = NULL;
-	flags = tvb_get_ntohl(tvb, offset);
-	proto_tree_add_uint_format(tree, hf_gluster_hndsk_flags, tvb, offset, 4, flags, "Flags: 0x%02x", flags);
+
+	if (tree)
+		proto_tree_add_item(tree, hf_gluster_hndsk_flags, tvb, offset,
+								4, ENC_NA);
 	offset += 4;
-	offset = dissect_rpc_string(tvb, tree, hf_gluster_hndsk_key, offset, &key);
-	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_hndsk_dict, offset);
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_hndsk_key, offset,
+								&key);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_hndsk_dict,
+								offset);
 	return offset;
 }
 
@@ -138,7 +147,8 @@ gluster_hndsk_2_set_lk_ver_call(tvbuff_t *tvb, int offset,
 				packet_info *pinfo _U_, proto_tree *tree)
 {
 	gchar* uid = NULL;
-	offset = dissect_rpc_string(tvb, tree, hf_gluster_hndsk_uid, offset, &uid);
+	offset = dissect_rpc_string(tvb, tree, hf_gluster_hndsk_uid, offset,
+									&uid);
 	offset = dissect_rpc_uint32(tvb, tree,hf_gluster_hndsk_lk_ver, offset);
 	return offset;
 }
@@ -147,8 +157,10 @@ static int
 gluster_hndsk_2_event_notify_call(tvbuff_t *tvb, int offset,
 				packet_info *pinfo _U_, proto_tree *tree)
 {
-	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_hndsk_event_op, offset);
-	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_hndsk_dict, offset);
+	offset = dissect_rpc_uint32(tvb, tree, hf_gluster_hndsk_event_op,
+								offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_hndsk_dict,
+								offset);
 	return offset;
 }
 
@@ -159,7 +171,8 @@ gluster_hndsk_2_event_notify_reply(tvbuff_t *tvb, int offset,
 					packet_info *pinfo, proto_tree *tree)
 {
 	offset = gluster_dissect_common_reply(tvb, offset, pinfo, tree);
-	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_hndsk_dict, offset);
+	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_hndsk_dict,
+								offset);
 	return offset;
 }
 
@@ -191,7 +204,8 @@ static const vsff gluster_hndsk_2_proc[] = {
 	},
 	{
 		GF_HNDSK_EVENT_NOTIFY, "EVENTNOTIFY",
-		gluster_hndsk_2_event_notify_call, gluster_hndsk_2_event_notify_reply
+		gluster_hndsk_2_event_notify_call,
+		gluster_hndsk_2_event_notify_reply
 	},
 	{ 0, NULL, NULL, NULL }
 };
@@ -212,9 +226,9 @@ proto_register_gluster_hndsk(void)
 {
 	static hf_register_info hf[] = {
 		{ &hf_gluster_hndsk_proc,
-			{ "GlusterFS Handshake", "gluster.hndsk.proc", FT_UINT32,
-				BASE_DEC, VALS(gluster_hndsk_proc_vals), 0,
-				NULL, HFILL }
+			{ "GlusterFS Handshake", "gluster.hndsk.proc",
+				FT_UINT32, BASE_DEC,
+				VALS(gluster_hndsk_proc_vals), 0, NULL, HFILL }
 		},
 		/* fields used by Gluster Handshake */
 		{ &hf_gluster_hndsk_dict,
@@ -222,18 +236,18 @@ proto_register_gluster_hndsk(void)
 				NULL, 0, NULL, HFILL }
 		},
 		/* For Gluster handshake event notify */
-                { &hf_gluster_hndsk_event_op,
-                       { "Event Op", "gluster.hndsk.event_notify_op", FT_UINT32, BASE_DEC,
-                                 NULL, 0, NULL, HFILL }
+	        { &hf_gluster_hndsk_event_op,
+	               { "Event Op", "gluster.hndsk.event_notify_op",
+				FT_UINT32, BASE_DEC, NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_hndsk_key,
-			{ "Key", "gluster.hndsk.getspec.key", FT_STRING, BASE_NONE,
-				NULL, 0, NULL, HFILL }
-                },
+			{ "Key", "gluster.hndsk.getspec.key", FT_STRING,
+				BASE_NONE, NULL, 0, NULL, HFILL }
+	        },
 		{ &hf_gluster_hndsk_spec,
 			/* FIXME: rename spec to something clearer */
-			{ "Spec", "gluster.hndsk.getspec", FT_STRING, BASE_NONE,
-				NULL, 0, NULL, HFILL }
+			{ "Spec", "gluster.hndsk.getspec", FT_STRING,
+				BASE_NONE, NULL, 0, NULL, HFILL }
 		},
 		/* For hand shake set_lk_ver */
 		{ &hf_gluster_hndsk_uid,
@@ -241,8 +255,8 @@ proto_register_gluster_hndsk(void)
 				NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_hndsk_lk_ver,
-			{ "Event Op", "gluster.hndsk.lk_ver", FT_UINT32, BASE_DEC,
-				NULL, 0, NULL, HFILL }
+			{ "Event Op", "gluster.hndsk.lk_ver", FT_UINT32,
+				BASE_DEC, NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_hndsk_flags,
 			{ "Flags", "gluster.hndsk.flags", FT_UINT32, BASE_OCT,
@@ -257,7 +271,8 @@ proto_register_gluster_hndsk(void)
 
 	/* Register the protocol name and description */
 	proto_gluster_hndsk = proto_register_protocol("GlusterFS Handshake",
-					"GlusterFS Handshake", "gluster-hndsk");
+						"GlusterFS Handshake",
+						"gluster.hndsk");
 	proto_register_subtree_array(ett, array_length(ett));
 	proto_register_field_array(proto_gluster_hndsk, hf, array_length(hf));
 
@@ -276,15 +291,15 @@ proto_reg_handoff_gluster_hndsk(void)
 
 /* Legacy GlusterFS Callback procedures, they don't contain any data. */
 static const vsff gluster_cbk_proc[] = {
-        { GF_CBK_NULL, "NULL", NULL, NULL },
+	{ GF_CBK_NULL, "NULL", NULL, NULL },
 	{ GF_CBK_FETCHSPEC, "FETCHSPEC", NULL, NULL },
-        { GF_CBK_INO_FLUSH, "INO_FLUSH", NULL, NULL },
+	{ GF_CBK_INO_FLUSH, "INO_FLUSH", NULL, NULL },
 	{ 0, NULL, NULL, NULL }
 };
 static const value_string gluster_cbk_proc_vals[] = {
-        { GF_CBK_NULL, "NULL" },
-        { GF_CBK_FETCHSPEC, "FETCHSPEC" },
-        { GF_CBK_INO_FLUSH, "INO_FLUSH" },
+	{ GF_CBK_NULL, "NULL" },
+	{ GF_CBK_FETCHSPEC, "FETCHSPEC" },
+	{ GF_CBK_INO_FLUSH, "INO_FLUSH" },
 	{ 0, NULL }
 };
 
@@ -308,7 +323,7 @@ proto_register_gluster_cbk(void)
 
 	/* Register the protocol name and description */
 	proto_gluster_cbk = proto_register_protocol("GlusterFS Callback",
-					"GlusterFS Callback", "gluster-cbk");
+					"GlusterFS Callback", "gluster.cbk");
 	proto_register_subtree_array(ett, array_length(ett));
 	proto_register_field_array(proto_gluster_cbk, hf, array_length(hf));
 }
