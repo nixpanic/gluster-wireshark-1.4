@@ -81,64 +81,37 @@ gluster_gd_mgmt_dissect_uuid(tvbuff_t *tvb, proto_tree *tree, int hfindex,
 								int offset)
 {
 	if (tree) {
-		proto_item *gfid_item;
-		header_field_info *hfinfo = proto_registrar_get_nth(hfindex);
-		gfid_item = proto_tree_add_text(tree, tvb, offset, 16 * 4,
-							"%s: ", hfinfo->name);
+		e_guid_t uuid;
+		int start_offset = offset;
 
-		/* 4 bytes */
-		proto_item_append_text(gfid_item, "%.2x",
-						tvb_get_ntohl(tvb, offset));
+		uuid.data1 = (tvb_get_ntohl(tvb, offset)    & 0xff) << 24 |
+		             (tvb_get_ntohl(tvb, offset+4)  & 0xff) << 16 |
+		             (tvb_get_ntohl(tvb, offset+8)  & 0xff) <<  8 |
+		             (tvb_get_ntohl(tvb, offset+12) & 0xff);
+		offset += 16;
+		uuid.data2 = (tvb_get_ntohl(tvb, offset)   & 0xff) << 8 |
+		             (tvb_get_ntohl(tvb, offset+4) & 0xff);
+		offset += 8;
+		uuid.data3 = (tvb_get_ntohl(tvb, offset)   & 0xff) << 8 |
+		             (tvb_get_ntohl(tvb, offset+4) & 0xff);
+		offset += 8;
+		uuid.data4[0] = tvb_get_ntohl(tvb, offset);
 		offset += 4;
-		proto_item_append_text(gfid_item, "%.2x",
-						tvb_get_ntohl(tvb, offset));
+		uuid.data4[1] = tvb_get_ntohl(tvb, offset);
 		offset += 4;
-		proto_item_append_text(gfid_item, "%.2x",
-						tvb_get_ntohl(tvb, offset));
+		uuid.data4[2] = tvb_get_ntohl(tvb, offset);
 		offset += 4;
-		proto_item_append_text(gfid_item, "%.2x",
-						tvb_get_ntohl(tvb, offset));
+		uuid.data4[3] = tvb_get_ntohl(tvb, offset);
 		offset += 4;
-		/* 2 bytes */
-		proto_item_append_text(gfid_item, "-%.2x",
-						tvb_get_ntohl(tvb, offset));
+		uuid.data4[4] = tvb_get_ntohl(tvb, offset);
 		offset += 4;
-		proto_item_append_text(gfid_item, "%.2x",
-						tvb_get_ntohl(tvb, offset));
+		uuid.data4[5] = tvb_get_ntohl(tvb, offset);
 		offset += 4;
-		/* 2 bytes */
-		proto_item_append_text(gfid_item, "-%.2x",
-						tvb_get_ntohl(tvb, offset));
+		uuid.data4[6] = tvb_get_ntohl(tvb, offset);
 		offset += 4;
-		proto_item_append_text(gfid_item, "%.2x",
-						tvb_get_ntohl(tvb, offset));
+		uuid.data4[7] = tvb_get_ntohl(tvb, offset);
 		offset += 4;
-		/* 2 bytes */
-		proto_item_append_text(gfid_item, "-%.2x",
-						tvb_get_ntohl(tvb, offset));
-		offset += 4;
-		proto_item_append_text(gfid_item, "%.2x",
-						tvb_get_ntohl(tvb, offset));
-		offset += 4;
-		/* 6 bytes */
-		proto_item_append_text(gfid_item, "-%.2x",
-						tvb_get_ntohl(tvb, offset));
-		offset += 4;
-		proto_item_append_text(gfid_item, "%.2x",
-						tvb_get_ntohl(tvb, offset));
-		offset += 4;
-		proto_item_append_text(gfid_item, "%.2x",
-						tvb_get_ntohl(tvb, offset));
-		offset += 4;
-		proto_item_append_text(gfid_item, "%.2x",
-						tvb_get_ntohl(tvb, offset));
-		offset += 4;
-		proto_item_append_text(gfid_item, "%.2x",
-						tvb_get_ntohl(tvb, offset));
-		offset += 4;
-		proto_item_append_text(gfid_item, "%.2x",
-						tvb_get_ntohl(tvb, offset));
-		offset += 4;
+		proto_tree_add_guid(tree, hfindex, tvb, start_offset, 4*16, &uuid);
 	} else
 		offset += 16 * 4;
 
@@ -522,7 +495,7 @@ static const vsff gd_mgmt_brick_2_proc[] = {
 	},
 	{
 		GLUSTERD_2_BRICK_XLATOR_INFO, "XLATOR_INFO",
- 		glusterd_brick_2_common_call, glusterd_brick_2_common_reply
+		glusterd_brick_2_common_call, glusterd_brick_2_common_reply
 	},
 	{
 		GLUSTERD_2_BRICK_XLATOR_OP, "XLATOR_OP" ,
@@ -699,7 +672,7 @@ proto_register_gluster_gd_mgmt(void)
 				BASE_NONE, NULL, 0, NULL, HFILL }
 		},
 		{ &hf_glusterd_uuid,
-			{ "UUID", "glusterd.uuid", FT_BYTES,
+			{ "UUID", "glusterd.uuid", FT_GUID,
 				BASE_NONE, NULL, 0, NULL, HFILL }
 		},
 		{ &hf_glusterd_hostname,
@@ -738,13 +711,13 @@ proto_register_gluster_gd_mgmt(void)
 	proto_register_field_array(proto_glusterd, hf, array_length(hf));
 
 	proto_gd_mgmt = proto_register_protocol("Gluster Daemon Management",
-					"GlusterD Management", "gd-mgmt");
+					"GlusterD Management", "glusterd.mgmt");
 	proto_gd_brick = proto_register_protocol(
 					"Gluster Daemon Brick Operations",
-					"GlusterD Brick", "gd-brick");
+					"GlusterD Brick", "glusterd.brick");
 	proto_gd_friend = proto_register_protocol(
 					"Gluster Daemon Friend Operations",
-					"GlusterD Friend", "gd-friend");
+					"GlusterD Friend", "glusterd.friend");
 }
 
 void
@@ -763,4 +736,3 @@ proto_reg_handoff_gluster_gd_mgmt(void)
 						hf_glusterd_friend_proc);
 
 }
-
