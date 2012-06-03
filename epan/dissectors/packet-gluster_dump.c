@@ -136,8 +136,9 @@ proto_register_gluster_dump(void)
 	static hf_register_info hf[] = {
 		/* programs */
 		{ &hf_gluster_dump_proc,
-			{ "Gluster DUMP", "gluster.dump.proc", FT_UINT32, BASE_DEC,
-				VALS(gluster_dump_proc_vals), 0, NULL, HFILL }
+			{ "Gluster DUMP", "gluster.dump.proc", FT_UINT32,
+				BASE_DEC, VALS(gluster_dump_proc_vals), 0,
+				NULL, HFILL }
 		},
 		{ &hf_gluster_progname,
 			{ "Program Name", "gluster.dump.progname", FT_STRING,
@@ -152,8 +153,8 @@ proto_register_gluster_dump(void)
 				FT_UINT64, BASE_DEC, NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_gfsid,
-			{ "GFS ID", "gluster.gfsid", FT_UINT64,
-				BASE_HEX, NULL, 0, NULL, HFILL }
+			{ "GFS ID", "gluster.gfsid", FT_UINT64, BASE_HEX, NULL,
+				0, NULL, HFILL }
 		}
 	};
 
@@ -164,7 +165,7 @@ proto_register_gluster_dump(void)
 	};
 
 	proto_gluster_dump = proto_register_protocol("Gluster Dump",
-					"Gluster Dump", "gluster-dump");
+					"Gluster Dump", "gluster.dump");
 	proto_register_subtree_array(ett, array_length(ett));
 	proto_register_field_array(proto_gluster_dump, hf, array_length(hf));
 }
