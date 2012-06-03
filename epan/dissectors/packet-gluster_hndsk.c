@@ -96,7 +96,7 @@ gluster_hndsk_2_setvolume_reply(tvbuff_t *tvb, int offset, packet_info *pinfo,
 
 static int
 gluster_hndsk_2_setvolume_call(tvbuff_t *tvb, int offset,
-	                        packet_info *pinfo _U_, proto_tree *tree)
+				packet_info *pinfo _U_, proto_tree *tree)
 {
 	offset = gluster_rpc_dissect_dict(tree, tvb, hf_gluster_hndsk_dict,
 								offset);
@@ -118,7 +118,7 @@ gluster_hndsk_2_getspec_reply(tvbuff_t *tvb, int offset, packet_info *pinfo,
 
 static int
 gluster_hndsk_2_getspec_call(tvbuff_t *tvb, int offset,
-	                        packet_info *pinfo _U_, proto_tree *tree)
+				packet_info *pinfo _U_, proto_tree *tree)
 {
 	gchar *key = NULL;
 
@@ -236,14 +236,14 @@ proto_register_gluster_hndsk(void)
 				NULL, 0, NULL, HFILL }
 		},
 		/* For Gluster handshake event notify */
-	        { &hf_gluster_hndsk_event_op,
-	               { "Event Op", "gluster.hndsk.event_notify_op",
+		{ &hf_gluster_hndsk_event_op,
+		       { "Event Op", "gluster.hndsk.event_notify_op",
 				FT_UINT32, BASE_DEC, NULL, 0, NULL, HFILL }
 		},
 		{ &hf_gluster_hndsk_key,
 			{ "Key", "gluster.hndsk.getspec.key", FT_STRING,
 				BASE_NONE, NULL, 0, NULL, HFILL }
-	        },
+		},
 		{ &hf_gluster_hndsk_spec,
 			/* FIXME: rename spec to something clearer */
 			{ "Spec", "gluster.hndsk.getspec", FT_STRING,
