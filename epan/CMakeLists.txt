@@ -563,9 +563,9 @@ set(DISSECTOR_SRC
 	dissectors/packet-glbp.c
 	dissectors/packet-gluster_cli.c
 	dissectors/packet-glusterd.c
-	dissectors/packet-gluster_hndsk.c
 	dissectors/packet-gluster_pmap.c
 	dissectors/packet-glusterfs.c
+	dissectors/packet-glusterfs_hndsk.c
 	dissectors/packet-gmhdr.c
 	dissectors/packet-gmrp.c
 	dissectors/packet-gnutella.c

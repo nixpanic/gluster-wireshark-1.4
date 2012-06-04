@@ -476,9 +476,9 @@ DISSECTOR_SRC = \
 	packet-glbp.c		\
 	packet-gluster_cli.c		\
 	packet-glusterd.c	\
-	packet-gluster_hndsk.c		\
 	packet-gluster_pmap.c		\
 	packet-glusterfs.c		\
+	packet-glusterfs_hndsk.c	\
 	packet-gmhdr.c		\
 	packet-gmrp.c		\
 	packet-gnutella.c	\
